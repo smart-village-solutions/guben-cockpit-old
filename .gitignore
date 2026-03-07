@@ -517,3 +517,6 @@ build/
 frontend/.env
 
 .qodo
+
+# Database
+dump/
