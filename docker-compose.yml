@@ -1,28 +1,92 @@
 services:
   web:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_CONTENT_GATEWAY_URL: ${VITE_CONTENT_GATEWAY_URL:-http://localhost:5100}
+        VITE_BOOKING_SDK: ${VITE_BOOKING_SDK:-https://booking.guben.de/cdn/current/booking-manager.min.js}
+        VITE_BOOKING_URL: ${VITE_BOOKING_URL:-https://backend.booking.guben.de}
+        VITE_BOOKING_LOGIN: ${VITE_BOOKING_LOGIN:-https://booking.guben.de/login/sso}
+        VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
+        VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
+        VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
+        VITE_MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
     container_name: web-dev
     restart: unless-stopped
+    depends_on:
+      - content-gateway
     ports:
-      - "3000:3000"
-    env_file: ./frontend/.env
+      - "${WEB_PORT:-3000}:3000"
+    env_file:
+      - path: ./frontend/.env
+        required: false
+    environment:
+      VITE_CONTENT_GATEWAY_URL: ${VITE_CONTENT_GATEWAY_URL:-http://content-gateway:5100}
     networks:
       - app
 
-  api:
+  web-live:
     build:
-      context: .
-      dockerfile: ./Api/Dockerfile
-    container_name: api-dev
+      context: ./frontend
+      args:
+        VITE_CONTENT_GATEWAY_URL: ${VITE_CONTENT_GATEWAY_BROWSER_URL:-http://127.0.0.1:5100}
+        VITE_BOOKING_SDK: ${VITE_BOOKING_SDK:-https://booking.guben.de/cdn/current/booking-manager.min.js}
+        VITE_BOOKING_URL: ${VITE_BOOKING_URL:-https://backend.booking.guben.de}
+        VITE_BOOKING_LOGIN: ${VITE_BOOKING_LOGIN:-https://booking.guben.de/login/sso}
+        VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
+        VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
+        VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
+        VITE_MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
+    container_name: web-live-dev
     restart: unless-stopped
     depends_on:
-      - postgres
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      Frontend:BaseUrl: https://web:3000
+      - content-gateway
     ports:
-      - "5000:5000"
-      - "5001:5001"
+      - "${WEB_LIVE_PORT:-3300}:3000"
+    env_file:
+      - path: ./frontend/.env
+        required: false
+    environment:
+      VITE_CONTENT_GATEWAY_URL: ${VITE_CONTENT_GATEWAY_BROWSER_URL:-http://127.0.0.1:5100}
+      VITE_BOOKING_SDK: ${VITE_BOOKING_SDK:-https://booking.guben.de/cdn/current/booking-manager.min.js}
+      VITE_BOOKING_URL: ${VITE_BOOKING_URL:-https://backend.booking.guben.de}
+      VITE_BOOKING_LOGIN: ${VITE_BOOKING_LOGIN:-https://booking.guben.de/login/sso}
+      VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
+      VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
+      VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
+      VITE_MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
+      INTERNAL_CONTENT_GATEWAY_URL: http://content-gateway:5100
+    command: ["start-frontend-live"]
+    networks:
+      - app
+
+  content-gateway:
+    build:
+      context: ./content-gateway
+    container_name: content-gateway-dev
+    restart: unless-stopped
+    depends_on:
+      postgrest:
+        condition: service_started
+    environment:
+      PORT: 5100
+      LOG_LEVEL: info
+      PUBLIC_BASE_URL: http://localhost:3000
+      MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
+      CONTENT_SOURCE_MODE: postgrest
+      DEFAULT_LANGUAGE: de
+      FALLBACK_LANGUAGE: de
+      CMS_GRAPHQL_URL: ${CMS_GRAPHQL_URL:-https://cms.example.com/graphql}
+      CMS_API_KEY: ${CMS_API_KEY:-replace-me}
+      CMS_API_KEY_HEADER: ${CMS_API_KEY_HEADER:-x-api-key}
+      CMS_TIMEOUT_MS: ${CMS_TIMEOUT_MS:-2500}
+      CMS_RETRY_ATTEMPTS: ${CMS_RETRY_ATTEMPTS:-2}
+      CMS_RETRY_BACKOFF_MS: ${CMS_RETRY_BACKOFF_MS:-200}
+      POSTGREST_URL: http://postgrest:3000
+      POSTGREST_TIMEOUT_MS: ${POSTGREST_TIMEOUT_MS:-10000}
+      POSTGREST_SCHEMA: public_content
+    ports:
+      - "${CONTENT_GATEWAY_PORT:-5100}:5100"
     networks:
       - app
       - backend
@@ -30,15 +94,58 @@ services:
   postgres:
     image: postgres
     container_name: postgres-dev
+    profiles: ["local-db"]
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${LOCAL_POSTGRES_PORT:-55432}:5432"
     environment:
       POSTGRES_USER: guben
       POSTGRES_PASSWORD: VeryStrongPassword123
       POSTGRES_DB: Guben
     volumes:
       - guben_cockpit:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guben -d Guben"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - backend
+
+  postgrest-bootstrap:
+    image: postgres:16-alpine
+    container_name: postgrest-bootstrap-dev
+    restart: "no"
+    environment:
+      PGRST_DB_URI: ${PGRST_DB_URI:-postgres://guben:VeryStrongPassword123@host.docker.internal:5432/Guben}
+    volumes:
+      - ./postgrest/sql:/sql:ro
+      - ./postgrest/checks:/checks:ro
+      - ./postgrest/bootstrap.sh:/bootstrap.sh:ro
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - backend
+
+  postgrest:
+    image: postgrest/postgrest:v12.2.8
+    container_name: postgrest-dev
+    restart: unless-stopped
+    depends_on:
+      postgrest-bootstrap:
+        condition: service_completed_successfully
+    env_file:
+      - ./postgrest/local.env
+    environment:
+      PGRST_DB_URI: ${PGRST_DB_URI:-postgres://guben:VeryStrongPassword123@host.docker.internal:5432/Guben}
+    command: ["postgrest", "/etc/postgrest/postgrest.conf"]
+    volumes:
+      - ./postgrest/postgrest.conf:/etc/postgrest/postgrest.conf:ro
+    ports:
+      - "${POSTGREST_PORT:-3001}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - backend
 
@@ -47,11 +154,12 @@ services:
     container_name: adminer-dev
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${ADMINER_PORT:-8080}:8080"
     environment:
       POSTGRES_PASSWORD: VeryStrongPassword123
-    depends_on:
-      - postgres
+      ADMINER_DEFAULT_SERVER: ${ADMINER_DEFAULT_SERVER:-host.docker.internal}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - backend
 

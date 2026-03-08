@@ -1,5 +1,4 @@
 import { Label } from "@/components/ui/label";
-import { useCategoriesGetAll } from "@/endpoints/gubenComponents";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { Combobox } from "../ui/comboBox";
@@ -18,11 +17,8 @@ export const CategoryFilter = ({
   categories: customCategories = []
 }: CategoryFilterProps) => {
   const { t } = useTranslation("common");
-  const { data } = useCategoriesGetAll({});
-
-  const backendCategories = data?.categories ?? [];
   const mergedCategories = Array.from(
-    new Map([...backendCategories, ...customCategories].map(c => [c.name, c])).values()
+    new Map(customCategories.map(c => [c.name, c])).values()
   );
 
   const options = mergedCategories.map(c => ({

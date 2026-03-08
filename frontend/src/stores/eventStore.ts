@@ -1,4 +1,4 @@
-import { CoordinatesResponse } from "@/endpoints/gubenSchemas";
+import type { Coordinates } from "@shared/public-content/contracts";
 import { create } from "zustand";
 
 export type BookingEvent = {
@@ -13,7 +13,7 @@ export type BookingEvent = {
   details?: EventDetails;
   imgUrl: string;
   flags?: string[];
-	coordinates?: CoordinatesResponse | null;
+	coordinates?: Coordinates | null;
 };
 
 export type EventDetails = {

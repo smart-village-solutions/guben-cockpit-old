@@ -3,7 +3,7 @@ import { HouseIcon, InfoIcon, TrophyIcon } from 'lucide-react'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useBookingStore } from '@/stores/bookingStore'
 import { useTranslation } from 'react-i18next'
-import { useBookingGetPublicTenantIds } from '@/endpoints/gubenComponents'
+import { useGatewayBookingTenants } from '@/public-content/hooks'
 
 import BookingCard from '@/components/booking/bookingCard'
 import BookingDivider from '@/components/booking/bookingDivider'
@@ -32,7 +32,8 @@ function Booking() {
   const resources = useMemo(() => bookables.filter((b) => b.category === 'resource'), [bookables])
   const sports = useMemo(() => bookables.filter((b) => b.category === 'sport'), [bookables])
 
-  const { data: tenantIds } = useBookingGetPublicTenantIds({});
+  const gatewayTenantIdsQuery = useGatewayBookingTenants();
+  const tenantIds = gatewayTenantIdsQuery.data;
 
   const [currentTenantIndex, setCurrentTenantIndex] = useState(0);
 
@@ -54,10 +55,15 @@ function Booking() {
   const shouldShowIntegration = currentTenant && !processedTenants.has(currentTenant.tenantId);
 
   useEffect(() => {
+    if (!tenantIds || tenantIds.tenants.length === 0) {
+      setLoading(false);
+      return;
+    }
+
     if (shouldShowIntegration) {
       setLoading(true);
     }
-  }, [shouldShowIntegration]);
+  }, [shouldShowIntegration, tenantIds]);
 
   const [translationsReady, setTranslationsReady] = useState(false);
   const currentLang = i18next.language as Language;
@@ -66,29 +72,31 @@ function Booking() {
     if (!shouldShowIntegration && currentLang !== "de" && bookables.length > 0) {
       const translateAll = async () => {
         setTranslationsReady(false);
-        const descriptions = bookables
-          .map(b => b.description)
-          .filter(desc => desc && desc.trim());
+        try {
+          const descriptions = bookables
+            .map(b => b.description)
+            .filter(desc => desc && desc.trim());
 
-        if (descriptions.length > 0) {
-          await translateHtmlBatchedMultiple([...new Set(descriptions)], currentLang);
+          if (descriptions.length > 0) {
+            await translateHtmlBatchedMultiple([...new Set(descriptions)], currentLang);
+          }
+
+          const otherStringsToTranslate = [
+            ...bookables
+              .map(b => b.autoCommitNote)
+              .filter((note): note is string => note != null && note.trim() !== ''),
+              
+            ...bookables
+              .flatMap(b => b.flags || [])
+              .filter((flag): flag is string => flag != null && flag.trim() !== '') 
+          ];
+          
+          if (otherStringsToTranslate.length > 0) {
+            await translateBatchedMultiple([...new Set(otherStringsToTranslate)], currentLang);
+          }
+        } finally {
+          setTranslationsReady(true);
         }
-
-        const otherStringsToTranslate = [
-          ...bookables
-            .map(b => b.autoCommitNote)
-            .filter((note): note is string => note != null && note.trim() !== ''),
-            
-          ...bookables
-            .flatMap(b => b.flags || [])
-            .filter((flag): flag is string => flag != null && flag.trim() !== '') 
-        ];
-        
-        if (otherStringsToTranslate.length > 0) {
-          await translateBatchedMultiple([...new Set(otherStringsToTranslate)], currentLang);
-        }
-
-        setTranslationsReady(true);
       };
 
       translateAll();

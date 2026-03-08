@@ -1,8 +1,7 @@
 import { ApiErrorResult } from "@/types/ApiErrorResult";
 import { toast } from "sonner";
-import { ErrorWrapper } from "@/endpoints/gubenFetcher";
 
-export const useErrorToast = (error: ErrorWrapper<ApiErrorResult>) => {
+export const useErrorToast = (error: ApiErrorResult | Error | unknown) => {
   // @ts-ignore
   error = error["stack"];
   if (typeof error == "object") {

@@ -1,17 +1,13 @@
 import { CustomTooltip } from "@/components/general/Tooltip";
-import { BaseImgTag } from "@/components/ui/BaseImgTag";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from '@tanstack/react-router';
-import { CalendarDaysIcon, ExternalLink, HomeIcon, Icon, LayoutGridIcon, LogOutIcon, MapIcon, PlaneIcon, ShieldIcon } from "lucide-react";
-import React, { createContext, HtmlHTMLAttributes, PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import { CalendarDaysIcon, HomeIcon, MapIcon, PlaneIcon } from "lucide-react";
+import React, { createContext, HtmlHTMLAttributes, PropsWithChildren, useContext, useMemo } from 'react';
 import { useTranslation } from "react-i18next";
-import { useAuth } from 'react-oidc-context';
 import { ServicePortalIcon, SmartCityGubenLogoIcon } from "../icons";
 import i18next from "i18next";
 import { getLocalizedLanguagename, Language } from "@/utilities/i18n/Languages";
 import { WithClassName } from "@/types/WithClassName";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useLanguageUpdater } from "@/hooks/useLanguageUpdater";
 import { MyGubenIcon } from "../icons/MyGubenIcon";
 
@@ -48,29 +44,10 @@ const NavList = ({ children, className }: PropsWithChildren & WithClassName) => 
   </ul>
 );
 
-const NavButton = (props: { name: string } & HtmlHTMLAttributes<HTMLButtonElement>) => (
-  <li>
-    <CustomTooltip text={props.name}>
-      <button {...props} className='h-full p-3 flex items-center justify-center w-auto rounded-xl text-gubenAccent hover:bg-gubenAccent hover:text-gubenAccent-foreground'>
-        {props.children}
-      </button>
-    </CustomTooltip>
-  </li>
-)
-
 export const Navbar = () => {
   const iconStyle = "icon size-8";
-  const auth = useAuth();
   const { t } = useTranslation("navigation");
   const location = useLocation();
-
-  const handleSignout = useCallback(() => {
-    auth.signoutRedirect({
-      redirectMethod: "assign",
-      redirectTarget: "self",
-      post_logout_redirect_uri: window.location.origin
-    })
-  }, []);
 
   return (
     <NavContext.Provider value={{ location: location.pathname }}>
@@ -121,22 +98,6 @@ export const Navbar = () => {
         </NavList>
 
         <NavList className={"justify-end"}>
-          {auth.isAuthenticated &&
-            <Label className='text-medium text-md'>
-              {auth.user?.profile.name}
-            </Label>
-          }
-
-          <NavLink to={"/admin"} name={t("Admin")}>
-            <ShieldIcon className="icon size-6" />
-          </NavLink>
-
-          {auth.isAuthenticated &&
-            <NavButton name={t("LogOut")} onClick={handleSignout}>
-              <LogOutIcon className="icon size-6" />
-            </NavButton>
-          }
-
           <LanguageSection/>
         </NavList>
 

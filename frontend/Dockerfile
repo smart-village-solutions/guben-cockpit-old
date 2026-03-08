@@ -1,20 +1,10 @@
-# This is the newer version
 FROM node:22-alpine
 
 ARG VITE_STRAPI_URL
 ENV VITE_STRAPI_URL=$VITE_STRAPI_URL
 
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
-ARG VITE_AUTHORITY
-ENV VITE_AUTHORITY=$VITE_AUTHORITY
-
-ARG VITE_AUDIENCE
-ENV VITE_AUDIENCE=$VITE_AUDIENCE
-
-ARG VITE_REDIRECT_URI
-ENV VITE_REDIRECT_URI=$VITE_REDIRECT_URI
+ARG VITE_CONTENT_GATEWAY_URL
+ENV VITE_CONTENT_GATEWAY_URL=$VITE_CONTENT_GATEWAY_URL
 
 ARG VITE_BOOKING_SDK
 ENV VITE_BOOKING_SDK=$VITE_BOOKING_SDK
@@ -42,12 +32,13 @@ COPY package.json .
 COPY package-lock.json .
 
 RUN npm ci
-RUN npm i -g serve
 
-COPY .. .
-
-RUN npm run build
+COPY . .
+COPY docker/start-frontend.sh /usr/local/bin/start-frontend
+COPY docker/start-frontend-live.sh /usr/local/bin/start-frontend-live
+COPY docker/serve-dist.mjs /app/docker/serve-dist.mjs
+RUN chmod +x /usr/local/bin/start-frontend /usr/local/bin/start-frontend-live
 
 EXPOSE 3000
 
-CMD [ "serve", "-s", "dist", "-p", "3000" ]
+CMD [ "start-frontend" ]

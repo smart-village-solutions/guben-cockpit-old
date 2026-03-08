@@ -1,41 +1,21 @@
-import { ProjectResponse } from "@/endpoints/gubenSchemas";
+import type { Project } from "@shared/public-content/contracts";
 import { ExternalLinkIcon } from "lucide-react";
 import ProjectDialog from "@/components/projects/projectDialog";
-import { useNextcloudGetFiles } from "@/endpoints/gubenComponents";
-import { ProjectType } from "@/types/ProjectType";
 
 interface IProps {
-  project: ProjectResponse;
+  project: Project;
   school?: boolean;
 }
 
 export default function ProjectCard({ project, school }: IProps) {
-  const imagesQuery = useNextcloudGetFiles({
-    queryParams: {
-      directory: `${ProjectType[project.type]}/${project.id}/images`,
-    },
-  },
-    { enabled: !!school });
-
-    console.log(imagesQuery);
-  const imageFilename = (imagesQuery.data ?? [])[0];
-  const filenamesAsStrings = imagesQuery.data;
-
-  let previewImage;
-  if (!project.imageUrl)
-    previewImage = `${import.meta.env.VITE_API_URL}/nextcloud/preview?pathToImage=${encodeURIComponent(`${ProjectType[project.type]}/${project.id}/images/${imageFilename}`)}`;
-
-  const imageUrlToUse = project.imageUrl ? project.imageUrl : previewImage;
-
   return (
-    <ProjectDialog project={project} school={school} imageFilenames={filenamesAsStrings}>
+    <ProjectDialog project={project} school={school}>
       <div className={"flex flex-col h-40 rounded-md overflow-hidden bg-neutral-800 text-white group"}>
-        {imageUrlToUse && (
+        {project.imageUrl && (
           <div className={"h-3/4"}>
-            { }
             <img
               className={"object-cover object-center h-full w-full"}
-              src={imageUrlToUse}
+              src={project.imageUrl}
               alt={"image"}
             />
           </div>
