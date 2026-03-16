@@ -3,14 +3,14 @@ services:
   # ── Legacy (unverändert) ──────────────────────────────────────────────────────
 
   guben-web-prod:
-    image: ${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION}
+    image: ${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION_WEB}
     container_name: guben-web-prod
     restart: unless-stopped
     networks:
       - websites
 
   guben-api-prod:
-    image: ${CONTAINER_REGISTRY}guben-cockpit-api:${VERSION}
+    image: ${CONTAINER_REGISTRY}guben-cockpit-api:${VERSION_API}
     container_name: guben-api-prod
     restart: unless-stopped
     environment:
@@ -70,7 +70,7 @@ services:
         condition: service_started
 
   guben-content-gateway-prod:
-    image: ${CONTAINER_REGISTRY}guben-cockpit-content-gateway:${VERSION}
+    image: ${CONTAINER_REGISTRY}guben-cockpit-content-gateway:${VERSION_WEB}
     container_name: guben-content-gateway-prod
     restart: unless-stopped
     environment:
