@@ -16,6 +16,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install shared dependencies
+        run: npm ci --prefix shared
+
       - name: Install content-gateway dependencies
         run: npm ci --prefix content-gateway
 
