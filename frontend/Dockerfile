@@ -27,16 +27,18 @@ ENV VITE_MATOMO_JS=$VITE_MATOMO_JS
 ARG VITE_MASTERPORTAL_URL
 ENV VITE_MASTERPORTAL_URL=$VITE_MASTERPORTAL_URL
 
-WORKDIR /app
-COPY package.json .
-COPY package-lock.json .
+WORKDIR /app/frontend
+COPY frontend/package.json .
+COPY frontend/package-lock.json .
 
 RUN npm ci
+RUN ln -s /app/frontend/node_modules /app/node_modules
 
-COPY . .
-COPY docker/start-frontend.sh /usr/local/bin/start-frontend
-COPY docker/start-frontend-live.sh /usr/local/bin/start-frontend-live
-COPY docker/serve-dist.mjs /app/docker/serve-dist.mjs
+COPY frontend .
+COPY shared ../shared
+COPY frontend/docker/start-frontend.sh /usr/local/bin/start-frontend
+COPY frontend/docker/start-frontend-live.sh /usr/local/bin/start-frontend-live
+COPY frontend/docker/serve-dist.mjs /app/docker/serve-dist.mjs
 RUN chmod +x /usr/local/bin/start-frontend /usr/local/bin/start-frontend-live
 
 EXPOSE 3000

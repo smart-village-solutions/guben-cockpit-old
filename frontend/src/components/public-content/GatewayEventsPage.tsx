@@ -314,15 +314,6 @@ export const GatewayEventsPage = () => {
       <CitizenInformationSystemBanner />
 
       <section className="space-y-8 max-w-7xl mx-auto">
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl">{query.data.page.title}</h1>
-          {query.data.page.description && (
-            <div className="prose prose-neutral mx-auto max-w-3xl">
-              <Markdown>{query.data.page.description}</Markdown>
-            </div>
-          )}
-        </div>
-
         <div className="flex items-end gap-2">
           <div className="w-full grid grid-cols-5 gap-2">
             <SearchFilter

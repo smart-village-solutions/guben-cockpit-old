@@ -1,7 +1,7 @@
 import { CustomTooltip } from "@/components/general/Tooltip";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from '@tanstack/react-router';
-import { CalendarDaysIcon, HomeIcon, MapIcon, PlaneIcon } from "lucide-react";
+import { CalendarDaysIcon, HomeIcon, MapIcon, PlaneIcon, ShieldIcon } from "lucide-react";
 import React, { createContext, HtmlHTMLAttributes, PropsWithChildren, useContext, useMemo } from 'react';
 import { useTranslation } from "react-i18next";
 import { ServicePortalIcon, SmartCityGubenLogoIcon } from "../icons";
@@ -98,6 +98,18 @@ export const Navbar = () => {
         </NavList>
 
         <NavList className={"justify-end"}>
+          <li>
+            <CustomTooltip text="Admin">
+              <a
+                href="https://booking.guben.de/login/sso"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 flex items-center justify-center rounded-xl text-gubenAccent hover:bg-gubenAccent hover:text-gubenAccent-foreground"
+              >
+                <ShieldIcon className="size-6" />
+              </a>
+            </CustomTooltip>
+          </li>
           <LanguageSection/>
         </NavList>
 

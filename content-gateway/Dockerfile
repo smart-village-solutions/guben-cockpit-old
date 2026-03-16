@@ -1,19 +1,22 @@
 FROM node:22-alpine AS build
 
-WORKDIR /app
-COPY package.json package-lock.json* ./
+WORKDIR /app/content-gateway
+COPY content-gateway/package.json content-gateway/package-lock.json* ./
 RUN npm ci
+RUN ln -s /app/content-gateway/node_modules /app/node_modules
 
-COPY . .
+COPY content-gateway .
+COPY shared ../shared
 RUN npm run build
 
 FROM node:22-alpine
-WORKDIR /app
+WORKDIR /app/content-gateway
 
-COPY package.json package-lock.json* ./
+COPY content-gateway/package.json content-gateway/package-lock.json* ./
 RUN npm ci --omit=dev
+RUN ln -s /app/content-gateway/node_modules /app/node_modules
 
-COPY --from=build /app/dist ./dist
+COPY --from=build /app/content-gateway/dist ./dist
 
 EXPOSE 5100
-CMD ["node", "dist/src/server.js"]
+CMD ["node", "dist/content-gateway/src/server.js"]

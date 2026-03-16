@@ -45,18 +45,23 @@ if (!rootElement.innerHTML) {
 
 function App() {
   useEffect(() => {
-    var _mtm = window._mtm = window._mtm || [];
-    _mtm.push({
-      'mtm.startTime': (new Date().getTime()),
-      'event': 'mtm.Start'
-    });
+    // Only load Matomo in production (not on localhost)
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-    var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-    g.async = true;
-    g.src = import.meta.env.VITE_MATOMO_JS;
+    if (!isLocalhost && import.meta.env.VITE_MATOMO_JS) {
+      var _mtm = window._mtm = window._mtm || [];
+      _mtm.push({
+        'mtm.startTime': (new Date().getTime()),
+        'event': 'mtm.Start'
+      });
 
-    if (s.parentNode) {
-      s.parentNode.insertBefore(g, s);
+      var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+      g.async = true;
+      g.src = import.meta.env.VITE_MATOMO_JS;
+
+      if (s.parentNode) {
+        s.parentNode.insertBefore(g, s);
+      }
     }
   }, [])
 

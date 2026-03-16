@@ -1,7 +1,8 @@
 services:
   web:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         VITE_CONTENT_GATEWAY_URL: ${VITE_CONTENT_GATEWAY_URL:-http://localhost:5100}
         VITE_BOOKING_SDK: ${VITE_BOOKING_SDK:-https://booking.guben.de/cdn/current/booking-manager.min.js}
@@ -27,7 +28,8 @@ services:
 
   web-live:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         VITE_CONTENT_GATEWAY_URL: ${VITE_CONTENT_GATEWAY_BROWSER_URL:-http://127.0.0.1:5100}
         VITE_BOOKING_SDK: ${VITE_BOOKING_SDK:-https://booking.guben.de/cdn/current/booking-manager.min.js}
@@ -62,7 +64,8 @@ services:
 
   content-gateway:
     build:
-      context: ./content-gateway
+      context: .
+      dockerfile: content-gateway/Dockerfile
     container_name: content-gateway-dev
     restart: unless-stopped
     depends_on:
@@ -92,7 +95,7 @@ services:
       - backend
 
   postgres:
-    image: postgres
+    image: postgres:16-alpine
     container_name: postgres-dev
     profiles: ["local-db"]
     restart: unless-stopped

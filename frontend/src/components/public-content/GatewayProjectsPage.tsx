@@ -58,8 +58,18 @@ export const GatewayProjectsPage = () => {
   }
 
   return (
-    <main className="p-6 flex flex-col items-center bg-white h-full">
-      <div className="max-w-[120rem] w-full">
+    <main className="w-full h-full flex flex-1 pl-20 pt-5 pr-20 pb-4 flex-col items-center">
+      <article className="max-w-[1600px] w-full pb-5">
+        <div className="flex gap-3 flex-col">
+          <h1 className="text-gubenAccent font-poppins text-h1 font-bold">
+            Willkommen in der Projektübersicht
+          </h1>
+          <p className="text-base text-gray-700">
+            Herzlich willkommen in der Projektübersicht laufender Aktivitäten der Verwaltung auf dem Guben Cockpit! Die Stadtverwaltung Guben möchte Sie einladen, sich über Entwicklungen und Aktivitäten in Guben zu informieren und dazu mit Ihnen ins Gespräch zu kommen. Durch Beteiligung der Gubener Bürgerschaft an Entwicklungsprozessen werden die unterschiedlichen Interessen verschiedener Zielgruppen berücksichtigt. Ziel ist es Guben gemeinsam mit Ihnen zu entwickeln. Lassen Sie uns, unter dem Motto Smarter Wandel mit Beteiligung, Guben gemeinsam gestalten.
+          </p>
+        </div>
+      </article>
+      <section className="max-w-[1600px] w-full">
         <div className="relative rounded-lg overflow-hidden">
           <img
             className="block absolute top-0 left-0 w-full h-full aspect-auto object-cover"
@@ -149,7 +159,7 @@ export const GatewayProjectsPage = () => {
             </div>
           </PaginationContainer>
         </section>
-      </div>
+      </section>
     </main>
   );
 };

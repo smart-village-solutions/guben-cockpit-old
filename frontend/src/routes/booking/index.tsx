@@ -7,7 +7,6 @@ import { useGatewayBookingTenants } from '@/public-content/hooks'
 
 import BookingCard from '@/components/booking/bookingCard'
 import BookingDivider from '@/components/booking/bookingDivider'
-import BookingHeader from '@/components/booking/bookingHeader'
 import BookingIntegration from '@/components/booking/bookingIntegration'
 import BookingHowItWorks from '@/components/booking/bookingHowItWorks'
 import BookingFaq from '@/components/booking/bookingFaq'
@@ -106,7 +105,19 @@ function Booking() {
   }, [currentLang, shouldShowIntegration]);
 
   return (
-    <main className="flex flex-col">
+    <main className="w-full h-full flex flex-col">
+      <article className="w-full pl-20 pt-5 pr-20 pb-4 flex items-center justify-center">
+        <div className="max-w-[1600px] w-full pb-5">
+          <div className="flex gap-3 flex-col">
+            <h1 className="text-gubenAccent font-poppins text-h1 font-bold">
+              Willkommen in der Buchungsübersicht
+            </h1>
+            <p className="text-base text-gray-700">
+              Herzlich willkommen auf unserer Buchungsplattform! Hier können Sie bequem und unkompliziert verschiedene Räume, Sportanlagen, Ressourcen und Events der Stadt Guben buchen. Ob für private Veranstaltungen, Vereinstreffen oder geschäftliche Aktivitäten – nutzen Sie unsere modernen Einrichtungen und Ressourcen. Durch digitale Buchungsprozesse möchten wir Ihnen Zeit sparen und die Auslastung unserer städtischen Infrastruktur optimieren. Lassen Sie uns unter dem Motto „Smarter Wandel mit Beteiligung" Guben gemeinsam gestalten und nutzen.
+            </p>
+          </div>
+        </div>
+      </article>
       <div>
         {shouldShowIntegration && (
           <BookingIntegration
@@ -116,7 +127,6 @@ function Booking() {
             onDone={handleTenantDone}
           />
         )}
-        <BookingHeader imgUrl="/images/guben-city-booking-placeholder.png" />
         <BookingDivider icon={HouseIcon} text={t("rooms")} />
         <div id="rooms">
           <div className="flex flex-wrap">

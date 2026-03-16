@@ -5,6 +5,7 @@ import { isNullOrUndefinedOrWhiteSpace } from "@/utilities/nullabilityUtils";
 import { BaseImgTag } from "@/components/ui/BaseImgTag";
 import { useGatewayFooterContent } from "@/public-content/hooks";
 import { isGatewayPublicContentEnabled } from "@/public-content/source";
+import { useTranslation } from "react-i18next";
 import type { FooterItem } from "@shared/public-content/contracts";
 
 export const Footer = () => {
@@ -13,6 +14,7 @@ export const Footer = () => {
 
 const GatewayFooter = () => {
   const {data: footerItemResponse, isPending} = useGatewayFooterContent();
+  const { t } = useTranslation("common");
 
   if (!isGatewayPublicContentEnabled) {
     return (
@@ -22,6 +24,13 @@ const GatewayFooter = () => {
       </footer>
     );
   }
+
+  const footerLinks = [
+    { name: t("Footer.PrivacyPolicy.name"), url: t("Footer.PrivacyPolicy.url") },
+    { name: t("Footer.Imprint.name"), url: t("Footer.Imprint.url") },
+    { name: t("Footer.Accessibility.name"), url: t("Footer.Accessibility.url") },
+    { name: t("Footer.Contact.name"), url: t("Footer.Contact.url") },
+  ];
 
   return (
     <footer className="bg-gubenAccent relative text-gubenAccent-foreground p-4 h-14 flex justify-center items-center">
@@ -36,6 +45,18 @@ const GatewayFooter = () => {
               </li>
             ))
         }
+        {footerLinks.map((link, index) => (
+          <li key={`footer-link-${index}`}>
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              {link.name}
+            </a>
+          </li>
+        ))}
       </ul>
     </footer>
   )

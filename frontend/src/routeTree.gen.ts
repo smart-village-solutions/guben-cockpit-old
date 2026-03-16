@@ -14,6 +14,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as MapImport } from './routes/map'
+import { Route as EventsImport } from './routes/events'
 import { Route as IndexImport } from './routes/index'
 import { Route as EventsIndexImport } from './routes/events/index'
 import { Route as BookingIndexImport } from './routes/booking/index'
@@ -37,14 +38,19 @@ const MapRoute = MapImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const EventsRoute = EventsImport.update({
+  path: '/events',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IndexRoute = IndexImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
 } as any)
 
 const EventsIndexRoute = EventsIndexImport.update({
-  path: '/events/',
-  getParentRoute: () => rootRoute,
+  path: '/',
+  getParentRoute: () => EventsRoute,
 } as any)
 
 const BookingIndexRoute = BookingIndexImport.update({
@@ -53,8 +59,8 @@ const BookingIndexRoute = BookingIndexImport.update({
 } as any)
 
 const EventsEventIdRoute = EventsEventIdImport.update({
-  path: '/events/$eventId',
-  getParentRoute: () => rootRoute,
+  path: '/$eventId',
+  getParentRoute: () => EventsRoute,
 } as any)
 
 const BookingTitleRoute = BookingTitleImport.update({
@@ -76,6 +82,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsImport
       parentRoute: typeof rootRoute
     }
     '/map': {
@@ -101,10 +114,10 @@ declare module '@tanstack/react-router' {
     }
     '/events/$eventId': {
       id: '/events/$eventId'
-      path: '/events/$eventId'
+      path: '/$eventId'
       fullPath: '/events/$eventId'
       preLoaderRoute: typeof EventsEventIdImport
-      parentRoute: typeof rootRoute
+      parentRoute: typeof EventsImport
     }
     '/booking/': {
       id: '/booking/'
@@ -115,10 +128,10 @@ declare module '@tanstack/react-router' {
     }
     '/events/': {
       id: '/events/'
-      path: '/events'
-      fullPath: '/events'
+      path: '/'
+      fullPath: '/events/'
       preLoaderRoute: typeof EventsIndexImport
-      parentRoute: typeof rootRoute
+      parentRoute: typeof EventsImport
     }
     '/booking/room/$title': {
       id: '/booking/room/$title'
@@ -132,14 +145,28 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
+interface EventsRouteChildren {
+  EventsEventIdRoute: typeof EventsEventIdRoute
+  EventsIndexRoute: typeof EventsIndexRoute
+}
+
+const EventsRouteChildren: EventsRouteChildren = {
+  EventsEventIdRoute: EventsEventIdRoute,
+  EventsIndexRoute: EventsIndexRoute,
+}
+
+const EventsRouteWithChildren =
+  EventsRoute._addFileChildren(EventsRouteChildren)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/events': typeof EventsRouteWithChildren
   '/map': typeof MapRoute
   '/projects': typeof ProjectsLazyRoute
   '/booking/$title': typeof BookingTitleRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/booking': typeof BookingIndexRoute
-  '/events': typeof EventsIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/booking/room/$title': typeof BookingRoomTitleRoute
 }
 
@@ -157,6 +184,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/events': typeof EventsRouteWithChildren
   '/map': typeof MapRoute
   '/projects': typeof ProjectsLazyRoute
   '/booking/$title': typeof BookingTitleRoute
@@ -170,12 +198,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/events'
     | '/map'
     | '/projects'
     | '/booking/$title'
     | '/events/$eventId'
     | '/booking'
-    | '/events'
+    | '/events/'
     | '/booking/room/$title'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -190,6 +219,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/events'
     | '/map'
     | '/projects'
     | '/booking/$title'
@@ -202,23 +232,21 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EventsRoute: typeof EventsRouteWithChildren
   MapRoute: typeof MapRoute
   ProjectsLazyRoute: typeof ProjectsLazyRoute
   BookingTitleRoute: typeof BookingTitleRoute
-  EventsEventIdRoute: typeof EventsEventIdRoute
   BookingIndexRoute: typeof BookingIndexRoute
-  EventsIndexRoute: typeof EventsIndexRoute
   BookingRoomTitleRoute: typeof BookingRoomTitleRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EventsRoute: EventsRouteWithChildren,
   MapRoute: MapRoute,
   ProjectsLazyRoute: ProjectsLazyRoute,
   BookingTitleRoute: BookingTitleRoute,
-  EventsEventIdRoute: EventsEventIdRoute,
   BookingIndexRoute: BookingIndexRoute,
-  EventsIndexRoute: EventsIndexRoute,
   BookingRoomTitleRoute: BookingRoomTitleRoute,
 }
 
@@ -235,17 +263,23 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/events",
         "/map",
         "/projects",
         "/booking/$title",
-        "/events/$eventId",
         "/booking/",
-        "/events/",
         "/booking/room/$title"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/events": {
+      "filePath": "events.tsx",
+      "children": [
+        "/events/$eventId",
+        "/events/"
+      ]
     },
     "/map": {
       "filePath": "map.tsx"
@@ -257,13 +291,15 @@ export const routeTree = rootRoute
       "filePath": "booking/$title.tsx"
     },
     "/events/$eventId": {
-      "filePath": "events/$eventId.tsx"
+      "filePath": "events/$eventId.tsx",
+      "parent": "/events"
     },
     "/booking/": {
       "filePath": "booking/index.tsx"
     },
     "/events/": {
-      "filePath": "events/index.tsx"
+      "filePath": "events/index.tsx",
+      "parent": "/events"
     },
     "/booking/room/$title": {
       "filePath": "booking/room/$title.tsx"
