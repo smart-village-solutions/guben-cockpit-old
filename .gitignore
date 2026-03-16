@@ -116,6 +116,7 @@ build
 # Local
 *.local
 *.log*
+docker-compose.local.env
 
 # Dist
 dist/
@@ -124,6 +125,7 @@ dist/
 .vercel
 .netlify
 .wrangler
+.playwright-cli/
 
 # IDE
 .vscode/*
@@ -495,7 +497,6 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
-!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 *.code-workspace
@@ -511,9 +512,13 @@ FodyWeavers.xsd
 obj/
 
 # Dist
+site-next/.next/
 build/
 
 # IDE
 frontend/.env
 
 .qodo
+
+# Database
+dump/

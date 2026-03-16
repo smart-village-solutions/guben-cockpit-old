@@ -14,6 +14,23 @@ function collectTextNodes(node: ChildNode, nodes: Text[] = []) {
     return nodes;
 }
 
+function normalizeTranslations(payload: unknown): string[] | null {
+    if (!payload || typeof payload !== "object") {
+        return null;
+    }
+
+    const translatedText = (payload as { translatedText?: unknown }).translatedText;
+    if (Array.isArray(translatedText) && translatedText.every((value) => typeof value === "string")) {
+        return translatedText;
+    }
+
+    if (typeof translatedText === "string") {
+        return [translatedText];
+    }
+
+    return null;
+}
+
 export async function translateBatchedMultiple(texts: string[], targetLang: string) {
     const results: string[] = [];
     const untranslated: { index: number; text: string }[] = [];
@@ -31,21 +48,30 @@ export async function translateBatchedMultiple(texts: string[], targetLang: stri
 
     const textsToTranslate = untranslated.map(({ text }) => text);
 
-    const response = await fetch(import.meta.env.VITE_TRANSLATE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            q: textsToTranslate,
-            source: "auto",
-            target: targetLang,
-            api_key: import.meta.env.VITE_TRANSLATE_API_KEY
-        }),
-    });
+    let translatedTexts: string[] | null = null;
+    try {
+        const response = await fetch(import.meta.env.VITE_TRANSLATE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                q: textsToTranslate,
+                source: "auto",
+                target: targetLang,
+                api_key: import.meta.env.VITE_TRANSLATE_API_KEY
+            }),
+        });
 
-    const data = await response.json();
+        if (response.ok) {
+            translatedTexts = normalizeTranslations(await response.json());
+        } else {
+            console.warn("Translation request returned non-OK status", response.status);
+        }
+    } catch (error) {
+        console.warn("Translation request failed", error);
+    }
 
     untranslated.forEach(({ index, text }, i) => {
-        const translated = data.translatedText[i];
+        const translated = translatedTexts?.[i] ?? text;
         const cacheKey = `${text}_${targetLang}`;
         cache[cacheKey] = translated;
         results[index] = translated;
@@ -61,7 +87,6 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
     htmls.forEach((html, i) => {
         const cacheKey = `${html}_${targetLang}`;
         if (htmlCache[cacheKey]) {
-            console.log(htmlCache[cacheKey]);
             results[i] = htmlCache[cacheKey];
         } else {
             untranslated.push({ index: i, text: html });
@@ -88,7 +113,7 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
         return results;
     }
 
-    let data;
+    let translatedTexts: string[] | null = null;
     try {
         const response = await fetch(import.meta.env.VITE_TRANSLATE_URL, {
             method: "POST",
@@ -101,10 +126,13 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
             }),
         });
 
-        data = await response.json();
-    } catch (err) {
-        console.error("Translation fetch failed", err);
-        return;
+        if (response.ok) {
+            translatedTexts = normalizeTranslations(await response.json());
+        } else {
+            console.warn("Translation request returned non-OK status", response.status);
+        }
+    } catch (error) {
+        console.warn("Translation fetch failed", error);
     }
   
     let counter = 0;
@@ -114,7 +142,7 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
         const root = doc.body.firstElementChild!;
         const nodes = collectTextNodes(root);
         nodes.forEach((node) => {
-            node.textContent = data.translatedText[counter++];
+            node.textContent = translatedTexts?.[counter++] ?? node.textContent ?? "";
         });
         const translatedHTML = root.innerHTML;
         htmlCache[`${text}_${targetLang}`] = translatedHTML;

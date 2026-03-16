@@ -1,15 +1,36 @@
-import { useFooterItemsGetAll } from "@/endpoints/gubenComponents";
 import { LoadingIndicator } from "../loadingIndicator/loadingIndicator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { isNullOrUndefinedOrWhiteSpace } from "@/utilities/nullabilityUtils";
-import sanitizeHtml from "sanitize-html";
-import { FooterItemResponse } from "@/endpoints/gubenSchemas";
 import { BaseImgTag } from "@/components/ui/BaseImgTag";
-import React from "react";
+import { useGatewayFooterContent } from "@/public-content/hooks";
+import { isGatewayPublicContentEnabled } from "@/public-content/source";
+import { useTranslation } from "react-i18next";
+import type { FooterItem } from "@shared/public-content/contracts";
 
 export const Footer = () => {
-  const {data: footerItemResponse, isPending} = useFooterItemsGetAll({});
+  return <GatewayFooter />;
+}
+
+const GatewayFooter = () => {
+  const {data: footerItemResponse, isPending} = useGatewayFooterContent();
+  const { t } = useTranslation("common");
+
+  if (!isGatewayPublicContentEnabled) {
+    return (
+      <footer className="bg-gubenAccent relative text-gubenAccent-foreground p-4 h-14 flex justify-center items-center">
+        <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"h-full left-2 absolute"}/>
+        <p className="text-sm">Oeffentliche Inhalte deaktiviert</p>
+      </footer>
+    );
+  }
+
+  const footerLinks = [
+    { name: t("Footer.PrivacyPolicy.name"), url: t("Footer.PrivacyPolicy.url") },
+    { name: t("Footer.Imprint.name"), url: t("Footer.Imprint.url") },
+    { name: t("Footer.Accessibility.name"), url: t("Footer.Accessibility.url") },
+    { name: t("Footer.Contact.name"), url: t("Footer.Contact.url") },
+  ];
 
   return (
     <footer className="bg-gubenAccent relative text-gubenAccent-foreground p-4 h-14 flex justify-center items-center">
@@ -18,19 +39,31 @@ export const Footer = () => {
         {
           isPending
             ? <LoadingIndicator/>
-            : footerItemResponse?.footerItems?.map((item, index) => (
+            : footerItemResponse?.items?.map((item: FooterItem, index: number) => (
               <li key={index}>
                 <FooterItemDialog footerItem={item}/>
               </li>
             ))
         }
+        {footerLinks.map((link, index) => (
+          <li key={`footer-link-${index}`}>
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              {link.name}
+            </a>
+          </li>
+        ))}
       </ul>
     </footer>
   )
 }
 
 interface FooterItemDialogProps {
-  footerItem: FooterItemResponse;
+  footerItem: FooterItem;
 }
 
 // TODO: customize the sanitize html so it allows for inline styling for colored text, images etc

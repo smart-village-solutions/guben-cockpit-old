@@ -3,8 +3,6 @@ import ReactDOM from 'react-dom/client'
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthContextProps, AuthProvider, AuthState, useAuth } from "react-oidc-context";
-import { User } from "oidc-client-ts";
 import {FetchInterceptor} from "./utilities/fetchApiExtensions";
 import { useEffect } from 'react'
 
@@ -25,19 +23,9 @@ FetchInterceptor.register();
 
 const queryClient = new QueryClient();
 
-export interface RouterContext {
-  queryClient: QueryClient;
-  // The ReturnType of your useAuth hook or the value of your AuthContext
-  auth: AuthContextProps;
-}
-
 // Set  up a Router instance
 const router = createRouter({
   routeTree,
-  context: {
-    queryClient: queryClient,
-    auth: undefined!
-  },
   defaultPreload: 'intent',
 })
 
@@ -48,46 +36,38 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const oidcConfig = {
-  authority: import.meta.env.VITE_AUTHORITY,
-  client_id: import.meta.env.VITE_AUDIENCE,
-  redirect_uri: import.meta.env.VITE_REDIRECT_URI,
-  automaticSilentRenew: true,
-};
-
 const rootElement = document.getElementById('app')!
 
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
-  root.render(
-    <AuthProvider onSigninCallback={(user: User | undefined) => console.log(user)} {...oidcConfig}>
-      <App/>
-    </AuthProvider>
-  )
+  root.render(<App/>)
 }
 
 function App() {
-  const auth = useAuth();
-
   useEffect(() => {
-    var _mtm = window._mtm = window._mtm || [];
-    _mtm.push({
-      'mtm.startTime': (new Date().getTime()),
-      'event': 'mtm.Start'
-    });
+    // Only load Matomo in production (not on localhost)
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-    var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-    g.async = true;
-    g.src = import.meta.env.VITE_MATOMO_JS;
+    if (!isLocalhost && import.meta.env.VITE_MATOMO_JS) {
+      var _mtm = window._mtm = window._mtm || [];
+      _mtm.push({
+        'mtm.startTime': (new Date().getTime()),
+        'event': 'mtm.Start'
+      });
 
-    if (s.parentNode) {
-      s.parentNode.insertBefore(g, s);
+      var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+      g.async = true;
+      g.src = import.meta.env.VITE_MATOMO_JS;
+
+      if (s.parentNode) {
+        s.parentNode.insertBefore(g, s);
+      }
     }
   }, [])
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} context={{queryClient, auth}}/>
+      <RouterProvider router={router} />
     </QueryClientProvider>
   )
 }
