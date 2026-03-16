@@ -49,32 +49,10 @@ services:
     networks:
       - guben_prod
 
-  # ── Neuer Stack ───────────────────────────────────────────────────────────────
+  # ── Neuer Stack (ohne DB-Migrationen) ───────────────────────────────────────
   #
-  # Voraussetzung: Die Dateien unter postgrest/sql/ müssen auf dem Host liegen
-  # (relativ zur Stack-Datei), da guben-postgrest-bootstrap-prod sie einbindet.
-  # Das Bootstrap-Init läuft einmalig und richtet Schema + Rollen ein.
-
-  guben-postgrest-bootstrap-prod:
-    image: postgres:17
-    container_name: guben-postgrest-bootstrap-prod
-    restart: "no"
-    environment:
-      PGPASSWORD: ${DATABASE_PASSWORD}
-    command: >
-      bash -c "
-        until pg_isready -h guben-db-prod -U ${DATABASE_USERNAME}; do sleep 2; done &&
-        psql -h guben-db-prod -U ${DATABASE_USERNAME} -d ${DATABASE_NAME} -f /sql/001_create_role.sql &&
-        psql -h guben-db-prod -U ${DATABASE_USERNAME} -d ${DATABASE_NAME} -f /sql/002_create_schema_and_views.sql &&
-        psql -h guben-db-prod -U ${DATABASE_USERNAME} -d ${DATABASE_NAME} -f /sql/003_grants.sql
-      "
-    volumes:
-      - ./postgrest/sql:/sql:ro
-    networks:
-      - guben_prod
-    depends_on:
-      guben-db-prod:
-        condition: service_started
+  # PostgREST und Content-Gateway greifen nur lesend auf die bestehende
+  # Produktivdatenbank zu. Es werden hier keine SQL-Init-Skripte ausgeführt.
 
   guben-postgrest-prod:
     image: postgrest/postgrest:v12.2.8
@@ -88,8 +66,8 @@ services:
     networks:
       - guben_prod
     depends_on:
-      guben-postgrest-bootstrap-prod:
-        condition: service_completed_successfully
+      guben-db-prod:
+        condition: service_started
 
   guben-content-gateway-prod:
     image: ${CONTAINER_REGISTRY}guben-cockpit-content-gateway:${VERSION}
