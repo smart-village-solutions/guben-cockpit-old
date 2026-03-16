@@ -10,7 +10,7 @@ services:
       - websites
 
   guben-api-prod:
-    image: ${CONTAINER_REGISTRY}guben-cockpit-api:${VERSION_API}
+    image: ghcr.io/agriculturedev/guben-cockpit-api:${VERSION_API}
     container_name: guben-api-prod
     restart: unless-stopped
     environment:
