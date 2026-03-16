@@ -44,7 +44,8 @@ jobs:
           DEFAULT_LANGUAGE=de \
           FALLBACK_LANGUAGE=de \
           npm start --prefix content-gateway &
-          for i in 1 2 3 4 5; do
+          # Wait up to ~60 seconds for the gateway to become ready (30 attempts * 2 seconds)
+          for i in {1..30}; do
             if curl --fail http://127.0.0.1:5100/health && curl --fail http://127.0.0.1:5100/health/live && curl --fail http://127.0.0.1:5100/health/ready; then
               exit 0
             fi
