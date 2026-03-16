@@ -103,8 +103,8 @@ npm run build
 
 GitHub Actions builds and publishes two images:
 
-- `ghcr.io/agriculturedev/guben-cockpit-web`
-- `ghcr.io/agriculturedev/guben-cockpit-content-gateway`
+- `ghcr.io/smart-village-solutions/guben-cockpit-web`
+- `ghcr.io/smart-village-solutions/guben-cockpit-content-gateway`
 
 PostgREST uses the upstream `postgrest/postgrest` image plus the SQL/bootstrap files from this repository.
 

@@ -249,8 +249,8 @@ Relevante Skripte:
 
 GitHub Actions erzeugt zwei Images:
 
-- `ghcr.io/agriculturedev/guben-cockpit-web`
-- `ghcr.io/agriculturedev/guben-cockpit-content-gateway`
+- `ghcr.io/smart-village-solutions/guben-cockpit-web`
+- `ghcr.io/smart-village-solutions/guben-cockpit-content-gateway`
 
 PostgREST wird nicht aus diesem Repo gebaut, sondern als Upstream-Image betrieben.
 

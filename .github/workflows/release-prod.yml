@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: agriculturedev/guben-cockpit
+  IMAGE_NAME: smart-village-solutions/guben-cockpit
 
 jobs:
   build-and-push-image:
