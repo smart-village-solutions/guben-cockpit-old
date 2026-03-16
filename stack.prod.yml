@@ -96,3 +96,5 @@ networks:
 
 volumes:
   guben-data-prod:
+    external: true
+    name: cockpit_guben-data-prod
