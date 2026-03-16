@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
 import { Button } from "@/components/ui/button";
-import { InformationCardResponse } from "@/endpoints/gubenSchemas";
+import type { InformationCard } from "@shared/public-content/contracts";
 import { Card } from "@/components/ui/card";
 import { BaseImgTag } from "@/components/ui/BaseImgTag";
 import { WithClassName } from "@/types/WithClassName";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Props extends WithClassName {
-  card: InformationCardResponse;
+  card: InformationCard;
 }
 
 export const InfoCard = ({ card, className }: Props) => {

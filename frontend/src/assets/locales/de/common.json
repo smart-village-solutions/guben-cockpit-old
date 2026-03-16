@@ -86,5 +86,23 @@
     "Remove": "Entfernen",
     "ErrorUnsupported": "Nicht unterstützter Dateityp. Erlaubt: {{extensions}}",
     "ErrorTooLarge": "Datei zu groß. Maximal {{max}} MB"
+  },
+  "Footer": {
+    "PrivacyPolicy": {
+      "name": "Datenschutzerklärung",
+      "url": "https://www.guben.de/de/barrierefreiheit"
+    },
+    "Imprint": {
+      "name": "Impressum",
+      "url": "https://www.guben.de/de/barrierefreiheit"
+    },
+    "Accessibility": {
+      "name": "Erklärung zur Barrierefreiheit",
+      "url": "https://www.guben.de/de/barrierefreiheit"
+    },
+    "Contact": {
+      "name": "Kontaktformular",
+      "url": "https://www.guben.de/de/kontakt"
+    }
   }
 }

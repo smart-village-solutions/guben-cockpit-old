@@ -1,4 +1,4 @@
-import { EventImageResponse, EventResponse } from "@/endpoints/gubenSchemas";
+import type { Event } from "@shared/public-content/contracts";
 import { CaretLeftIcon, CaretRightIcon } from "@radix-ui/react-icons";
 import { Link } from "@tanstack/react-router";
 import { ArrowRightIcon, ClockIcon, MapPinIcon } from "lucide-react";
@@ -8,7 +8,7 @@ import { getEventImage } from "@/lib/DefaultEventImage";
 import DOMPurify from "dompurify";
 import { TranslatedHtml, TranslatedText } from "@/utilities/translateUtils";
 
-type TEventCardContext = { event: EventResponse }
+type TEventCardContext = { event: Event }
 const EventCardContext = createContext<TEventCardContext | undefined>(undefined);
 
 const useEventCard = () => {
@@ -17,7 +17,7 @@ const useEventCard = () => {
   return context;
 }
 
-function EventCard({event}: { event: EventResponse }) {
+function EventCard({event}: { event: Event }) {
   return (
     <EventCardContext.Provider value={{event}}>
       <div className="flex justify-between gap-8 p-8 w-full rounded-2xl h-80 space-y-4 shadow-md bg-white">
@@ -74,10 +74,6 @@ EventCard.Description = () => {
   return (
     <p className="text-muted-foreground line-clamp-2">{event.description}</p>
   );
-}
-
-interface EventCardImageProps {
-  images: EventImageResponse[];
 }
 
 EventCard.ImageBox = () => {

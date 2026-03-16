@@ -1,18 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 
-interface BookindHeaderProps {
-  imgUrl: string;
-}
-
-export default function BookingHeader({imgUrl}: BookindHeaderProps)  {
+export default function BookingHeader()  {
   const { t } = useTranslation("booking");
 
   return (
-    <div className="relative w-full h-72 overflow-hidden">
-      <img
-        src={imgUrl}
-        className="w-full h-full object-cover absolute top-0 left-0" />
+    <div className="relative w-full h-72 overflow-hidden bg-gray-300">
       <div className="absolute bottom-0 left-0 w-full h-1/3 flex flex-col items-center justify-center bg-red-600/70">
         <div className="mt-1 text-gubenAccent-foreground font-bold italic text-6xl tracking-tight">
           {t("booking")}

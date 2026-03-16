@@ -4,11 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { MapComponent } from "@/components/home/MapComponent";
 import { InfoCard } from "@/components/home/InfoCard/InfoCard";
 import { cn } from "@/lib/utils";
-import {
-  DashboardDropdownResponse,
-  DashboardTabResponse,
-  DropdownLinkResponse,
-} from "@/endpoints/gubenSchemas";
+import type { DashboardDropdown } from "@shared/public-content/contracts";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DashboardDropdownTabsProps {
-  dropdowns: DashboardDropdownResponse[];
+  dropdowns: DashboardDropdown[];
 }
 
 export const DashboardDropdownTabs = ({
@@ -27,7 +23,7 @@ export const DashboardDropdownTabs = ({
 }: DashboardDropdownTabsProps) => {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const allTabs = useMemo(() => {
-    const tabs: DashboardTabResponse[] = [];
+    const tabs: DashboardDropdown["tabs"][number][] = [];
     dropdowns.forEach((d) => {
       if (d.tabs) {
         d.tabs.forEach((t) => {
@@ -84,7 +80,7 @@ interface DashboardDropdownMenuProps {
   activeTab: string | null;
   isLink: boolean;
   tabs?: { id: string; title: string }[];
-  links?: DropdownLinkResponse[];
+  links?: DashboardDropdown["links"];
   onTabClick?: (tabId: string) => void;
 }
 

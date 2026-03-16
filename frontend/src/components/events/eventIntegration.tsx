@@ -1,4 +1,4 @@
-import { CoordinatesResponse } from "@/endpoints/gubenSchemas";
+import type { Coordinates } from "@shared/public-content/contracts";
 import { BookingEvent, Ticket, useEventStore } from "@/stores/eventStore";
 import { useEffect } from "react";
 
@@ -161,7 +161,7 @@ async function fetchCoordinates(
   street: string | undefined,
   streetNumber: string | undefined,
   zip: string | undefined,
-  city: string | undefined): Promise<CoordinatesResponse> {
+  city: string | undefined): Promise<Coordinates> {
   try {
     if (street === undefined || streetNumber === undefined || zip === undefined || city === undefined) return null;
     const query = `${streetNumber} ${street}, ${zip} ${city}`;

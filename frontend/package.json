@@ -6,16 +6,17 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "dev": "npm run translations && npm run check-translations && vite --port=3000",
-    "build": "npm run check-translations && vite build",
+    "build:spa": "npm run check-translations && vite build",
+    "build": "npm run build:spa && npm run prerender:public && npm run verify:prerender",
     "serve": "vite preview",
     "start": "vite",
-    "codegen": "npx openapi-codegen gen guben",
     "translations": "i18next-resources-for-ts interface -i ./src/assets/locales/de -o ./src/utilities/i18n/@types/resources.d.ts",
-    "check-translations": "node src/utilities/i18n/CheckTranslations.cjs"
+    "check-translations": "node src/utilities/i18n/CheckTranslations.cjs",
+    "verify:gateway-contracts": "tsx scripts/verify-gateway-contracts.ts",
+    "prerender:public": "tsx scripts/prerender-public-routes.ts",
+    "verify:prerender": "tsx scripts/verify-prerender.ts"
   },
   "devDependencies": {
-    "@openapi-codegen/cli": "^2.0.2",
-    "@openapi-codegen/typescript": "^8.0.2",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tanstack/eslint-plugin-query": "^5.58.1",
     "@tanstack/router-plugin": "^1.58.12",
@@ -29,6 +30,7 @@
     "i18next-resources-for-ts": "^1.5.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
+    "tsx": "^4.19.3",
     "vite": "^5.4.4",
     "vite-plugin-svgr": "^4.3.0"
   },
@@ -84,7 +86,6 @@
     "react-hook-form": "^7.54.2",
     "react-i18next": "^15.4.0",
     "react-markdown": "^9.0.1",
-    "react-oidc-context": "^3.2.0",
     "react-quill": "^2.0.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",

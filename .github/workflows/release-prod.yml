@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: agriculturedev/guben-cockpit
+  IMAGE_NAME: smart-village-solutions/guben-cockpit
 
 jobs:
   build-and-push-image:
@@ -17,9 +17,7 @@ jobs:
       contents: read
       packages: write
     env:
-      VITE_API_URL: ${{ vars.VITE_API_URL }}
-      VITE_AUTHORITY: ${{ vars.VITE_AUTHORITY }}
-      VITE_AUDIENCE: ${{ vars.VITE_AUDIENCE }}
+      VITE_CONTENT_GATEWAY_URL: ${{ vars.VITE_CONTENT_GATEWAY_URL }}
       VITE_BOOKING_SDK: ${{ vars.VITE_BOOKING_SDK }}
       VITE_BOOKING_LOGIN: ${{ vars.VITE_BOOKING_LOGIN }}
       VITE_BOOKING_URL: ${{ vars.VITE_BOOKING_URL }}
@@ -48,14 +46,13 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
+          context: .
+          file: ./frontend/Dockerfile
           push: true
           tags: ${{ steps.meta-web.outputs.tags }}
           labels: ${{ steps.meta-web.outputs.labels }}
           build-args: |
-            VITE_API_URL=${{ vars.VITE_API_URL }}
-            VITE_AUTHORITY=${{ vars.VITE_AUTHORITY }}
-            VITE_AUDIENCE=${{ vars.VITE_AUDIENCE }}
+            VITE_CONTENT_GATEWAY_URL=${{ vars.VITE_CONTENT_GATEWAY_URL }}
             VITE_BOOKING_SDK=${{ vars.VITE_BOOKING_SDK }}
             VITE_BOOKING_LOGIN=${{ vars.VITE_BOOKING_LOGIN }}
             VITE_BOOKING_URL=${{ vars.VITE_BOOKING_URL }}
@@ -65,16 +62,16 @@ jobs:
             VITE_MASTERPORTAL_URL=${{ vars.VITE_MASTERPORTAL_URL }}
 
       - name: Extract metadata (tags, labels) for Docker
-        id: meta-api
+        id: meta-gateway
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-content-gateway
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Api/Dockerfile
+          file: ./content-gateway/Dockerfile
           push: true
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
+          tags: ${{ steps.meta-gateway.outputs.tags }}
+          labels: ${{ steps.meta-gateway.outputs.labels }}
