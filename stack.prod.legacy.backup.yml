@@ -1,0 +1,58 @@
+services:
+  guben-web-prod:
+    image: ${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION}
+    container_name: guben-web-prod
+    restart: unless-stopped
+    networks:
+      - websites
+
+  guben-api-prod:
+    image: ${CONTAINER_REGISTRY}guben-cockpit-api:${VERSION}
+    container_name: guben-api-prod
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Frontend:BaseUri: ${FRONTEND_BASEURI}
+      Jobs:ProjectImporter:BearerToken: ${ProjectImporterBearerToken}
+      ConnectionStrings:DefaultConnection: ${DATABASE_CONNECTION_STRING}
+      Keycloak:realm: ${KEYCLOAK_REALM}
+      Keycloak:auth-server-url: ${KEYCLOAK_AUTH_SERVER}
+      Keycloak:ssl-required: ${KEYCLOAK_ENABLE_SSL}
+      Keycloak:resource: ${KEYCLOAK_RESOURCE}
+      Keycloak:verify-token-audience: ${KEYCLOAK_VERIFY_AUDIENCE}
+      Nextcloud:BaseUri: ${NEXTCLOUD_BASE_URI}
+      Nextcloud:BaseDirectory: ${NEXTCLOUD_BASE_DIR}
+      Nextcloud:Username: ${NEXTCLOUD_USERNAME}
+      Nextcloud:Password: ${NEXTCLOUD_PASSWORD}
+    networks:
+      - websites
+      - guben_prod
+    depends_on:
+      guben-db-prod:
+        condition: service_started
+        restart: true
+
+  guben-db-prod:
+    container_name: guben-db-prod
+    restart: unless-stopped
+    env_file: stack.env
+    image: postgres:17
+    # ports:
+      # - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - guben-data-prod:/var/lib/postgresql/data/ #using a volume
+    networks:
+      - guben_prod
+
+networks:
+  guben_prod:
+    driver: bridge
+  websites:
+    external: true
+
+volumes:
+  guben-data-prod:
