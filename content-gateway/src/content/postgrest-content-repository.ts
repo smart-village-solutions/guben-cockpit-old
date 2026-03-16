@@ -19,7 +19,7 @@ import { PostgrestClient } from "../upstream/postgrest-client.js";
 import { PublicContentRepository } from "./content-repository.js";
 import { PostgrestContentMapper, distanceInKm } from "./postgrest-content-mapper.js";
 import { PostgrestContentSource } from "./postgrest-content-source.js";
-import { EventFilters, EventCategoryRow, EventImageRow, EventUrlRow, LocationRow } from "./postgrest-content-types.js";
+import { EventFilters, EventCategoryRow, EventImageRow, EventUrlRow } from "./postgrest-content-types.js";
 
 export class PostgrestContentRepository implements PublicContentRepository {
   private readonly mapper: PostgrestContentMapper;
