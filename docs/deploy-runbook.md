@@ -10,15 +10,17 @@ Schnellablauf fuer akute Stoerungen oder dringende Releases.
 
 ```bash
 export TARGET_WEB_VERSION=v0.8.6
-export PORTAINER_URL='https://94.100.67.180:9443'
+export PORTAINER_URL='https://<portainer-host>:9443'
 export PORTAINER_TOKEN='<api-token>'
+export PORTAINER_STACK_ID='<stack-id>'
+export PORTAINER_ENDPOINT_ID='<endpoint-id>'
 ```
 
 2. Stack-Status laden:
 
 ```bash
-curl -ksS -H "X-API-Key: $PORTAINER_TOKEN" \
-  "$PORTAINER_URL/api/stacks/10?endpointId=3" > /tmp/p-stack-now.json
+curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
+  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID" > /tmp/p-stack-now.json
 ```
 
 3. Env fuer Deploy bauen:
@@ -37,11 +39,11 @@ jq -n \
   '{stackFileContent:$content, env:$env, prune:true, pullImage:true}' \
   > /tmp/p-update.json
 
-curl -ksS -X PUT \
+curl -fsS -X PUT \
   -H "X-API-Key: $PORTAINER_TOKEN" \
   -H 'Content-Type: application/json' \
   --data-binary @/tmp/p-update.json \
-  "$PORTAINER_URL/api/stacks/10?endpointId=3"
+  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID"
 ```
 
 5. Wenn `denied`: Images vorpullen und erneut deployen (dann `pullImage:false`).
@@ -49,16 +51,16 @@ curl -ksS -X PUT \
 6. Smoke-Test:
 
 ```bash
-curl -ksS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
-curl -ksS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
-curl -ksS -o /dev/null -w "booking/default/bookables: %{http_code}\n" https://cockpit.guben.de/api/booking/html/default/bookables
+curl -fsS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
+curl -fsS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
+curl -fsS -o /dev/null -w "booking/default/bookables: %{http_code}\n" https://cockpit.guben.de/api/booking/html/default/bookables
 ```
 
 Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schritte 3-6 wiederholen.
 
 ## Scope
 
-- Stack: `cockpit` (Portainer Stack ID `10`, Endpoint ID `3`)
+- Stack: `cockpit`
 - Produktions-Compose: `stack.prod.yml`
 - Wichtige Images:
   - `ghcr.io/smart-village-solutions/guben-cockpit-web:<tag>`
@@ -69,9 +71,16 @@ Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schrit
 
 - GitHub Tag fuer Release ist gepusht (z. B. `v0.8.6`)
 - GitHub Action fuer Image-Build ist erfolgreich
+- Portainer-URL, Stack-ID und Endpoint-ID liegen aus der privaten Betriebsdokumentation oder direkt aus Portainer vor
 - In Portainer existieren lauffaehige GHCR-Registries mit passenden Accounts:
   - fuer `smart-village-solutions/*`
   - fuer `agriculturedev/*`
+
+## TLS-Hinweis
+
+Die `curl`-Beispiele gehen von gueltig vertrauenswuerdigen Zertifikaten aus und verwenden bewusst kein `-k`.
+
+Wenn Portainer ueber eine interne CA oder ein Self-Signed-Zertifikat abgesichert ist, sollte das Zertifikat lokal vertraut oder gezielt per `--cacert /pfad/zur/ca.pem` uebergeben werden.
 
 ## 1. Pre-Deploy Checks
 
@@ -118,11 +127,13 @@ docker manifest inspect ghcr.io/smart-village-solutions/guben-cockpit-content-ga
 ## 3. Deploy (Portainer API, optional)
 
 ```bash
-PORTAINER_URL='https://94.100.67.180:9443'
+PORTAINER_URL='https://<portainer-host>:9443'
 PORTAINER_TOKEN='<api-token>'
+PORTAINER_STACK_ID='<stack-id>'
+PORTAINER_ENDPOINT_ID='<endpoint-id>'
 
-curl -ksS -H "X-API-Key: $PORTAINER_TOKEN" \
-  "$PORTAINER_URL/api/stacks/10?endpointId=3" > /tmp/p-stack-now.json
+curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
+  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID" > /tmp/p-stack-now.json
 
 # Env anpassen (Beispiel mit jq)
 jq '.Env | map(if .name=="VERSION_WEB" then .value="v0.8.6" else . end)' \
@@ -134,19 +145,19 @@ jq -n \
   '{stackFileContent:$content, env:$env, prune:true, pullImage:true}' \
   > /tmp/p-update.json
 
-curl -ksS -X PUT \
+curl -fsS -X PUT \
   -H "X-API-Key: $PORTAINER_TOKEN" \
   -H 'Content-Type: application/json' \
   --data-binary @/tmp/p-update.json \
-  "$PORTAINER_URL/api/stacks/10?endpointId=3"
+  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID"
 ```
 
 ## 4. Post-Deploy Smoke Tests
 
 ```bash
-curl -ksS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
-curl -ksS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
-curl -ksS -o /dev/null -w "booking/default/bookables: %{http_code}\n" https://cockpit.guben.de/api/booking/html/default/bookables
+curl -fsS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
+curl -fsS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
+curl -fsS -o /dev/null -w "booking/default/bookables: %{http_code}\n" https://cockpit.guben.de/api/booking/html/default/bookables
 ```
 
 Erwartung: jeweils `200`.
@@ -154,8 +165,8 @@ Erwartung: jeweils `200`.
 Zusatzcheck Container:
 
 ```bash
-curl -ksS -H "X-API-Key: $PORTAINER_TOKEN" \
-  "$PORTAINER_URL/api/endpoints/3/docker/containers/json?all=1" | \
+curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
+  "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT_ID/docker/containers/json?all=1" | \
   jq -r '.[] | select(([.Names[]] | join(" ") | test("guben-(web|api|db|postgrest|content-gateway)-prod"))) | [.Names[0], .Image, .State] | @tsv'
 ```
 
@@ -175,10 +186,10 @@ Beispiel manuelles Pullen via Portainer Docker API:
 
 ```bash
 # X-Registry-Auth ist Base64 von {"registryId": <id>}
-curl -ksS -X POST \
+curl -fsS -X POST \
   -H "X-API-Key: $PORTAINER_TOKEN" \
   -H "X-Registry-Auth: <base64-json>" \
-  "$PORTAINER_URL/api/endpoints/3/docker/images/create?fromImage=ghcr.io/agriculturedev/guben-cockpit-api&tag=v0.7.3"
+  "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT_ID/docker/images/create?fromImage=ghcr.io/agriculturedev/guben-cockpit-api&tag=v0.7.3"
 ```
 
 ### Fehlerbild: Env-Eintraege mit `:` im Namen
