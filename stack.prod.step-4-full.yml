@@ -1,13 +1,8 @@
 services:
-
-  # ── Legacy (unverändert) ──────────────────────────────────────────────────────
-
   guben-web-prod:
     image: ${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION_WEB}
     container_name: guben-web-prod
     restart: unless-stopped
-    environment:
-      VITE_CONTENT_GATEWAY_URL: http://content-gateway:5100
     networks:
       - websites
 
@@ -50,11 +45,6 @@ services:
     networks:
       - guben_prod
 
-  # ── Neuer Stack (ohne DB-Migrationen) ───────────────────────────────────────
-  #
-  # PostgREST und Content-Gateway greifen nur lesend auf die bestehende
-  # Produktivdatenbank zu. Es werden hier keine SQL-Init-Skripte ausgeführt.
-
   guben-postgrest-prod:
     image: postgrest/postgrest:v12.2.8
     container_name: guben-postgrest-prod
@@ -84,10 +74,8 @@ services:
       DEFAULT_LANGUAGE: de
       FALLBACK_LANGUAGE: de
     networks:
-      websites:
-        aliases:
-          - content-gateway
-      guben_prod: {}
+      - websites
+      - guben_prod
     depends_on:
       guben-postgrest-prod:
         condition: service_started

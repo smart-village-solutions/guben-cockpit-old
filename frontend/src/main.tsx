@@ -1,4 +1,4 @@
-import ReactDOM from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
@@ -38,9 +38,11 @@ declare module '@tanstack/react-router' {
 
 const rootElement = document.getElementById('app')!
 
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement)
-  root.render(<App/>)
+if (rootElement.hasChildNodes()) {
+  hydrateRoot(rootElement, <App />)
+} else {
+  const root = createRoot(rootElement)
+  root.render(<App />)
 }
 
 function App() {
