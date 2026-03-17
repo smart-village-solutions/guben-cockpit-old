@@ -7,7 +7,8 @@ services:
     container_name: guben-web-prod
     restart: unless-stopped
     environment:
-      VITE_CONTENT_GATEWAY_URL: http://content-gateway:5100
+      PRERENDER_CONTENT_GATEWAY_URL: http://content-gateway:5100
+      VITE_CONTENT_GATEWAY_URL: ${FRONTEND_BASEURI}
     networks:
       - websites
 

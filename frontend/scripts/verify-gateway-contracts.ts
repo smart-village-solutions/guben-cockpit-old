@@ -7,7 +7,10 @@ import {
   projectsContentSchema,
 } from "../../shared/public-content/contracts";
 
-const baseUrl = process.env.VITE_CONTENT_GATEWAY_URL?.trim() || "http://localhost:5100";
+const baseUrl =
+  process.env.PRERENDER_CONTENT_GATEWAY_URL?.trim() ||
+  process.env.VITE_CONTENT_GATEWAY_URL?.trim() ||
+  "http://localhost:5100";
 
 const fetchJson = async (path: string) => {
   const response = await fetch(`${baseUrl}${path}`);
