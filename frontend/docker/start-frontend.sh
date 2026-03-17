@@ -2,7 +2,7 @@
 set -eu
 
 wait_for_gateway() {
-  gateway_url="${VITE_CONTENT_GATEWAY_URL:-http://content-gateway:5100}"
+  gateway_url="${PRERENDER_CONTENT_GATEWAY_URL:-${VITE_CONTENT_GATEWAY_URL:-http://content-gateway:5100}}"
   echo "Waiting for content gateway at ${gateway_url}/health ..."
 
   attempts=0
