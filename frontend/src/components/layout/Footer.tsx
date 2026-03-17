@@ -10,7 +10,12 @@ import type { FooterItem } from "@shared/public-content/contracts";
 
 export const Footer = () => {
   return <GatewayFooter />;
-}
+};
+
+type FooterLink = {
+  name: string;
+  url: string;
+};
 
 const GatewayFooter = () => {
   const {data: footerItemResponse, isPending} = useGatewayFooterContent();
@@ -25,11 +30,11 @@ const GatewayFooter = () => {
     );
   }
 
-  const footerLinks = [
-    { name: t("Footer.PrivacyPolicy.name"), url: t("Footer.PrivacyPolicy.url") },
-    { name: t("Footer.Imprint.name"), url: t("Footer.Imprint.url") },
-    { name: t("Footer.Accessibility.name"), url: t("Footer.Accessibility.url") },
-    { name: t("Footer.Contact.name"), url: t("Footer.Contact.url") },
+  const footerLinks: FooterLink[] = [
+    { name: t("Footer.PrivacyPolicy.name") as string, url: t("Footer.PrivacyPolicy.url") as string },
+    { name: t("Footer.Imprint.name") as string, url: t("Footer.Imprint.url") as string },
+    { name: t("Footer.Accessibility.name") as string, url: t("Footer.Accessibility.url") as string },
+    { name: t("Footer.Contact.name") as string, url: t("Footer.Contact.url") as string },
   ];
 
   return (
@@ -59,8 +64,8 @@ const GatewayFooter = () => {
         ))}
       </ul>
     </footer>
-  )
-}
+  );
+};
 
 interface FooterItemDialogProps {
   footerItem: FooterItem;
@@ -88,5 +93,5 @@ export default function FooterItemDialog({footerItem}: FooterItemDialogProps) {
         }
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -2,6 +2,8 @@ import type { Coordinates } from "@shared/public-content/contracts";
 import { BookingEvent, Ticket, useEventStore } from "@/stores/eventStore";
 import { useEffect } from "react";
 
+const bookingBaseUrl = (import.meta.env.VITE_BOOKING_URL || "/api/booking").replace(/\/+$/, "");
+
 type EventIntegrationProps = {
   tenantId: string;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -13,7 +15,7 @@ export default function EventIntegration({ tenantId, setLoading, onDone }: Event
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const url = `${import.meta.env.VITE_BOOKING_URL}/html/${tenantId}/events`;
+      const url = `${bookingBaseUrl}/html/${tenantId}/events`;
       try {
         const resp = await fetch(url);
         const html = await resp.text();
@@ -53,7 +55,7 @@ export default function EventIntegration({ tenantId, setLoading, onDone }: Event
 
         await Promise.all(events.map(async (event) => {
           if (!event.bkid) return;
-          const detailUrl = `${import.meta.env.VITE_BOOKING_URL}/html/${tenantId}/events/${event.bkid}`;
+          const detailUrl = `${bookingBaseUrl}/html/${tenantId}/events/${event.bkid}`;
           try {
             const detailResp = await fetch(detailUrl);
             const detailHtml = await detailResp.text();

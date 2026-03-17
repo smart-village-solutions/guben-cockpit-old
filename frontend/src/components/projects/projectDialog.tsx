@@ -11,6 +11,7 @@ interface IProps {
   project: Project;
   children: React.ReactNode;
   className?: string;
+  school?: boolean;
 }
 
 export default function ProjectDialog({ project, children, className }: IProps) {

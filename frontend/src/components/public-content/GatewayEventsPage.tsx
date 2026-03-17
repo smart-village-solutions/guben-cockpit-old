@@ -146,13 +146,13 @@ export const GatewayEventsPage = () => {
     const location: Event["location"] = {
       id: crypto.randomUUID(),
       name: event.details?.eventLocation || "",
-      city: event.details?.city,
-      street: event.details?.street,
+      city: event.details?.city ?? null,
+      street: event.details?.street ?? null,
       telephoneNumber: event.contactPhone,
       fax: null,
       email: event.contactEmail,
       website: null,
-      zip: event.details?.zip,
+      zip: event.details?.zip ?? null,
     };
 
     const categories: Category[] = (event.flags ?? []).map((flag) => ({

@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Booking, Ticket, useBookingStore } from "@/stores/bookingStore";
 
+const bookingBaseUrl = (import.meta.env.VITE_BOOKING_URL || "/api/booking").replace(/\/+$/, "");
+
 type BookingIntegrationProps = {
   tenantId: string;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -15,7 +17,7 @@ export default function BookingIntegration({ tenantId, setLoading, onDone, priva
     const fetchBookings = async () => {
       setLoading(true);
 
-      const url = `${import.meta.env.VITE_BOOKING_URL}/html/${tenantId}/bookables`;
+      const url = `${bookingBaseUrl}/html/${tenantId}/bookables`;
 
       try {
         const resp = await fetch(url);
@@ -90,7 +92,7 @@ export default function BookingIntegration({ tenantId, setLoading, onDone, priva
         const fetchTickets = async (bookable: Booking) => {
           if (!bookable.bkid || bookable.bkid === "#") return;
 
-          const detailUrl = `${import.meta.env.VITE_BOOKING_URL}/html/${tenantId}/bookables/${bookable.bkid}`;
+          const detailUrl = `${bookingBaseUrl}/html/${tenantId}/bookables/${bookable.bkid}`;
           try {
             const resp = await fetch(detailUrl);
             const html = await resp.text();
