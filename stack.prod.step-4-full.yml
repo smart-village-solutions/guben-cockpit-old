@@ -1,0 +1,92 @@
+services:
+  guben-web-prod:
+    image: ${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION_WEB}
+    container_name: guben-web-prod
+    restart: unless-stopped
+    networks:
+      - websites
+
+  guben-api-prod:
+    image: ghcr.io/agriculturedev/guben-cockpit-api:${VERSION_API}
+    container_name: guben-api-prod
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Frontend:BaseUri: ${FRONTEND_BASEURI}
+      Jobs:ProjectImporter:BearerToken: ${ProjectImporterBearerToken}
+      ConnectionStrings:DefaultConnection: ${DATABASE_CONNECTION_STRING}
+      Keycloak:realm: ${KEYCLOAK_REALM}
+      Keycloak:auth-server-url: ${KEYCLOAK_AUTH_SERVER}
+      Keycloak:ssl-required: ${KEYCLOAK_ENABLE_SSL}
+      Keycloak:resource: ${KEYCLOAK_RESOURCE}
+      Keycloak:verify-token-audience: ${KEYCLOAK_VERIFY_AUDIENCE}
+      Nextcloud:BaseUri: ${NEXTCLOUD_BASE_URI}
+      Nextcloud:BaseDirectory: ${NEXTCLOUD_BASE_DIR}
+      Nextcloud:Username: ${NEXTCLOUD_USERNAME}
+      Nextcloud:Password: ${NEXTCLOUD_PASSWORD}
+    networks:
+      - websites
+      - guben_prod
+    depends_on:
+      guben-db-prod:
+        condition: service_started
+        restart: true
+
+  guben-db-prod:
+    container_name: guben-db-prod
+    restart: unless-stopped
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - guben-data-prod:/var/lib/postgresql/data/
+    networks:
+      - guben_prod
+
+  guben-postgrest-prod:
+    image: postgrest/postgrest:v12.2.8
+    container_name: guben-postgrest-prod
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: ${PGRST_DB_URI}
+      PGRST_DB_SCHEMA: public_content
+      PGRST_DB_ANON_ROLE: guben_public_content_reader
+      PGRST_SERVER_PORT: 3000
+    networks:
+      - guben_prod
+    depends_on:
+      guben-db-prod:
+        condition: service_started
+
+  guben-content-gateway-prod:
+    image: ${CONTAINER_REGISTRY}guben-cockpit-content-gateway:${VERSION_WEB}
+    container_name: guben-content-gateway-prod
+    restart: unless-stopped
+    environment:
+      PORT: 5100
+      LOG_LEVEL: warn
+      CONTENT_SOURCE_MODE: postgrest
+      POSTGREST_URL: http://guben-postgrest-prod:3000
+      PUBLIC_BASE_URL: ${FRONTEND_BASEURI}
+      MASTERPORTAL_URL: ${MASTERPORTAL_URL}
+      DEFAULT_LANGUAGE: de
+      FALLBACK_LANGUAGE: de
+    networks:
+      - websites
+      - guben_prod
+    depends_on:
+      guben-postgrest-prod:
+        condition: service_started
+
+networks:
+  guben_prod:
+    driver: bridge
+  websites:
+    external: true
+
+volumes:
+  guben-data-prod:
+    external: true
+    name: cockpit_guben-data-prod
