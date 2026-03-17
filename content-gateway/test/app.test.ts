@@ -5,7 +5,6 @@ import { GatewayError } from "../src/errors.js";
 import type { PublicContentRepository } from "../src/content/content-repository.js";
 import { loadConfig } from "../src/config.js";
 import { mockDashboardContent, mockEventDetail, mockEventsContent, mockFooterContent, mockHomeContent, mockMapContent, mockProjectsContent } from "../src/content/mock-data.js";
-import { CmsClient } from "../src/upstream/cms-client.js";
 
 const baseConfig = loadConfig({
   PORT: "5100",
@@ -201,17 +200,11 @@ describe("content gateway", () => {
     });
   });
 
-  it("maps cms failures to the same outage contract", async () => {
+  it("maps unexpected errors to a gateway internal error", async () => {
     const failingRepository: PublicContentRepository = {
       ...repository,
       getHome: vi.fn(async () => {
-        throw new GatewayError({
-          code: "UPSTREAM_UNAVAILABLE",
-          message: "cms request failed",
-          statusCode: 503,
-          upstream: "cms",
-          retryable: true,
-        });
+        throw new Error("unexpected failure");
       }),
     };
 
@@ -221,43 +214,13 @@ describe("content gateway", () => {
       url: "/api/content/home",
     });
 
-    expect(response.statusCode).toBe(503);
+    expect(response.statusCode).toBe(500);
     expect(response.json()).toEqual({
       error: expect.objectContaining({
-        code: "UPSTREAM_UNAVAILABLE",
-        upstream: "cms",
-        retryable: true,
+        code: "INTERNAL_ERROR",
+        upstream: "gateway",
+        retryable: false,
       }),
     });
-  });
-
-  it("never leaks cms credentials in thrown errors", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ errors: [{ message: "invalid" }] }),
-    });
-    vi.stubGlobal("fetch", fetchMock);
-
-    const client = new CmsClient({
-      CMS_GRAPHQL_URL: "https://cms.example.com/graphql",
-      CMS_API_KEY: "super-secret-key",
-      CMS_API_KEY_HEADER: "x-api-key",
-      CMS_TIMEOUT_MS: 100,
-      CMS_RETRY_ATTEMPTS: 0,
-      CMS_RETRY_BACKOFF_MS: 0,
-    });
-    await expect(client.execute("query { ping }")).rejects.toThrow(
-      "cms returned an invalid GraphQL payload",
-    );
-
-    const [url, init] = fetchMock.mock.calls[0] as [string, { headers: Record<string, string> }];
-    expect(url).toBe("https://cms.example.com/graphql");
-    expect(init.headers["x-api-key"]).toBe("super-secret-key");
-
-    try {
-      await client.execute("query { ping }");
-    } catch (error) {
-      expect(String(error)).not.toContain("super-secret-key");
-    }
   });
 });

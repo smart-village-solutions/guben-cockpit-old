@@ -8,7 +8,7 @@ type RequestJsonOptions = {
   timeoutMs: number;
   retryAttempts: number;
   retryBackoffMs: number;
-  upstream: "cms" | "postgrest";
+  upstream: "postgrest";
 };
 
 const delay = (ms: number) =>
