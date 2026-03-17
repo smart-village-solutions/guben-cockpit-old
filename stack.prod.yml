@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       PRERENDER_CONTENT_GATEWAY_URL: http://content-gateway:5100
-      VITE_CONTENT_GATEWAY_URL: ${FRONTEND_BASEURI}
+      VITE_CONTENT_GATEWAY_URL: ${CONTENT_GATEWAY_PUBLIC_URL}
     networks:
       - websites
 
