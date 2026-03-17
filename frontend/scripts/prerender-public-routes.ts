@@ -10,7 +10,7 @@ import {
   projectsContentSchema,
 } from "../../shared/public-content/contracts";
 
-const baseUrl = process.env.VITE_CONTENT_GATEWAY_URL ?? "http://localhost:5100";
+const baseUrl = process.env.VITE_CONTENT_GATEWAY_URL?.trim() || "http://localhost:5100";
 const distDir = path.resolve(process.cwd(), "dist");
 
 const fetchJson = async <T>(pathName: string, schema: { parse(input: unknown): T }) => {

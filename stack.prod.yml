@@ -6,6 +6,8 @@ services:
     image: ${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION_WEB}
     container_name: guben-web-prod
     restart: unless-stopped
+    environment:
+      VITE_CONTENT_GATEWAY_URL: http://content-gateway:5100
     networks:
       - websites
 
