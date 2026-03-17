@@ -82,8 +82,10 @@ services:
       DEFAULT_LANGUAGE: de
       FALLBACK_LANGUAGE: de
     networks:
-      - websites
-      - guben_prod
+      websites:
+        aliases:
+          - content-gateway
+      guben_prod: {}
     depends_on:
       guben-postgrest-prod:
         condition: service_started
