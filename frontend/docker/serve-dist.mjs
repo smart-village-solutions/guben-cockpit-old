@@ -6,6 +6,7 @@ import path from "node:path";
 const rootDir = path.resolve(process.cwd(), "dist");
 const fallbackFile = path.join(rootDir, "index.html");
 const port = Number(process.env.PORT ?? 3000);
+const gatewayProxyBaseUrl = process.env.INTERNAL_CONTENT_GATEWAY_URL ?? "http://content-gateway:5100";
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -66,6 +67,35 @@ const resolveRequestFile = async (requestPath) => {
   return fallbackFile;
 };
 
+const shouldProxyToGateway = (requestPath) => {
+  const normalizedPath = decodeURIComponent((requestPath ?? "/").split("?")[0] || "/");
+  return normalizedPath === "/api/content" || normalizedPath.startsWith("/api/content/");
+};
+
+const proxyToGateway = async (request, response) => {
+  const targetUrl = new URL(request.url ?? "/", gatewayProxyBaseUrl).toString();
+  const upstreamResponse = await fetch(targetUrl, {
+    method: request.method,
+    headers: {
+      accept: request.headers.accept ?? "application/json",
+      "accept-language": request.headers["accept-language"] ?? "",
+      "x-forwarded-host": request.headers.host ?? "",
+      "x-forwarded-proto": "https",
+    },
+  });
+
+  const headers = Object.fromEntries(upstreamResponse.headers.entries());
+  response.writeHead(upstreamResponse.status, headers);
+
+  if (request.method === "HEAD") {
+    response.end();
+    return;
+  }
+
+  const bodyText = await upstreamResponse.text();
+  response.end(bodyText);
+};
+
 const server = createServer(async (request, response) => {
   const method = request.method ?? "GET";
   if (method !== "GET" && method !== "HEAD") {
@@ -75,6 +105,11 @@ const server = createServer(async (request, response) => {
   }
 
   try {
+    if (shouldProxyToGateway(request.url)) {
+      await proxyToGateway(request, response);
+      return;
+    }
+
     const requestFile = await resolveRequestFile(request.url ?? "/");
     if (!requestFile) {
       response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
