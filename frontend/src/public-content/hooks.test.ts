@@ -62,6 +62,37 @@ const createProjectsContent = (
   });
 
 describe("loadGatewayProjectDetailContent", () => {
+  it("returns immediately when the project is already present on the first page", async () => {
+    const fetcher = vi.fn() as unknown as ProjectFetcher & ReturnType<typeof vi.fn>;
+    vi.mocked(fetcher).mockResolvedValue(
+      createProjectsContent(
+        [
+          {
+            id: "business-1",
+            type: 0,
+            title: "Business 1",
+            description: "Business 1",
+            fullText: "Business 1",
+            imageCaption: null,
+            imageUrl: null,
+            imageCredits: null,
+            published: true,
+          },
+        ],
+        3,
+      ),
+    );
+
+    const result = await loadGatewayProjectDetailContent("de", "school-1", fetcher);
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(result._category).toBe("schools");
+    expect(result.results[0]).toMatchObject({
+      id: "school-1",
+      _category: "schools",
+    });
+  });
+
   it("fetches additional business pages until the project is found", async () => {
     const fetcher = vi.fn() as unknown as ProjectFetcher & ReturnType<typeof vi.fn>;
     vi.mocked(fetcher)
@@ -122,11 +153,13 @@ describe("loadGatewayProjectDetailContent", () => {
   it("throws a clear error when the requested project does not exist", async () => {
     const fetcher = vi.fn() as unknown as ProjectFetcher & ReturnType<typeof vi.fn>;
     vi.mocked(fetcher).mockResolvedValue(
-      createProjectsContent([], 1),
+      createProjectsContent([], 2),
     );
 
     await expect(
       loadGatewayProjectDetailContent("de", "missing", fetcher),
     ).rejects.toThrow("Project with ID missing not found");
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 });

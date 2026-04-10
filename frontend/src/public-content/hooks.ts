@@ -39,50 +39,55 @@ export const loadGatewayProjectDetailContent = async (
   id: string,
   fetcher: ProjectFetcher = fetchGatewayJson,
 ): Promise<GatewayProjectDetailResult> => {
-  let allProjects: Array<Project & { _category: ProjectCategory }> = [];
-
   const firstData = await fetcher("/api/content/projects", projectsContentSchema, {
     lang: language,
     pageNumber: 1,
     pageSize: 100,
   });
 
-  allProjects = [
+  const firstPageProjects = [
     ...withCategory(firstData.featuredProjects, "featured"),
     ...withCategory(firstData.schools, "schools"),
     ...withCategory(firstData.businesses.results, "marketplace"),
   ];
 
-  let hasMore = firstData.businesses.pageCount > 1;
-  let pageNumber = 2;
+  const firstPageMatch = firstPageProjects.find((entry) => entry.id === id);
 
-  while (hasMore) {
+  if (firstPageMatch) {
+    return {
+      results: [firstPageMatch],
+      _category: firstPageMatch._category,
+      seo: firstData.seo,
+    };
+  }
+
+  let pageNumber = 2;
+  let pageCount = firstData.businesses.pageCount;
+
+  while (pageNumber <= pageCount) {
     const data = await fetcher("/api/content/projects", projectsContentSchema, {
       lang: language,
       pageNumber,
       pageSize: 100,
     });
 
-    allProjects = [
-      ...allProjects,
-      ...withCategory(data.businesses.results, "marketplace"),
-    ];
+    const project = withCategory(data.businesses.results, "marketplace").find(
+      (entry) => entry.id === id,
+    );
 
-    hasMore = pageNumber < data.businesses.pageCount;
+    if (project) {
+      return {
+        results: [project],
+        _category: project._category,
+        seo: firstData.seo,
+      };
+    }
+
+    pageCount = data.businesses.pageCount;
     pageNumber += 1;
   }
 
-  const project = allProjects.find((entry) => entry.id === id);
-
-  if (!project) {
-    throw new Error(`Project with ID ${id} not found`);
-  }
-
-  return {
-    results: [project],
-    _category: project._category,
-    seo: firstData.seo,
-  };
+  throw new Error(`Project with ID ${id} not found`);
 };
 
 const useContentLanguage = () => {
