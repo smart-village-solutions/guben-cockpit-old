@@ -12,17 +12,19 @@ interface EditIconButtonProps extends WithClassName {
   onClick?: () => void;
 }
 
-const IconButton = (props: { disabled?: boolean, onClick?: () => void }) => (
-  <div
-    onClick={props.disabled !== undefined && props.disabled ? undefined : props.onClick}
+const IconButton = (props: { disabled?: boolean; onClick?: () => void }) => (
+  <button
+    type="button"
+    disabled={props.disabled}
+    onClick={props.disabled ? undefined : props.onClick}
     className={cn("rounded-full p-1.5 border size-8", props.disabled
       ? "bg-gray-200 text-gray-400"
       : "bg-white hover:cursor-pointer hover:bg-gray-200"
     )}
   >
     <PencilIcon className="size-full" />
-  </div>
-)
+  </button>
+);
 
 export const EditIconButton = ({ tooltip, disabledTooltip, onClick, className, dialogTrigger = false, disabled = false }: EditIconButtonProps) => {
   return (
@@ -32,7 +34,7 @@ export const EditIconButton = ({ tooltip, disabledTooltip, onClick, className, d
           <DialogTrigger asChild>
             <IconButton {...{ disabled }} />
           </DialogTrigger>
-        ) : <IconButton {...{ onclick, disabled }} />
+        ) : <IconButton {...{ onClick, disabled }} />
       }
     </CustomTooltip>
   );

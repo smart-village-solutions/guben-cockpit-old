@@ -11,19 +11,21 @@ interface DeleteIconButtonProps {
   onClick?: () => void;
 }
 
-const IconButton = (props: { disabled?: boolean, onClick?: () => void }) => (
-  <div
-    onClick={props.disabled !== undefined && props.disabled ? undefined : props.onClick}
+const IconButton = (props: { disabled?: boolean; onClick?: () => void }) => (
+  <button
+    type="button"
+    disabled={props.disabled}
+    onClick={props.disabled ? undefined : props.onClick}
     className={cn("rounded-full p-1.5 border size-8", props.disabled
       ? "bg-gray-200 text-gray-400"
       : "text-red-500 bg-white hover:cursor-pointer hover:bg-gray-200"
     )}
   >
     <Trash2Icon className="size-full" />
-  </div>
-)
+  </button>
+);
 
-export const DeleteIconButton = ({tooltip, dialogTrigger, disabled, disabledTooltip, onClick}: DeleteIconButtonProps) => {
+export const DeleteIconButton = ({ tooltip, dialogTrigger, disabled, disabledTooltip, onClick }: DeleteIconButtonProps) => {
   return (
     <CustomTooltip text={disabled ? disabledTooltip ?? "" : tooltip}>
       {dialogTrigger
@@ -31,7 +33,7 @@ export const DeleteIconButton = ({tooltip, dialogTrigger, disabled, disabledTool
           <DialogTrigger asChild>
             <IconButton {...{ disabled }} />
           </DialogTrigger>
-        ) : <IconButton {...{ onclick, disabled }} />
+        ) : <IconButton {...{ onClick, disabled }} />
       }
     </CustomTooltip>
   );

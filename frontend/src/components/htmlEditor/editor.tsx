@@ -42,8 +42,6 @@ interface MenuProps {
 }
 
 const HeadingDropdown = ({ editor }: MenuProps) => {
-  if (!editor) return null;
-
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const options: Level[] = [1, 2, 3];
@@ -61,6 +59,8 @@ const HeadingDropdown = ({ editor }: MenuProps) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  if (!editor) return null;
 
   return (
     <div className="relative inline-block" ref={dropdownRef}>
@@ -112,9 +112,6 @@ const HeadingDropdown = ({ editor }: MenuProps) => {
 
 const ColorPicker = ({ editor }: MenuProps) => {
   const [color, setColor] = useState<string>("#000000");
-  if (!editor) return null;
-
-
   // Preset common colors
   const presetColors = [
     '#cd1421', // Guben Red
@@ -129,9 +126,15 @@ const ColorPicker = ({ editor }: MenuProps) => {
   ];
 
   const setColorOverride = useDebouncedCallback((color: string) => {
+    if (!editor) {
+      return;
+    }
+
     setColor(color)
     editor.chain().focus().setColor(color).run()
   }, 100);
+
+  if (!editor) return null;
 
   return (
     <div className="relative inline-block group">

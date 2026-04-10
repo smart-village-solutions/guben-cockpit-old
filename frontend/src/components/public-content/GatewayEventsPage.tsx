@@ -74,11 +74,17 @@ export const GatewayEventsPage = () => {
   });
   useRouteMetadata(query.data?.seo);
 
+  const tenantIds = query.data?.events.bookingTenants ?? [];
+  const currentTenant = tenantIds[currentTenantIndex];
+  const shouldShowIntegration = Boolean(
+    currentTenant && !processedTenants.has(currentTenant.tenantId),
+  );
+  const currentLang = i18next.language as Language;
+  const [translationsReady, setTranslationsReady] = useState(false);
+
   if (!isGatewayPublicContentEnabled) {
     return <PublicContentDisabledState />;
   }
-
-  const tenantIds = query.data?.events.bookingTenants ?? [];
 
   const handleTenantDone = useCallback(() => {
     const currentTenant = tenantIds[currentTenantIndex];
@@ -93,9 +99,6 @@ export const GatewayEventsPage = () => {
       setLoading(false);
     }
   }, [currentTenantIndex, markProcessedTenants, tenantIds]);
-
-  const currentTenant = tenantIds[currentTenantIndex];
-  const shouldShowIntegration = currentTenant && !processedTenants.has(currentTenant.tenantId);
 
   useEffect(() => {
     if (tenantIds.length === 0) {
@@ -237,9 +240,6 @@ export const GatewayEventsPage = () => {
     pagination.setTotal(allEvents.length);
     pagination.setPageCount(query.data?.events.pageCount ?? 1);
   }, [allEvents.length, query.data]);
-
-  const currentLang = i18next.language as Language;
-  const [translationsReady, setTranslationsReady] = useState(false);
 
   // Progressive loading: show content immediately, load translations in background
   useEffect(() => {

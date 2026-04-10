@@ -16,16 +16,16 @@ export const ProjectsMarketplacePage = () => {
   const query = useGatewayProjectsContent(pagination.page, pagination.pageSize);
   useRouteMetadata(query.data?.seo);
 
-  if (!isGatewayPublicContentEnabled) {
-    return <PublicContentDisabledState />;
-  }
-
   useEffect(() => {
     if (query.data) {
       pagination.setTotal(query.data.businesses.totalCount);
       pagination.setPageCount(query.data.businesses.pageCount);
     }
-  }, [query.data]);
+  }, [pagination, query.data]);
+
+  if (!isGatewayPublicContentEnabled) {
+    return <PublicContentDisabledState />;
+  }
 
   if (query.isPending) {
     return (
