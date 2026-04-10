@@ -41,7 +41,7 @@ describe("server bootstrap", () => {
       }),
     }));
 
-    await import("../src/server.ts");
+    await import("../src/server.js");
 
     expect(listen).toHaveBeenCalledWith({
       host: "0.0.0.0",
@@ -77,7 +77,7 @@ describe("server bootstrap", () => {
 
     const originalExitCode = process.exitCode;
 
-    await import("../src/server.ts");
+    await import("../src/server.js");
 
     expect(error).toHaveBeenCalledWith(expect.any(Error), "Failed to start content gateway");
     expect(process.exitCode).toBe(1);
@@ -118,9 +118,18 @@ describe("server bootstrap", () => {
       createApp,
     }));
 
-    await import("../src/server.ts");
+    await import("../src/server.js");
 
-    const options = createApp.mock.calls[0][0];
+    const [options] = (createApp.mock.calls as unknown as Array<[{
+      readinessProbe: () => Promise<{
+        ready: boolean;
+        checks: Record<string, { ready: boolean }>;
+      }>;
+    }]>)[0] ?? [];
+    expect(options).toBeDefined();
+    if (!options) {
+      throw new Error("createApp was not called");
+    }
     await expect(options.readinessProbe()).resolves.toEqual({
       ready: true,
       checks: {
