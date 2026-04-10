@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { GatewayError } from "../src/errors.js";
 import { requestJson } from "../src/upstream/request-json.js";
 
 describe("requestJson", () => {
