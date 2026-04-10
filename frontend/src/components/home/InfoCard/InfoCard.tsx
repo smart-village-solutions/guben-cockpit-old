@@ -33,9 +33,9 @@ export const InfoCard = ({ card, className }: Props) => {
   return (
     <>
       <GenericCard
-        imageUrl={card.imageUrl}
-        imageAlt={card.imageAlt}
-        title={card.title}
+        imageUrl={card.imageUrl ?? undefined}
+        imageAlt={card.imageAlt ?? undefined}
+        title={card.title ?? ""}
         titleSize="text-lg"
         description={renderDescription(false)}
         descriptionLines={3}
@@ -58,9 +58,9 @@ export const InfoCard = ({ card, className }: Props) => {
         <DialogContent className="p-0 max-w-2xl">
           <Card className="flex flex-col bg-white p-4 rounded-lg shadow-none">
             <GenericCard
-              imageUrl={card.imageUrl}
-              imageAlt={card.imageAlt}
-              title={card.title}
+              imageUrl={card.imageUrl ?? undefined}
+              imageAlt={card.imageAlt ?? undefined}
+              title={card.title ?? ""}
               titleSize="text-xl"
               description={renderDescription(true)}
               buttonLabel={card.button?.title}
