@@ -45,7 +45,7 @@ const filtersSchema = z
 
 type FiltersType = z.infer<typeof filtersSchema>;
 
-export const GatewayEventsPage = () => {
+const GatewayEventsPageContent = () => {
   const { t } = useTranslation(["common", "events"]);
   const bookingEvents = useEventStore((state) => state.events);
   const processedTenants = useEventStore((state) => state.processedTenants);
@@ -81,10 +81,6 @@ export const GatewayEventsPage = () => {
   );
   const currentLang = i18next.language as Language;
   const [translationsReady, setTranslationsReady] = useState(false);
-
-  if (!isGatewayPublicContentEnabled) {
-    return <PublicContentDisabledState />;
-  }
 
   const handleTenantDone = useCallback(() => {
     const currentTenant = tenantIds[currentTenantIndex];
@@ -372,6 +368,14 @@ export const GatewayEventsPage = () => {
       </section>
     </main>
   );
+};
+
+export const GatewayEventsPage = () => {
+  if (!isGatewayPublicContentEnabled) {
+    return <PublicContentDisabledState />;
+  }
+
+  return <GatewayEventsPageContent />;
 };
 
 function toRadians(angle: number): number {

@@ -13,15 +13,16 @@ import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 export const ProjectsMarketplacePage = () => {
   const pagination = usePagination();
+  const { setTotal, setPageCount } = pagination;
   const query = useGatewayProjectsContent(pagination.page, pagination.pageSize);
   useRouteMetadata(query.data?.seo);
 
   useEffect(() => {
     if (query.data) {
-      pagination.setTotal(query.data.businesses.totalCount);
-      pagination.setPageCount(query.data.businesses.pageCount);
+      setTotal(query.data.businesses.totalCount);
+      setPageCount(query.data.businesses.pageCount);
     }
-  }, [pagination, query.data]);
+  }, [query.data, setPageCount, setTotal]);
 
   if (!isGatewayPublicContentEnabled) {
     return <PublicContentDisabledState />;
