@@ -2,6 +2,7 @@ import { after, before, describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,12 +19,44 @@ const postgrestContainer = `guben-postgrest-test-${suffix}`;
 const dbUri = "postgres://guben:VeryStrongPassword123@postgres-test:5432/guben";
 const port = 36000 + Number.parseInt(suffix.slice(0, 3), 16);
 
-const run = (args, options = {}) =>
-  execFileSync("docker", args, {
+const run = (args, options = {}) => {
+  const result = spawnSync("docker", args, {
     encoding: "utf8",
     stdio: ["pipe", "pipe", "pipe"],
     ...options,
-  }).trim();
+  });
+
+  if (result.status !== 0) {
+    throw new Error((result.stderr || result.stdout || `docker ${args.join(" ")} failed`).trim());
+  }
+
+  return result.stdout.trim();
+};
+
+const inspectContainerStatus = (containerName) =>
+  spawnSync(
+    "docker",
+    ["inspect", containerName, "--format", "{{.State.Status}}"],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+  ).stdout.trim();
+
+const ensureContainerRunning = async (containerName) => {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const status = inspectContainerStatus(containerName);
+
+    if (status === "running") {
+      return;
+    }
+
+    if (status === "created" || status === "exited") {
+      spawnSync("docker", ["start", containerName], { stdio: "ignore" });
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  throw new Error(`Timed out waiting for container ${containerName} to start`);
+};
 
 const waitForHttp = (url) => {
   for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -39,18 +72,26 @@ const waitForHttp = (url) => {
 
 const waitForPostgres = async () => {
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    const ready = spawnSync("docker", [
-      "exec",
-      postgresContainer,
-        "pg_isready",
+    const ready = spawnSync(
+      "docker",
+      [
+        "exec",
+        postgresContainer,
+        "psql",
         "-U",
         "guben",
         "-d",
         "guben",
-    ]);
+        "-c",
+        "SELECT 1",
+      ],
+      { stdio: "ignore" },
+    );
+
     if (ready.status === 0) {
       return;
     }
+
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
@@ -72,6 +113,27 @@ const execPsql = (sql) =>
     "-c",
     sql,
   ]);
+
+const execPsqlFile = (filePath) =>
+  run(
+    [
+      "exec",
+      "-i",
+      postgresContainer,
+      "psql",
+      "-U",
+      "guben",
+      "-d",
+      "guben",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-f",
+      "-",
+    ],
+    {
+      input: readFileSync(filePath, "utf8"),
+    },
+  );
 
 const setupSeedData = () => {
   execPsql(`
@@ -197,8 +259,7 @@ describe("postgrest smoke", { skip: !dockerAvailable, timeout: 60000 }, () => {
   before(async () => {
     run(["network", "create", networkName]);
     run([
-      "run",
-      "-d",
+      "create",
       "--name",
       postgresContainer,
       "--network",
@@ -214,33 +275,26 @@ describe("postgrest smoke", { skip: !dockerAvailable, timeout: 60000 }, () => {
       postgresImage,
     ]);
 
+    run(["start", postgresContainer]);
+    await ensureContainerRunning(postgresContainer);
     await waitForPostgres();
-
     setupSeedData();
 
+    const sqlFiles = [
+      path.join(repoRoot, "sql", "001_create_role.sql"),
+      path.join(repoRoot, "sql", "002_create_schema_and_views.sql"),
+      path.join(repoRoot, "sql", "003_grants.sql"),
+      path.join(repoRoot, "checks", "verify_permissions.sql"),
+    ];
+
     for (let pass = 0; pass < 2; pass += 1) {
-      run([
-        "run",
-        "--rm",
-        "--network",
-        networkName,
-        "-e",
-        `PGRST_DB_URI=${dbUri}`,
-        "-v",
-        `${path.join(repoRoot, "sql")}:/sql:ro`,
-        "-v",
-        `${path.join(repoRoot, "checks")}:/checks:ro`,
-        "-v",
-        `${path.join(repoRoot, "bootstrap.sh")}:/bootstrap.sh:ro`,
-        postgresImage,
-        "/bin/sh",
-        "/bootstrap.sh",
-      ]);
+      for (const filePath of sqlFiles) {
+        execPsqlFile(filePath);
+      }
     }
 
     run([
-      "run",
-      "-d",
+      "create",
       "--name",
       postgrestContainer,
       "--network",
@@ -261,6 +315,9 @@ describe("postgrest smoke", { skip: !dockerAvailable, timeout: 60000 }, () => {
       "PGRST_SERVER_PORT=3000",
       postgrestImage,
     ]);
+
+    run(["start", postgrestContainer]);
+    await ensureContainerRunning(postgrestContainer);
   });
 
   after(() => {
@@ -287,10 +344,10 @@ describe("postgrest smoke", { skip: !dockerAvailable, timeout: 60000 }, () => {
       assert.equal(deniedStatus, "404");
 
       const readerCheck = execPsql(`
-      SET ROLE guben_public_content_reader;
-      SELECT tenant_id FROM public_content.booking_tenants;
-      RESET ROLE;
-    `);
+        SET ROLE guben_public_content_reader;
+        SELECT tenant_id FROM public_content.booking_tenants;
+        RESET ROLE;
+      `);
       assert.match(readerCheck, /tenant-public/);
     },
   );
