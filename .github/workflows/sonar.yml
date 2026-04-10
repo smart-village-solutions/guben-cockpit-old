@@ -50,6 +50,7 @@ jobs:
             echo "Set either SONAR_HOST_URL for SonarQube or SONAR_ORGANIZATION for SonarCloud."
             exit 1
           fi
+          test -f shared/coverage/lcov.info
           test -f content-gateway/coverage/lcov.info
           test -f frontend/coverage/lcov.info
 
