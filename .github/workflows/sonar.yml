@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   sonar:
-    if: ${{ secrets.SONAR_TOKEN != '' }}
     runs-on: ubuntu-latest
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -46,6 +45,7 @@ jobs:
 
       - name: Validate Sonar configuration
         run: |
+          test -n "$SONAR_TOKEN"
           if [ -z "$SONAR_HOST_URL" ] && [ -z "$SONAR_ORGANIZATION" ]; then
             echo "Set either SONAR_HOST_URL for SonarQube or SONAR_ORGANIZATION for SonarCloud."
             exit 1
