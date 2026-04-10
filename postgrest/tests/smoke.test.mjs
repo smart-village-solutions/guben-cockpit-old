@@ -2,7 +2,7 @@ import { after, before, describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -56,6 +56,24 @@ const ensureContainerRunning = async (containerName) => {
   }
 
   throw new Error(`Timed out waiting for container ${containerName} to start`);
+};
+
+const resolveRepoFile = (...segments) => {
+  const candidates = [
+    path.join(repoRoot, ...segments),
+    path.join(process.cwd(), ...segments),
+    path.join(process.cwd(), "postgrest", ...segments),
+  ];
+
+  const resolved = candidates.find((candidate) => existsSync(candidate));
+
+  if (!resolved) {
+    throw new Error(
+      `Could not resolve ${segments.join("/")} from ${process.cwd()} or ${repoRoot}`,
+    );
+  }
+
+  return resolved;
 };
 
 const waitForHttp = (url) => {
@@ -281,10 +299,10 @@ describe("postgrest smoke", { skip: !dockerAvailable, timeout: 60000 }, () => {
     setupSeedData();
 
     const sqlFiles = [
-      path.join(repoRoot, "sql", "001_create_role.sql"),
-      path.join(repoRoot, "sql", "002_create_schema_and_views.sql"),
-      path.join(repoRoot, "sql", "003_grants.sql"),
-      path.join(repoRoot, "checks", "verify_permissions.sql"),
+      resolveRepoFile("sql", "001_create_role.sql"),
+      resolveRepoFile("sql", "002_create_schema_and_views.sql"),
+      resolveRepoFile("sql", "003_grants.sql"),
+      resolveRepoFile("checks", "verify_permissions.sql"),
     ];
 
     for (let pass = 0; pass < 2; pass += 1) {
