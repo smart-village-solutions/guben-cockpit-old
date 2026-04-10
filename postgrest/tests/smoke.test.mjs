@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, "..", "..");
+const packageRoot = path.resolve(__dirname, "..");
 const postgresImage = "postgres:16-alpine";
 const postgrestImage = "postgrest/postgrest:v12.2.8";
 
@@ -58,19 +58,11 @@ const ensureContainerRunning = async (containerName) => {
   throw new Error(`Timed out waiting for container ${containerName} to start`);
 };
 
-const resolveRepoFile = (...segments) => {
-  const candidates = [
-    path.join(repoRoot, ...segments),
-    path.join(process.cwd(), ...segments),
-    path.join(process.cwd(), "postgrest", ...segments),
-  ];
+const resolvePackageFile = (...segments) => {
+  const resolved = path.join(packageRoot, ...segments);
 
-  const resolved = candidates.find((candidate) => existsSync(candidate));
-
-  if (!resolved) {
-    throw new Error(
-      `Could not resolve ${segments.join("/")} from ${process.cwd()} or ${repoRoot}`,
-    );
+  if (!existsSync(resolved)) {
+    throw new Error(`Could not resolve ${segments.join("/")} from ${packageRoot}`);
   }
 
   return resolved;
@@ -299,10 +291,10 @@ describe("postgrest smoke", { skip: !dockerAvailable, timeout: 60000 }, () => {
     setupSeedData();
 
     const sqlFiles = [
-      resolveRepoFile("sql", "001_create_role.sql"),
-      resolveRepoFile("sql", "002_create_schema_and_views.sql"),
-      resolveRepoFile("sql", "003_grants.sql"),
-      resolveRepoFile("checks", "verify_permissions.sql"),
+      resolvePackageFile("sql", "001_create_role.sql"),
+      resolvePackageFile("sql", "002_create_schema_and_views.sql"),
+      resolvePackageFile("sql", "003_grants.sql"),
+      resolvePackageFile("checks", "verify_permissions.sql"),
     ];
 
     for (let pass = 0; pass < 2; pass += 1) {
