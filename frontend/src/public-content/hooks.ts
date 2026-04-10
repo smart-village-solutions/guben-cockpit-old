@@ -9,9 +9,86 @@ import {
   homeContentSchema,
   mapContentSchema,
   projectsContentSchema,
+  type Project,
+  type ProjectsContent,
 } from "@shared/public-content/contracts";
 import { fetchGatewayJson } from "./client";
 import { isGatewayPublicContentEnabled } from "./source";
+
+type ProjectCategory = "featured" | "schools" | "marketplace";
+type ProjectFetcher = (
+  path: string,
+  schema: typeof projectsContentSchema,
+  searchParams?: Record<string, string | number | undefined>,
+) => Promise<ProjectsContent>;
+
+export type GatewayProjectDetailResult = {
+  results: [Project & { _category: ProjectCategory }];
+  _category: ProjectCategory;
+  seo: ProjectsContent["seo"];
+};
+
+const withCategory = (projects: Project[], category: ProjectCategory) =>
+  projects.map((project) => ({
+    ...project,
+    _category: category,
+  }));
+
+export const loadGatewayProjectDetailContent = async (
+  language: string,
+  id: string,
+  fetcher: ProjectFetcher = fetchGatewayJson,
+): Promise<GatewayProjectDetailResult> => {
+  const firstData = await fetcher("/api/content/projects", projectsContentSchema, {
+    lang: language,
+    pageNumber: 1,
+    pageSize: 100,
+  });
+
+  const firstPageProjects = [
+    ...withCategory(firstData.featuredProjects, "featured"),
+    ...withCategory(firstData.schools, "schools"),
+    ...withCategory(firstData.businesses.results, "marketplace"),
+  ];
+
+  const firstPageMatch = firstPageProjects.find((entry) => entry.id === id);
+
+  if (firstPageMatch) {
+    return {
+      results: [firstPageMatch],
+      _category: firstPageMatch._category,
+      seo: firstData.seo,
+    };
+  }
+
+  let pageNumber = 2;
+  let pageCount = firstData.businesses.pageCount;
+
+  while (pageNumber <= pageCount) {
+    const data = await fetcher("/api/content/projects", projectsContentSchema, {
+      lang: language,
+      pageNumber,
+      pageSize: 100,
+    });
+
+    const project = withCategory(data.businesses.results, "marketplace").find(
+      (entry) => entry.id === id,
+    );
+
+    if (project) {
+      return {
+        results: [project],
+        _category: project._category,
+        seo: firstData.seo,
+      };
+    }
+
+    pageCount = data.businesses.pageCount;
+    pageNumber += 1;
+  }
+
+  throw new Error(`Project with ID ${id} not found`);
+};
 
 const useContentLanguage = () => {
   const { i18n } = useTranslation();
@@ -49,54 +126,7 @@ export const useGatewayProjectDetailContent = (id: string) => {
   return useQuery({
     queryKey: ["gateway-content", "projects", "detail", language, id],
     enabled: isGatewayPublicContentEnabled && id.length > 0,
-    queryFn: async () => {
-      // Fetch projects from all categories (featured, schools, businesses)
-      // Note: Gateway limits pageSize to 100, so we fetch in pages for businesses
-      let allProjects: Array<any & { _category?: string }> = [];
-
-      // Fetch the main projects page (contains featured, schools, and first page of businesses)
-      const firstData = await fetchGatewayJson("/api/content/projects", projectsContentSchema, {
-        lang: language,
-        pageNumber: 1,
-        pageSize: 100,
-      });
-
-      // Add all projects from all categories with category metadata
-      allProjects = [
-        ...(firstData?.featuredProjects || []).map((p: any) => ({ ...p, _category: 'featured' })),
-        ...(firstData?.schools || []).map((p: any) => ({ ...p, _category: 'schools' })),
-        ...(firstData?.businesses?.results || []).map((p: any) => ({ ...p, _category: 'marketplace' })),
-      ];
-
-      // Check if there are more pages of businesses
-      let hasMore = (firstData?.businesses?.pageCount || 1) > 1;
-      let pageNumber = 2;
-
-      while (hasMore) {
-        const data = await fetchGatewayJson("/api/content/projects", projectsContentSchema, {
-          lang: language,
-          pageNumber,
-          pageSize: 100,
-        });
-
-        allProjects = [
-          ...allProjects,
-          ...(data?.businesses?.results || []).map((p: any) => ({ ...p, _category: 'marketplace' })),
-        ];
-
-        hasMore = pageNumber < (data?.businesses?.pageCount || 1);
-        pageNumber++;
-      }
-
-      // Find the project with the matching ID
-      const project = allProjects.find((p: any) => p.id === id);
-
-      if (!project) {
-        throw new Error(`Project with ID ${id} not found`);
-      }
-
-      return { results: [project], _category: project._category };
-    },
+    queryFn: () => loadGatewayProjectDetailContent(language, id),
   });
 };
 

@@ -29,6 +29,7 @@
     "notFound": "Niestety nie znaleziono żądanej oferty.",
     "offer": "Nasza oferta"
   },
+  "noResults": "Brak wyników",
   "priceCard": {
     "included": "W pokoju zawarte są",
     "price": "Cena",

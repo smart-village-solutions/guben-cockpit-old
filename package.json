@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
-    "typecheck": "cd frontend && npm run typecheck"
+    "typecheck": "cd frontend && npm run typecheck",
+    "test": "npm --prefix content-gateway test && npm --prefix frontend test",
+    "test:coverage": "npm --prefix content-gateway run test:coverage && npm --prefix frontend run test:coverage"
   }
 }
