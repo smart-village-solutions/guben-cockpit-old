@@ -10,6 +10,7 @@ import BookingDivider from '@/components/booking/bookingDivider'
 import BookingIntegration from '@/components/booking/bookingIntegration'
 import BookingHowItWorks from '@/components/booking/bookingHowItWorks'
 import BookingFaq from '@/components/booking/bookingFaq'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import i18next from 'i18next'
 import { Language } from '@/utilities/i18n/Languages'
 import { translateBatchedMultiple, translateHtmlBatchedMultiple } from '@/utilities/translateUtils'
@@ -106,19 +107,21 @@ function Booking() {
 
   return (
     <main className="w-full h-full flex flex-col">
-      <article className="w-full pl-20 pt-5 pr-20 pb-4 flex items-center justify-center">
-        <div className="max-w-[1600px] w-full pb-5">
-          <div className="flex gap-3 flex-col">
-            <h1 className="text-gubenAccent font-poppins text-h1 font-bold">
-              Willkommen in der Buchungsübersicht
-            </h1>
-            <p className="text-base text-gray-700">
-              Herzlich willkommen auf unserer Buchungsplattform! Hier können Sie bequem und unkompliziert verschiedene Räume, Sportanlagen, Ressourcen und Events der Stadt Guben buchen. Ob für private Veranstaltungen, Vereinstreffen oder geschäftliche Aktivitäten – nutzen Sie unsere modernen Einrichtungen und Ressourcen. Durch digitale Buchungsprozesse möchten wir Ihnen Zeit sparen und die Auslastung unserer städtischen Infrastruktur optimieren. Lassen Sie uns unter dem Motto „Smarter Wandel mit Beteiligung" Guben gemeinsam gestalten und nutzen.
-            </p>
-          </div>
+      <Breadcrumb items={[
+        { label: 'Startseite', href: '/' },
+        { label: 'Buchungen', href: '/booking' }
+      ]} />
+      <article className="max-w-7xl mx-auto px-4 w-full pb-5">
+        <div className="flex gap-3 flex-col">
+          <h1 className="text-gubenAccent font-poppins text-h1 font-bold">
+            Willkommen in der Buchungsübersicht
+          </h1>
+          <p className="text-base text-gray-700">
+            Herzlich willkommen auf unserer Buchungsplattform! Hier können Sie bequem und unkompliziert verschiedene Räume, Sportanlagen, Ressourcen und Events der Stadt Guben buchen. Ob für private Veranstaltungen, Vereinstreffen oder geschäftliche Aktivitäten – nutzen Sie unsere modernen Einrichtungen und Ressourcen. Durch digitale Buchungsprozesse möchten wir Ihnen Zeit sparen und die Auslastung unserer städtischen Infrastruktur optimieren. Lassen Sie uns unter dem Motto „Smarter Wandel mit Beteiligung" Guben gemeinsam gestalten und nutzen.
+          </p>
         </div>
       </article>
-      <div>
+      <div className="w-full flex flex-col items-center">
         {shouldShowIntegration && (
           <BookingIntegration
             key={`${currentTenant.tenantId}`}
@@ -127,44 +130,40 @@ function Booking() {
             onDone={handleTenantDone}
           />
         )}
-        <BookingDivider icon={HouseIcon} text={t("rooms")} />
-        <div id="rooms">
-          <div className="flex flex-wrap">
-            {translationsReady
-              ? rooms.map((room, index) => <BookingCard key={index} booking={room} />)
-              : Array.from({ length: rooms.length }).map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 h-80 p-4"
-                  />
-              ))
-            }
+        <div className="max-w-7xl mx-auto px-4 w-full">
+          <BookingDivider icon={HouseIcon} text={t("rooms")} />
+          <div id="rooms">
+            <div className="flex flex-wrap">
+              {/* Progressive loading: show cards immediately, load translations in background */}
+              {rooms.length > 0
+                ? rooms.map((room, index) => <BookingCard key={index} booking={room} />)
+                : <p className="text-neutral-500">{t("noResults")}</p>
+              }
+            </div>
           </div>
-        </div>
-        <BookingDivider icon={TrophyIcon} text={t("sportFacilities")} />
-        <div id="sport_facilities">
-          <div className="flex flex-wrap">
-            {translationsReady
-              ? sports.map((bookable, index) => <BookingCard key={`sport-${index}`} booking={bookable} />)
-              : Array.from({ length: sports.length }).map((_, i) => (
-                  <Skeleton key={i} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 h-80 p-4" />
-                ))
-            }
+          <BookingDivider icon={TrophyIcon} text={t("sportFacilities")} />
+          <div id="sport_facilities">
+            <div className="flex flex-wrap">
+              {/* Progressive loading: show cards immediately, load translations in background */}
+              {sports.length > 0
+                ? sports.map((bookable, index) => <BookingCard key={`sport-${index}`} booking={bookable} />)
+                : <p className="text-neutral-500">{t("noResults")}</p>
+              }
+            </div>
           </div>
-        </div>
-        <BookingDivider icon={InfoIcon} text={t("resources")} />
-        <div id="resources">
-          <div className="flex flex-wrap">
-            {translationsReady
-              ? resources.map((bookable, index) => <BookingCard key={`res-${index}`} booking={bookable} />)
-              : Array.from({ length: resources.length }).map((_, i) => (
-                  <Skeleton key={i} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 h-80 p-4" />
-                ))
-            }
+          <BookingDivider icon={InfoIcon} text={t("resources")} />
+          <div id="resources">
+            <div className="flex flex-wrap">
+              {/* Progressive loading: show cards immediately, load translations in background */}
+              {resources.length > 0
+                ? resources.map((bookable, index) => <BookingCard key={`res-${index}`} booking={bookable} />)
+                : <p className="text-neutral-500">{t("noResults")}</p>
+              }
+            </div>
           </div>
+          <BookingHowItWorks />
+          <BookingFaq />
         </div>
-        <BookingHowItWorks />
-        <BookingFaq />
       </div>
     </main>
   )

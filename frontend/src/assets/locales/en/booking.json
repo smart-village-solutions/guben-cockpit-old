@@ -27,8 +27,10 @@
   },
   "bookingComponent": {
     "notFound": "Unfortunately, the requested offer could not be found.",
-    "offer": "Our Offer"
+    "offer": "Our Offer",
+    "description": "Description"
   },
+  "noResults": "No results found",
   "priceCard": {
     "included": "Included in the room are",
     "price": "Price",

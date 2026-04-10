@@ -13,7 +13,7 @@ function RootComponent() {
   return (
     <div className={"min-h-screen h-screen flex flex-col bg-background"}>
       <Navbar />
-      <div className={"w-full h-max flex-grow bg-neutral-100"}>
+      <div className={"w-full h-max flex-grow bg-neutral-100 pt-5"}>
         <Outlet/>
       </div>
       <Footer/>

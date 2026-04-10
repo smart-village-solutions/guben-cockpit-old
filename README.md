@@ -80,6 +80,16 @@ npm install
 npm run dev
 ```
 
+Builder.io Preview:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Dann in `frontend/.env` den Wert `VITE_BUILDER_PUBLIC_API_KEY` setzen und Builder als Preview-URL lokal auf `http://localhost:3000/builder-preview?url=/` konfigurieren.
+Wenn Builder deinen lokalen Rechner erreichen soll, nutze dafuer einen Tunnel wie `ngrok` oder `cloudflared` und trage statt `localhost` die oeffentliche Tunnel-URL ein.
+
 ## Verification
 
 Gateway:
