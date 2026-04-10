@@ -19,6 +19,9 @@ jobs:
       - name: Install shared dependencies
         run: npm ci --prefix shared
 
+      - name: Test shared contracts
+        run: npm run test:coverage --prefix shared
+
       - name: Install content-gateway dependencies
         run: npm ci --prefix content-gateway
 
@@ -75,3 +78,9 @@ jobs:
           test -f frontend/dist/events/index.html
           test -f frontend/dist/map/index.html
           echo "Build successful"
+
+      - name: Install postgrest test dependencies
+        run: npm ci --prefix postgrest
+
+      - name: Run postgrest smoke tests
+        run: npm test --prefix postgrest

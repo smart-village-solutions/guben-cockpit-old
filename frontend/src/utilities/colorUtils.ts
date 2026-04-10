@@ -21,7 +21,7 @@ export function hexToRgb(hexValue: string): Option<[number, number, number]> {
 
 export function rgbToHex(color: ColorRgb): string {
   const [r,g,b] = color;
-  return "#" + r.toString(16) + g.toString(16) + b.toString(16);
+  return "#" + [r, g, b].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 
 // mathematics-based method to extract luminance from a rgb color
