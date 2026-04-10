@@ -1,7 +1,8 @@
 import { CustomTooltip } from "@/components/general/Tooltip";
 import { DialogTrigger } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { Trash2Icon } from "lucide-react";
+
+import { IconButtonBase } from "./IconButtonBase";
 
 interface DeleteIconButtonProps {
   tooltip: string;
@@ -12,17 +13,14 @@ interface DeleteIconButtonProps {
 }
 
 const IconButton = (props: { disabled?: boolean; onClick?: () => void }) => (
-  <button
-    type="button"
+  <IconButtonBase
     disabled={props.disabled}
-    onClick={props.disabled ? undefined : props.onClick}
-    className={cn("rounded-full p-1.5 border size-8", props.disabled
+    icon={Trash2Icon}
+    onClick={props.onClick}
+    className={props.disabled
       ? "bg-gray-200 text-gray-400"
-      : "text-red-500 bg-white hover:cursor-pointer hover:bg-gray-200"
-    )}
-  >
-    <Trash2Icon className="size-full" />
-  </button>
+      : "text-red-500 bg-white hover:cursor-pointer hover:bg-gray-200"}
+  />
 );
 
 export const DeleteIconButton = ({ tooltip, dialogTrigger, disabled, disabledTooltip, onClick }: DeleteIconButtonProps) => {
