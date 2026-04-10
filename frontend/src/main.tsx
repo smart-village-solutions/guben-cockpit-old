@@ -10,6 +10,7 @@ import "./utilities"
 import "./index.css"
 import "./utilities/i18n/initializeTranslations.ts";
 import "./utilities/dateExtensions";
+import "./builder/registry";
 
 // Type declaration for Matomo Tag Manager
 declare global {

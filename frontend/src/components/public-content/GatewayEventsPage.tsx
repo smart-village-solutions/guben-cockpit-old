@@ -241,10 +241,14 @@ export const GatewayEventsPage = () => {
   const currentLang = i18next.language as Language;
   const [translationsReady, setTranslationsReady] = useState(false);
 
+  // Progressive loading: show content immediately, load translations in background
   useEffect(() => {
-    setTranslationsReady(false);
+    // Only set to true if not already loaded and not a booking integration
+    if (translationsReady || shouldShowIntegration) return;
 
-    if (!shouldShowIntegration && currentLang !== "de") {
+    setTranslationsReady(true);
+
+    if (currentLang !== "de") {
       const customEvents = (allEvents as (Event & { isBookingEvent?: boolean })[]).filter(
         (event) => event.isBookingEvent,
       );
@@ -284,19 +288,8 @@ export const GatewayEventsPage = () => {
     ).values(),
   );
 
-  if (query.isPending) {
-    return (
-      <main className="relative space-y-8 mb-8">
-        <section className="space-y-4 max-w-7xl mx-auto pt-10">
-          <Skeleton className="h-10 w-72 mx-auto" />
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-2/3 mx-auto" />
-        </section>
-      </main>
-    );
-  }
-
-  if (query.error || !query.data) {
+  // Show error only if query has failed, not just loading
+  if (query.error && !query.data) {
     return <PublicContentErrorState error={query.error} onRetry={() => void query.refetch()} />;
   }
 
@@ -313,9 +306,9 @@ export const GatewayEventsPage = () => {
       ))}
       <CitizenInformationSystemBanner />
 
-      <section className="space-y-8 max-w-7xl mx-auto">
+      <section className="space-y-8 max-w-7xl mx-auto px-4 w-full">
         <div className="flex items-end gap-2">
-          <div className="w-full grid grid-cols-5 gap-2">
+          <div className="flex-1 grid grid-cols-5 gap-2">
             <SearchFilter
               className="col-span-2"
               value={filters.search ?? null}
@@ -346,7 +339,7 @@ export const GatewayEventsPage = () => {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto flex flex-col gap-4">
+      <section className="max-w-7xl mx-auto px-4">
         <PaginationContainer
           nextPage={pagination.nextPage}
           previousPage={pagination.previousPage}
@@ -357,14 +350,24 @@ export const GatewayEventsPage = () => {
           pageSize={pagination.pageSize}
           page={pagination.page}
         >
-          {translationsReady
-            ? allEvents.map((event) => <EventCard key={event.id} event={event} />)
-            : Array.from({ length: pagination.pageSize }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="w-full h-48 sm:h-60 md:h-64 lg:h-72 rounded-md p-4 mb-4"
-                />
-              ))}
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
+            {/* Show events immediately if available, otherwise show skeleton */}
+            {allEvents.length > 0
+              ? allEvents.map((event) => (
+                  <div key={event.id} className="flex w-full">
+                    <EventCard event={event} />
+                  </div>
+                ))
+              : // Show loading skeletons only if no events yet and query is pending
+                query.isPending
+                ? Array.from({ length: pagination.pageSize }).map((_, index) => (
+                    <Skeleton
+                      key={index}
+                      className="w-full h-96 rounded-lg"
+                    />
+                  ))
+                : null}
+          </div>
         </PaginationContainer>
       </section>
     </main>

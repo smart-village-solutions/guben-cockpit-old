@@ -28,13 +28,13 @@ function GatewayHomeRoute() {
 
   if (query.isPending) {
     return (
-      <main className="w-full h-full flex flex-1 pl-20 pt-5 pr-20 pb-4 flex-col items-center">
-        <article className="max-w-[1600px] w-full pb-5 space-y-3">
+      <main className="w-full h-full flex flex-1 flex-col items-center">
+        <article className="max-w-7xl mx-auto px-4 w-full pb-5 space-y-3">
           <Skeleton className="h-10 w-80" />
           <Skeleton className="h-6 w-full" />
           <Skeleton className="h-6 w-2/3" />
         </article>
-        <section className="max-w-[1600px] w-full">
+        <section className="max-w-7xl mx-auto px-4 w-full">
           <Skeleton className="h-[36rem] w-full" />
         </section>
       </main>
@@ -46,8 +46,8 @@ function GatewayHomeRoute() {
   }
 
   return (
-    <main className="w-full h-full flex flex-1 pl-20 pt-5 pr-20 pb-4 flex-col items-center">
-      <article className="max-w-[1600px] w-full pb-5">
+    <main className="w-full h-full flex flex-1 flex-col items-center">
+      <article className="max-w-7xl mx-auto px-4 w-full pb-5">
         <div className="flex gap-3 flex-col">
           <h1 className="text-gubenAccent font-poppins text-h1 font-bold">
             {query.data.page.title}
@@ -55,7 +55,7 @@ function GatewayHomeRoute() {
           <Markdown>{query.data.page.description}</Markdown>
         </div>
       </article>
-      <section className="max-w-[1600px] w-full">
+      <section className="max-w-7xl mx-auto px-4 w-full">
         <DashboardDropdownTabs dropdowns={query.data.dashboard.dropdowns} />
       </section>
     </main>

@@ -90,18 +90,18 @@
   "Footer": {
     "PrivacyPolicy": {
       "name": "Polityka prywatności",
-      "url": "https://www.guben.de/de/barrierefreiheit"
+      "url": "https://www.guben.de/de/datenschutz"
     },
     "Imprint": {
       "name": "Impresum",
-      "url": "https://www.guben.de/de/barrierefreiheit"
+      "url": "https://www.guben.de/de/impressum"
     },
     "Accessibility": {
-      "name": "Oświadczenie o dostępności",
+      "name": "Dostępność",
       "url": "https://www.guben.de/de/barrierefreiheit"
     },
     "Contact": {
-      "name": "Formularz kontaktowy",
+      "name": "Kontakt",
       "url": "https://www.guben.de/de/kontakt"
     }
   }

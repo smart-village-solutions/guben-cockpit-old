@@ -208,7 +208,7 @@ export const gatewayErrorSchema = z.object({
       "INTERNAL_ERROR",
     ]),
     message: z.string(),
-    upstream: z.enum(["cms", "postgrest", "gateway"]),
+    upstream: z.enum(["postgrest", "gateway"]),
     retryable: z.boolean(),
     requestId: z.string(),
   }),

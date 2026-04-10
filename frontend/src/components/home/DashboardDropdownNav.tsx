@@ -64,10 +64,12 @@ export const DashboardDropdownTabs = ({
       {activeTab && tab && (
         <div key={activeTab} className={"flex min-h-[70vh] h-full"}>
           <MapComponent src={tab.mapUrl} />
-          <div className={"flex-1 h-full columns-2 px-4 pt-2"}>
-            {tab?.informationCards?.map((card, index) => {
-              return <InfoCard key={index} card={card} />;
-            })}
+          <div className={"flex-1 h-full px-4 pt-2"}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 auto-rows-fr">
+              {tab?.informationCards?.map((card, index) => {
+                return <InfoCard key={index} card={card} />;
+              })}
+            </div>
           </div>
         </div>
       )}

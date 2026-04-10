@@ -56,8 +56,8 @@ Local URLs:
 - `http://127.0.0.1:3000/` prerendered public build
 - `http://127.0.0.1:3300/` interactive Vite frontend
 - `http://127.0.0.1:5100/health` gateway health
-- `http://127.0.0.1:3002/` PostgREST
-- `http://127.0.0.1:8088/` Adminer
+- `http://127.0.0.1:3001/` PostgREST
+- `http://127.0.0.1:8080/` Adminer
 
 ## Local development without Docker
 
@@ -79,6 +79,16 @@ cp .env.example .env
 npm install
 npm run dev
 ```
+
+Builder.io Preview:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Dann in `frontend/.env` den Wert `VITE_BUILDER_PUBLIC_API_KEY` setzen und Builder als Preview-URL lokal auf `http://localhost:3000/builder-preview?url=/` konfigurieren.
+Wenn Builder deinen lokalen Rechner erreichen soll, nutze dafuer einen Tunnel wie `ngrok` oder `cloudflared` und trage statt `localhost` die oeffentliche Tunnel-URL ein.
 
 ## Verification
 
@@ -110,5 +120,7 @@ PostgREST uses the upstream `postgrest/postgrest` image plus the SQL/bootstrap f
 
 ## Weitere Dokumentation
 
+- [arc42-Architekturdokumentation](./docs/arc42.md)
 - [Systemdokumentation](./docs/system-documentation.md)
 - [Gateway-Rollout](./docs/public-content-gateway-rollout.md)
+- [Deploy-Runbook](./docs/deploy-runbook.md)

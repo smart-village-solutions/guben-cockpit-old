@@ -13,16 +13,68 @@ interface Resources {
       "showLess": "Weniger anzeigen",
       "items": [
         {
-          "question": "Frage 1",
-          "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+          "question": "1. Was kann ich über das Buchungsportal buchen?",
+          "answer": "Sie können über die Plattform verschiedene Räume, Geräte und Ressourcen der Stadt Guben buchen – z. B. Veranstaltungsräume, Technik oder kommunale Einrichtungen."
         },
         {
-          "question": "Frage 2",
-          "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+          "question": "2. Wer darf das Buchungsportal nutzen?",
+          "answer": "Das Angebot richtet sich an Bürgerinnen und Bürger, Vereine, Schulen sowie andere Organisationen mit Bezug zur Stadt Guben."
         },
         {
-          "question": "Frage 3",
-          "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+          "question": "3. Muss ich mich für eine Buchung registrieren?",
+          "answer": "Sie können sich ohne Registrierung als Gast anmelden. Für häufige Buchungen empfiehlt sich jedoch eine Registrierung."
+        },
+        {
+          "question": "4. Wie kann ich eine Buchung vornehmen?",
+          "answer": "Wählen Sie auf der Buchungsseite das gewünschte Objekt aus, geben Sie Datum, Uhrzeit und weitere Angaben ein und bestätigen Sie die Buchung. Nach Abschluss erhalten Sie eine Bestätigungs-E-Mail."
+        },
+        {
+          "question": "5. Welche Angaben sind für eine Buchung notwendig?",
+          "answer": "Je nach Angebot benötigen wir Name, E-Mail-Adresse, Telefonnummer, Nutzungszeitraum und ggf. den Zweck der Nutzung."
+        },
+        {
+          "question": "6. Woher weiß ich, dass meine Buchung erfolgreich war?",
+          "answer": "Der zuständige Mitarbeiter wird Ihre Anfrage bearbeiten und Ihnen nach erfolgreicher Buchung eine Bestätigungs-E-Mail schicken."
+        },
+        {
+          "question": "7. Sind die Buchungen kostenlos?",
+          "answer": "Einige Angebote sind kostenlos, andere kostenpflichtig. Die Kosten werden direkt im jeweiligen Buchungsangebot angezeigt."
+        },
+        {
+          "question": "8. Wie funktioniert die Online-Bezahlung?",
+          "answer": "Wenn für das Angebot eine Gebühr anfällt, können Sie diese bequem online per SEPA-Lastschrift, Kreditkarte oder anderen digitalen Zahlungsmitteln begleichen."
+        },
+        {
+          "question": "9. Erhalte ich eine Rechnung oder Quittung?",
+          "answer": "Ja, nach Abschluss der Zahlung senden wir Ihnen eine Zahlungsbestätigung per E-Mail zu."
+        },
+        {
+          "question": "10. Kann ich meine Buchung nachträglich ändern oder stornieren?",
+          "answer": "Ja. In Ihrer Buchungsbestätigung gibt es die Möglichkeit die Buchung zu stornieren."
+        },
+        {
+          "question": "11. Fallen Stornogebühren an?",
+          "answer": "Nein."
+        },
+        {
+          "question": "12. Was passiert, wenn ich meinen Termin nicht wahrnehme?",
+          "answer": "Wenn keine Stornierung erfolgt, kann eine Gebühr anfallen oder die Buchung für andere blockiert bleiben. Bitte sagen Sie Termine rechtzeitig ab."
+        },
+        {
+          "question": "13. Was muss ich beim gebuchten Termin mitbringen?",
+          "answer": "Bringen Sie bitte Ihre Buchungsbestätigung (digital oder ausgedruckt) und ggf. einen Identitätsnachweis mit."
+        },
+        {
+          "question": "14. Wann darf ich die gebuchten Räume oder Geräte nutzen?",
+          "answer": "Die Nutzung ist nur im angegebenen Zeitraum erlaubt. Bitte halten Sie sich an die vereinbarten Zeiten, um Überschneidungen zu vermeiden."
+        },
+        {
+          "question": "15. An wen kann ich mich wenden, wenn ich vor Ort Unterstützung benötige?",
+          "answer": "Die zuständige Kontaktperson oder der Ansprechpartner ist in der Buchungsbestätigung angegeben. Bei allgemeinen Fragen können Sie sich an das Smart City Team (smartcity@guben.de) wenden."
+        },
+        {
+          "question": "16. Ich habe technische Probleme bei der Buchung – was kann ich tun?",
+          "answer": "Sollte die Buchung nicht funktionieren oder eine Fehlermeldung erscheinen, versuchen Sie es zunächst mit einem anderen Browser. Wenn das Problem bestehen bleibt, kontaktieren Sie uns per E-Mail unter smartcity@guben.de."
         }
       ]
     },
@@ -162,19 +214,19 @@ interface Resources {
     },
     "Footer": {
       "PrivacyPolicy": {
-        "name": "Datenschutzerklärung",
-        "url": "https://www.guben.de/de/barrierefreiheit"
+        "name": "Datenschutz",
+        "url": "https://www.guben.de/de/datenschutz"
       },
       "Imprint": {
         "name": "Impressum",
-        "url": "https://www.guben.de/de/barrierefreiheit"
+        "url": "https://www.guben.de/de/impressum"
       },
       "Accessibility": {
-        "name": "Erklärung zur Barrierefreiheit",
+        "name": "Barrierefreiheit",
         "url": "https://www.guben.de/de/barrierefreiheit"
       },
       "Contact": {
-        "name": "Kontaktformular",
+        "name": "Kontakt",
         "url": "https://www.guben.de/de/kontakt"
       }
     }

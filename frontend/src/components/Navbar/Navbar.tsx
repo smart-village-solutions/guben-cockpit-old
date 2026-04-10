@@ -23,10 +23,10 @@ const NavLink = (props: { name: string, to: string, children: React.ReactNode, t
   }, [location]);
 
   return (
-    <li>
+    <li className="h-auto">
       <CustomTooltip text={props.name}>
         <Link to={props.to} target={props.target} className={cn(
-          'h-full p-3 flex items-center justify-center w-auto rounded-xl',
+          'px-3 py-1.5 mt-3 mb-3 flex items-center justify-center w-auto rounded-xl',
           isActive
             ? "hover:bg-red-400 bg-gubenAccent text-gubenAccent-foreground"
             : "text-gubenAccent stroke-gubenAccent hover:stroke-gubenAccent-foreground hover:bg-gubenAccent hover:text-gubenAccent-foreground"
@@ -39,7 +39,7 @@ const NavLink = (props: { name: string, to: string, children: React.ReactNode, t
 }
 
 const NavList = ({ children, className }: PropsWithChildren & WithClassName) => (
-  <ul className={cn('flex-1 flex gap-2 h-full items-center justify-center self-center', className)}>
+  <ul className={cn('flex-1 flex gap-2 h-full items-center justify-center self-center py-2', className)}>
     {children}
   </ul>
 );
@@ -51,8 +51,8 @@ export const Navbar = () => {
 
   return (
     <NavContext.Provider value={{ location: location.pathname }}>
-      <div className="w-full h-20 bg-white sticky top-0 shadow py-12 pr-2 rounded-b flex items-center justify-between z-50">
-        <div id="logo" className="flex-1 flex justify-start items-center h-full pl-5">
+      <div className="w-full h-20 bg-white sticky top-0 shadow px-4 rounded-b flex items-center justify-between z-50 gap-5">
+        <div id="logo" className="flex justify-start items-center h-full">
           <Link to="/" className="h-full flex justify-center items-center">
             <SmartCityGubenLogoIcon className="w-[128px] h-auto" />
           </Link>
@@ -60,39 +60,39 @@ export const Navbar = () => {
 
         <NavList>
           <NavLink to="/" name={t("Dashboard")}>
-            <div className="flex flex-col items-center w-24">
+            <div className="flex flex-col items-center w-20">
               <HomeIcon className={iconStyle} />
-              <span className="mt-1 font-nunito">{t('Dashboard')}</span>
+              <span className="mt-1 text-xs font-nunito">{t('Dashboard')}</span>
             </div>
           </NavLink>
           <NavLink to="/projects" name={t("Projects")}>
-            <div className="flex flex-col items-center w-24">
+            <div className="flex flex-col items-center w-20">
               <MyGubenIcon className={iconStyle} />
-              <span className="mt-1 font-nunito">{t('Projects')}</span>
+              <span className="mt-1 text-xs font-nunito">{t('Projects')}</span>
             </div>
           </NavLink>
           <NavLink to="/map" name={t("Map")}>
-            <div className="flex flex-col items-center w-24">
+            <div className="flex flex-col items-center w-20">
               <MapIcon className={iconStyle} />
-              <span className="mt-1 font-nunito">{t('Map')}</span>
+              <span className="mt-1 text-xs font-nunito">{t('Map')}</span>
             </div>
           </NavLink>
           <NavLink to="/events" name={t("Events")}>
-            <div className="flex flex-col items-center w-24">
+            <div className="flex flex-col items-center w-20">
               <CalendarDaysIcon className={iconStyle} />
-              <span className="mt-1 font-nunito">{t('Events')}</span>
+              <span className="mt-1 text-xs font-nunito">{t('Events')}</span>
             </div>
           </NavLink>
           <NavLink to="/booking" name={t("Booking")}>
-            <div className="flex flex-col items-center w-24">
+            <div className="flex flex-col items-center w-20">
               <PlaneIcon className={iconStyle} />
-              <span className="mt-1 font-nunito">{t('Booking')}</span>
+              <span className="mt-1 text-xs font-nunito">{t('Booking')}</span>
             </div>
           </NavLink>
           <NavLink name={t("ServicePortal")} to="https://serviceportal.dikom-bb.de/stadt-guben" target="_blank">
-            <div className="flex flex-col items-center w-24">
+            <div className="flex flex-col items-center w-20">
               <ServicePortalIcon className={iconStyle} />
-              <span className="mt-1 whitespace-nowrap font-nunito">{t('ServicePortal')}</span>
+              <span className="mt-1 text-xs whitespace-nowrap font-nunito">{t('ServicePortal')}</span>
             </div>
           </NavLink>
         </NavList>
@@ -127,16 +127,16 @@ const LanguageSection = () => {
     <div className="relative flex items-center justify-center">
       <div className="group">
         {/* Display current language */}
-        <button className="p-2 rounded-lg text-[#cd1421] group-hover:bg-[#cd1421] group-hover:text-white">
+        <button className="p-1 mx-3 rounded-lg text-[#cd1421] group-hover:bg-[#cd1421] group-hover:text-white whitespace-nowrap">
           {getLocalizedLanguagename(currentLanguage)}
         </button>
 
-        {/* Dropdown Menu */}
-        <div className="absolute right-0 hidden rounded-lg shadow-lg group-hover:block bg-white border ">
+        {/* Dropdown Menu - positioned from the left to stay within bounds */}
+        <div className="absolute left-0 top-full hidden rounded-lg shadow-lg group-hover:block bg-white border z-50 mt-1">
           {Object.values(Language).map((lang) => (
             <button
               key={lang}
-              className="w-full text-left px-3 py-2 rounded-lg text-[#cd1421] hover:bg-[#cd1421] hover:text-white"
+              className="w-full text-left px-2 py-1 rounded-lg text-[#cd1421] hover:bg-[#cd1421] hover:text-white whitespace-nowrap"
               onClick={async () => await updateLanguage(lang)}
             >
               {getLocalizedLanguagename(lang)}

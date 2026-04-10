@@ -44,6 +44,62 @@ export const useGatewayProjectsContent = (pageNumber: number, pageSize: number) 
   });
 };
 
+export const useGatewayProjectDetailContent = (id: string) => {
+  const language = useContentLanguage();
+  return useQuery({
+    queryKey: ["gateway-content", "projects", "detail", language, id],
+    enabled: isGatewayPublicContentEnabled && id.length > 0,
+    queryFn: async () => {
+      // Fetch projects from all categories (featured, schools, businesses)
+      // Note: Gateway limits pageSize to 100, so we fetch in pages for businesses
+      let allProjects: Array<any & { _category?: string }> = [];
+
+      // Fetch the main projects page (contains featured, schools, and first page of businesses)
+      const firstData = await fetchGatewayJson("/api/content/projects", projectsContentSchema, {
+        lang: language,
+        pageNumber: 1,
+        pageSize: 100,
+      });
+
+      // Add all projects from all categories with category metadata
+      allProjects = [
+        ...(firstData?.featuredProjects || []).map((p: any) => ({ ...p, _category: 'featured' })),
+        ...(firstData?.schools || []).map((p: any) => ({ ...p, _category: 'schools' })),
+        ...(firstData?.businesses?.results || []).map((p: any) => ({ ...p, _category: 'marketplace' })),
+      ];
+
+      // Check if there are more pages of businesses
+      let hasMore = (firstData?.businesses?.pageCount || 1) > 1;
+      let pageNumber = 2;
+
+      while (hasMore) {
+        const data = await fetchGatewayJson("/api/content/projects", projectsContentSchema, {
+          lang: language,
+          pageNumber,
+          pageSize: 100,
+        });
+
+        allProjects = [
+          ...allProjects,
+          ...(data?.businesses?.results || []).map((p: any) => ({ ...p, _category: 'marketplace' })),
+        ];
+
+        hasMore = pageNumber < (data?.businesses?.pageCount || 1);
+        pageNumber++;
+      }
+
+      // Find the project with the matching ID
+      const project = allProjects.find((p: any) => p.id === id);
+
+      if (!project) {
+        throw new Error(`Project with ID ${id} not found`);
+      }
+
+      return { results: [project], _category: project._category };
+    },
+  });
+};
+
 export const useGatewayEventsContent = (
   searchParams: Record<string, string | number | undefined>,
 ) => {

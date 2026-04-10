@@ -1,0 +1,11 @@
+{
+  "name": "guben-cockpit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo for Guben Cockpit",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "typecheck": "cd frontend && npm run typecheck"
+  }
+}

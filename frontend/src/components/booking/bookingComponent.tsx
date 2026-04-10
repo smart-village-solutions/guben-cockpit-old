@@ -1,12 +1,11 @@
-import BookingDivider from "./bookingDivider";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useBookingStore } from "@/stores/bookingStore";
 import PriceCard from "./priceCard";
 import { useTranslation } from "react-i18next";
-import DOMPurify from "dompurify";
-import { Button } from "../ui/button";
-import { ArrowLeftIcon } from "lucide-react";
+import { DetailPageLayout } from "../ui/DetailPageLayout";
 import { TranslatedHtml } from "@/utilities/translateUtils";
+import { ReactNode } from "react";
+import { MapPinIcon } from "lucide-react";
 
 export default function BookingComponent() {
   const { t } = useTranslation("booking");
@@ -25,68 +24,100 @@ export default function BookingComponent() {
   }
 
   return (
-    <div>
-      <div className="relative w-full h-72 overflow-hidden">
-        <Button
-          variant="ghost"
-          className='z-10 text-white gap-2 absolute top-4 left-4 flex items-center hover:bg-none'
-          onClick={() => navigate({ to: "/booking" })}
-        >
-          <ArrowLeftIcon className='size-4' />
-          <p>{t('AllBookings')}</p>
-        </Button>
-        <img
-          src={booking.imgUrl}
-          className="w-full h-full object-cover absolute top-0 left-0" />
-        <div className="absolute bottom-0 left-0 w-full h-1/3 flex flex-col items-center justify-center bg-red-600/70">
-          <div className="mt-1 text-gubenAccent-foreground font-bold italic text-6xl tracking-tight">
-            {title}
-          </div>
-        </div>
-      </div>
-      <div>
-        <BookingDivider text={title} />
-        <div className="p-5 grid grid-cols-3 gap-5">
-          <div className="col-span-2">
+    <DetailPageLayout
+      heroImage={booking.imgUrl}
+      heroAlt={title}
+      title={title}
+      breadcrumbItems={[
+        { label: 'Startseite', href: '/' },
+        { label: 'Buchungen', href: '/booking' },
+        { label: title, href: `/booking/${title}` }
+      ]}
+      metadata={
+        <div className="space-y-4">
+          {booking.category && (
+            <div className="flex gap-2 flex-wrap">
+              <p className="px-4 border-neutral-300 border rounded-full text-sm capitalize">
+                {booking.category === 'room' ? 'Raum' : booking.category === 'sport' ? 'Sportanlage' : 'Ressource'}
+              </p>
+            </div>
+          )}
+
+          {booking.location && (
+            <div className="space-y-1">
+              <p className="flex gap-2 items-center text-neutral-500">
+                <MapPinIcon className="size-4" /> Ort
+              </p>
+              <p className="text-neutral-800">{booking.location}</p>
+            </div>
+          )}
+
+          {booking.description && (
+            <div>
+              <p className="text-xs text-neutral-500 font-semibold mb-2">BESCHREIBUNG</p>
               <TranslatedHtml
-                className="prose max-w-none"
-                text={booking.description} />
+                className="text-sm text-gray-600 line-clamp-2"
+                text={booking.description}
+              />
+            </div>
+          )}
+        </div>
+      }
+      onBack={() => navigate({ to: "/booking" })}
+      backLabel={t("AllBookings")}
+    >
+      <div className="space-y-8">
+        {/* Description and Image */}
+        <div className="grid grid-cols-3 gap-8">
+          <div className="col-span-2">
+            <h2 className="font-bold text-xl mb-4">{t("bookingComponent.description")}</h2>
+            <TranslatedHtml
+              className="prose max-w-none"
+              text={booking.description}
+            />
           </div>
           <div className="col-span-1 flex items-center justify-center">
             <img
               src={booking.imgUrl}
               alt={t("imageAlt")}
-              className="w-full h-auto max-h-80 rounded-lg object-contain" />
+              className="w-full h-auto max-h-80 rounded-lg object-contain"
+            />
           </div>
         </div>
-        <BookingDivider text={t("bookingComponent.offer")} />
-        {booking.tickets && booking.tickets.length > 0 ? (
-          booking.tickets.map((ticket, index) => (
-            <PriceCard
-              key={ticket.bkid || index}
-              bookingUrl={ticket.bookingUrl}
-              description={ticket.description}
-              price={ticket.price}
-              prices={ticket.prices || []}
-              title={ticket.title || title}
-              flags={ticket.flags || booking.flags}
-              location={ticket.location || booking.location}
-              autoCommitNote={ticket.autoCommitNote || booking.autoCommitNote}
-              imgUrl={ticket.imgUrl}
-            />
-          ))
-        ) : (
-          <PriceCard
-            bookingUrl={booking.bookingUrl}
-            price={booking.price}
-            prices={booking.prices || []}
-            title={title}
-            flags={booking.flags}
-            location={booking.location}
-            autoCommitNote={booking.autoCommitNote}
-          />
-        )}
+
+        {/* Offers Section */}
+        <div>
+          <h2 className="font-bold text-xl mb-4">{t("bookingComponent.offer")}</h2>
+          <div className="space-y-4">
+            {booking.tickets && booking.tickets.length > 0 ? (
+              booking.tickets.map((ticket, index) => (
+                <PriceCard
+                  key={ticket.bkid || index}
+                  bookingUrl={ticket.bookingUrl}
+                  description={ticket.description}
+                  price={ticket.price}
+                  prices={ticket.prices || []}
+                  title={ticket.title || title}
+                  flags={ticket.flags || booking.flags}
+                  location={ticket.location || booking.location}
+                  autoCommitNote={ticket.autoCommitNote || booking.autoCommitNote}
+                  imgUrl={ticket.imgUrl}
+                />
+              ))
+            ) : (
+              <PriceCard
+                bookingUrl={booking.bookingUrl}
+                price={booking.price}
+                prices={booking.prices || []}
+                title={title}
+                flags={booking.flags}
+                location={booking.location}
+                autoCommitNote={booking.autoCommitNote}
+              />
+            )}
+          </div>
+        </div>
       </div>
-    </div>
-  )
+    </DetailPageLayout>
+  );
 };
