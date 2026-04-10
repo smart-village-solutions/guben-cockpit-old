@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "v8",
-      reporter: ["text", "json-summary", "html"],
+      reporter: ["text", "json-summary", "html", "lcov"],
       reportsDirectory: "./coverage",
       include: ["src/**/*.ts", "src/**/*.tsx"],
       exclude: ["src/routeTree.gen.ts", "src/main.tsx", "src/vite-env.d.ts"],

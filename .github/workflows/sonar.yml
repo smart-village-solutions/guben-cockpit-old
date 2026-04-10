@@ -1,0 +1,81 @@
+name: sonar
+
+on:
+  pull_request:
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sonar:
+    if: ${{ secrets.SONAR_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install shared dependencies
+        run: npm ci --prefix shared
+
+      - name: Install content-gateway dependencies
+        run: npm ci --prefix content-gateway
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Generate coverage reports
+        run: npm run test:coverage
+
+      - name: Validate Sonar configuration
+        run: |
+          if [ -z "$SONAR_HOST_URL" ] && [ -z "$SONAR_ORGANIZATION" ]; then
+            echo "Set either SONAR_HOST_URL for SonarQube or SONAR_ORGANIZATION for SonarCloud."
+            exit 1
+          fi
+          test -f content-gateway/coverage/lcov.info
+          test -f frontend/coverage/lcov.info
+
+      - name: Build Sonar scanner args
+        id: sonar_args
+        run: |
+          args=""
+          if [ -n "$SONAR_PROJECT_KEY" ]; then
+            args="$args -Dsonar.projectKey=$SONAR_PROJECT_KEY"
+          fi
+          if [ -n "$SONAR_ORGANIZATION" ]; then
+            args="$args -Dsonar.organization=$SONAR_ORGANIZATION"
+          fi
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          args: ${{ steps.sonar_args.outputs.args }}
+
+      - name: SonarQube quality gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 10
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
