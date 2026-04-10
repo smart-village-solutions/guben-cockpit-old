@@ -70,7 +70,7 @@ describe("requestJson", () => {
         retryBackoffMs: 0,
         upstream: "postgrest",
       }),
-    ).rejects.toMatchObject<Partial<GatewayError>>({
+    ).rejects.toMatchObject({
       code: "UPSTREAM_TIMEOUT",
       statusCode: 503,
       upstream: "postgrest",
@@ -89,7 +89,7 @@ describe("requestJson", () => {
         retryBackoffMs: 0,
         upstream: "postgrest",
       }),
-    ).rejects.toMatchObject<Partial<GatewayError>>({
+    ).rejects.toMatchObject({
       code: "UPSTREAM_UNAVAILABLE",
       statusCode: 503,
       upstream: "postgrest",
