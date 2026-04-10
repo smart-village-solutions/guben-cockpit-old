@@ -1,5 +1,6 @@
 {
   "name": "guben-cockpit-shared",
+  "private": true,
   "type": "module",
   "scripts": {
     "test": "vitest run",

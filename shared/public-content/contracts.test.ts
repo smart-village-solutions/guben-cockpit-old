@@ -6,7 +6,7 @@ import {
   gatewayErrorSchema,
   homeContentSchema,
   projectsContentSchema,
-} from "./contracts.js";
+} from "./contracts";
 
 describe("public content contracts", () => {
   it("accepts valid home content payloads", () => {

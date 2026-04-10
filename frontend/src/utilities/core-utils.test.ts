@@ -20,7 +20,7 @@ describe("utility modules", () => {
   it("handles color conversions and contrast calculations", () => {
     expect(hexToRgb("#ff8800")).toEqual([255, 136, 0]);
     expect(hexToRgb("invalid")).toBeNull();
-    expect(rgbToHex([255, 136, 0])).toBe("#ff880");
+    expect(rgbToHex([255, 136, 0])).toBe("#ff8800");
     expect(getLuminance([255, 255, 255])).toBeGreaterThan(getLuminance([0, 0, 0]));
     expect(getContrast([255, 255, 255], [0, 0, 0])).toBeGreaterThan(20);
     expect(getHexColorFromText("Guben")).toMatch(/^#[0-9a-f]{6}$/);
