@@ -20,13 +20,17 @@ const localPublicBaseUrlDefault = createHttpUrl("localhost", localDevelopmentPor
 const masterportalUrlDefault = createHttpUrl("masterportal");
 
 const isHttpUrlAllowed = (value: string, allowedHttpHosts: Set<string>) => {
-  const url = new URL(value);
+  try {
+    const url = new URL(value);
 
-  if (url.protocol === "https:") {
-    return true;
+    if (url.protocol === "https:") {
+      return true;
+    }
+
+    return url.protocol === "http:" && allowedHttpHosts.has(url.hostname);
+  } catch {
+    return false;
   }
-
-  return url.protocol === "http:" && allowedHttpHosts.has(url.hostname);
 };
 
 const createSecureUrlSchema = (

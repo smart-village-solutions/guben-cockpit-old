@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { trimTrailingSlashes as trimBookingTrailingSlashes } from "@/components/booking/bookingIntegration";
 import { trimTrailingSlashes as trimEventTrailingSlashes } from "@/components/events/eventIntegration";
 import { isValidFloatInput } from "@/components/ui/input";
+import { trimTrailingSlashes } from "@/utilities/urlUtils";
 
 describe("security hotspot helpers", () => {
   it("validates float input without regex backtracking", () => {
@@ -26,5 +27,10 @@ describe("security hotspot helpers", () => {
     expect(trimEventTrailingSlashes("/api/booking///")).toBe("/api/booking");
     expect(trimEventTrailingSlashes("https://example.com/path/")).toBe("https://example.com/path");
     expect(trimEventTrailingSlashes("https://example.com")).toBe("https://example.com");
+  });
+
+  it("trims trailing slashes in the shared URL utility", () => {
+    expect(trimTrailingSlashes("/api/shared//")).toBe("/api/shared");
+    expect(trimTrailingSlashes("https://example.com/")).toBe("https://example.com");
   });
 });

@@ -1,13 +1,8 @@
 import { useEffect } from "react";
 import { Booking, Ticket, useBookingStore } from "@/stores/bookingStore";
+import { trimTrailingSlashes } from "@/utilities/urlUtils";
 
-export const trimTrailingSlashes = (value: string) => {
-  let end = value.length;
-  while (end > 0 && value[end - 1] === "/") {
-    end -= 1;
-  }
-  return value.slice(0, end);
-};
+export { trimTrailingSlashes } from "@/utilities/urlUtils";
 
 const bookingBaseUrl = trimTrailingSlashes(import.meta.env.VITE_BOOKING_URL || "/api/booking");
 

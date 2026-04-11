@@ -59,4 +59,14 @@ describe("loadConfig", () => {
       }),
     ).toThrow(/MASTERPORTAL_URL/);
   });
+
+  it("rejects malformed PUBLIC_BASE_URL via validation instead of crashing URL parsing", () => {
+    expect(() =>
+      loadConfig({
+        CONTENT_SOURCE_MODE: "mock",
+        PUBLIC_BASE_URL: "not-a-url",
+        MASTERPORTAL_URL: "http://masterportal",
+      }),
+    ).toThrow();
+  });
 });
