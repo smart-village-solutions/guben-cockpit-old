@@ -325,12 +325,15 @@ describe("Sonar fix smoke tests", () => {
       <EditIconButton tooltip="Edit" onClick={vi.fn()} />,
     );
     const baseMarkup = renderToStaticMarkup(
-      <IconButtonBase icon={Trash2Icon} onClick={vi.fn()} className="text-red-500" />,
+      <IconButtonBase icon={Trash2Icon} onClick={vi.fn()} className="text-red-500" label="Remove item" />,
     );
 
     expect(deleteMarkup).toContain("button");
+    expect(deleteMarkup).toContain('aria-label="Delete"');
     expect(editMarkup).toContain("button");
+    expect(editMarkup).toContain('aria-label="Edit"');
     expect(baseMarkup).toContain("text-red-500");
+    expect(baseMarkup).toContain('title="Remove item"');
   });
 
   it("renders cards and detail pages with nullable image data", () => {
@@ -364,6 +367,7 @@ describe("Sonar fix smoke tests", () => {
     const detailMarkup = renderToStaticMarkup(<GatewayProjectDetailPage projectId="project-1" />);
 
     expect(infoMarkup).toContain("Description");
+    expect(infoMarkup).toContain("Information");
     expect(projectMarkup).toContain("Project");
     expect(detailMarkup).toContain("Projekt");
   });
