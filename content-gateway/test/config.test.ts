@@ -39,4 +39,24 @@ describe("loadConfig", () => {
     }
     expect(config.POSTGREST_URL).toBe("http://localhost:3001");
   });
+
+  it("rejects non-local PUBLIC_BASE_URL over plain http", () => {
+    expect(() =>
+      loadConfig({
+        CONTENT_SOURCE_MODE: "mock",
+        PUBLIC_BASE_URL: "http://example.com",
+        MASTERPORTAL_URL: "http://masterportal",
+      }),
+    ).toThrow(/PUBLIC_BASE_URL/);
+  });
+
+  it("rejects non-internal MASTERPORTAL_URL over plain http", () => {
+    expect(() =>
+      loadConfig({
+        CONTENT_SOURCE_MODE: "mock",
+        PUBLIC_BASE_URL: "http://localhost:3000",
+        MASTERPORTAL_URL: "http://example.com",
+      }),
+    ).toThrow(/MASTERPORTAL_URL/);
+  });
 });

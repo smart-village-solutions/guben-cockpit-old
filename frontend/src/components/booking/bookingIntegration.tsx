@@ -1,7 +1,15 @@
 import { useEffect } from "react";
 import { Booking, Ticket, useBookingStore } from "@/stores/bookingStore";
 
-const bookingBaseUrl = (import.meta.env.VITE_BOOKING_URL || "/api/booking").replace(/\/+$/, "");
+const trimTrailingSlashes = (value: string) => {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === "/") {
+    end -= 1;
+  }
+  return value.slice(0, end);
+};
+
+const bookingBaseUrl = trimTrailingSlashes(import.meta.env.VITE_BOOKING_URL || "/api/booking");
 
 type BookingIntegrationProps = {
   tenantId: string;

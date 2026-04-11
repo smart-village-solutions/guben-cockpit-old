@@ -1,10 +1,38 @@
 import { z } from "zod";
 
+const localHttpHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+const internalHttpHosts = new Set(["masterportal"]);
+
+const isHttpUrlAllowed = (value: string, allowedHttpHosts: Set<string>) => {
+  const url = new URL(value);
+
+  if (url.protocol === "https:") {
+    return true;
+  }
+
+  return url.protocol === "http:" && allowedHttpHosts.has(url.hostname);
+};
+
+const createSecureUrlSchema = (
+  message: string,
+  allowedHttpHosts: Set<string>,
+) =>
+  z.string().url().refine(
+    (value) => isHttpUrlAllowed(value, allowedHttpHosts),
+    message,
+  );
+
 const baseConfigSchema = z.object({
   PORT: z.coerce.number().int().positive().default(5100),
   LOG_LEVEL: z.string().default("info"),
-  PUBLIC_BASE_URL: z.string().url().default("http://localhost:3000"),
-  MASTERPORTAL_URL: z.string().url().or(z.string().startsWith("http://")).default("http://masterportal"),
+  PUBLIC_BASE_URL: createSecureUrlSchema(
+    "PUBLIC_BASE_URL must use https unless it targets a local development host.",
+    localHttpHosts,
+  ).default("http://localhost:3000"),
+  MASTERPORTAL_URL: createSecureUrlSchema(
+    "MASTERPORTAL_URL must use https unless it targets an explicitly allowed internal host.",
+    new Set([...localHttpHosts, ...internalHttpHosts]),
+  ).default("http://masterportal"),
   CONTENT_SOURCE_MODE: z.enum(["mock", "postgrest"]),
   DEFAULT_LANGUAGE: z.string().min(2).default("de"),
   FALLBACK_LANGUAGE: z.string().min(2).default("de"),
