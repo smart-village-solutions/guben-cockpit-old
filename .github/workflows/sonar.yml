@@ -41,7 +41,7 @@ jobs:
         run: npm ci --prefix frontend
 
       - name: Generate coverage reports
-        run: npm run test:coverage
+        run: CI_SONAR=true npm run test:coverage
 
       - name: Normalize LCOV paths for monorepo Sonar scan
         run: |

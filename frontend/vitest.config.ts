@@ -1,6 +1,8 @@
 import path from "path";
 import { defineConfig } from "vitest/config";
 
+const isSonarCoverageRun = process.env.CI_SONAR === "true";
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -15,32 +17,23 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json-summary", "html", "lcov"],
       reportsDirectory: "./coverage",
-      include: [
-        "src/auth/permissions.ts",
-        "src/hooks/useDebouncedCallback.ts",
-        "src/hooks/useDialogFormToggle.ts",
-        "src/hooks/useErrorToast.ts",
-        "src/hooks/useLanguageUpdater.ts",
-        "src/hooks/usePagination.ts",
-        "src/public-content/client.ts",
-        "src/public-content/hooks.ts",
-        "src/public-content/source.ts",
-        "src/public-content/useRouteMetadata.ts",
-        "src/stores/bookingStore.ts",
-        "src/stores/eventStore.ts",
-        "src/utilities/colorUtils.ts",
-        "src/utilities/dateExtensions.ts",
-        "src/utilities/enumUtils.ts",
-        "src/utilities/fetchApiExtensions.ts",
-        "src/utilities/nullabilityUtils.ts",
+      include: ["src/**/*.ts", "src/**/*.tsx"],
+      exclude: [
+        "src/**/*.test.ts",
+        "src/**/*.test.tsx",
+        "src/test/**",
+        "src/routeTree.gen.ts",
+        "src/vite-env.d.ts",
+        "src/**/*.d.ts",
       ],
-      exclude: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-      thresholds: {
-        statements: 70,
-        branches: 60,
-        functions: 70,
-        lines: 70,
-      },
+      ...(!isSonarCoverageRun && {
+        thresholds: {
+          statements: 70,
+          branches: 60,
+          functions: 70,
+          lines: 70,
+        },
+      }),
     },
   },
 });
