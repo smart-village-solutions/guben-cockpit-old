@@ -24,11 +24,6 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
   const query = useGatewayEventDetailContent(eventId);
   const data = eventFromState ?? query.data?.event;
   useRouteMetadata(query.data?.seo);
-
-  if (!isGatewayPublicContentEnabled) {
-    return <PublicContentDisabledState />;
-  }
-
   const [startDate, endDate] = useMemo(
     () =>
       data
@@ -36,6 +31,10 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
         : [undefined, undefined],
     [data],
   );
+
+  if (!isGatewayPublicContentEnabled) {
+    return <PublicContentDisabledState />;
+  }
 
   const tickets = (data as any)?.isBookingEvent
     ? useEventStore.getState().getTicketsByBkid(eventId)

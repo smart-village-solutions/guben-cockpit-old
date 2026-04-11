@@ -41,7 +41,13 @@ jobs:
         run: npm ci --prefix frontend
 
       - name: Generate coverage reports
-        run: npm run test:coverage
+        run: CI_SONAR=true npm run test:coverage
+
+      - name: Normalize LCOV paths for monorepo Sonar scan
+        run: |
+          sed -i 's#^SF:public-content/#SF:shared/public-content/#' shared/coverage/lcov.info
+          sed -i 's#^SF:src/#SF:content-gateway/src/#' content-gateway/coverage/lcov.info
+          sed -i 's#^SF:src/#SF:frontend/src/#' frontend/coverage/lcov.info
 
       - name: Validate Sonar configuration
         run: |
@@ -53,6 +59,9 @@ jobs:
           test -f shared/coverage/lcov.info
           test -f content-gateway/coverage/lcov.info
           test -f frontend/coverage/lcov.info
+          grep -q '^SF:shared/public-content/' shared/coverage/lcov.info
+          grep -q '^SF:content-gateway/src/' content-gateway/coverage/lcov.info
+          grep -q '^SF:frontend/src/' frontend/coverage/lcov.info
 
       - name: Build Sonar scanner args
         id: sonar_args

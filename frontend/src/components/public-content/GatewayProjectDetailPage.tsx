@@ -63,8 +63,8 @@ export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) =
 
   return (
     <DetailPageLayout
-      heroImage={project?.imageUrl}
-      heroAlt={project?.title}
+      heroImage={project?.imageUrl ?? undefined}
+      heroAlt={project?.title ?? undefined}
       title={project?.title || "Projekt"}
       breadcrumbItems={project ? getBreadcrumbItems() : undefined}
       metadata={

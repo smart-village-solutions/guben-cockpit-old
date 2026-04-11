@@ -16,6 +16,7 @@ interface Props extends WithClassName {
 
 export const InfoCard = ({ card, className }: Props) => {
   const [open, setOpen] = useState(false);
+  const cardTitle = card.title?.trim() || "Information";
 
   const renderDescription = (fullText: boolean) => (
     <Markdown
@@ -33,9 +34,9 @@ export const InfoCard = ({ card, className }: Props) => {
   return (
     <>
       <GenericCard
-        imageUrl={card.imageUrl}
-        imageAlt={card.imageAlt}
-        title={card.title}
+        imageUrl={card.imageUrl ?? undefined}
+        imageAlt={card.imageAlt ?? undefined}
+        title={cardTitle}
         titleSize="text-lg"
         description={renderDescription(false)}
         descriptionLines={3}
@@ -58,9 +59,9 @@ export const InfoCard = ({ card, className }: Props) => {
         <DialogContent className="p-0 max-w-2xl">
           <Card className="flex flex-col bg-white p-4 rounded-lg shadow-none">
             <GenericCard
-              imageUrl={card.imageUrl}
-              imageAlt={card.imageAlt}
-              title={card.title}
+              imageUrl={card.imageUrl ?? undefined}
+              imageAlt={card.imageAlt ?? undefined}
+              title={cardTitle}
               titleSize="text-xl"
               description={renderDescription(true)}
               buttonLabel={card.button?.title}

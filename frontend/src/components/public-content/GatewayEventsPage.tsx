@@ -45,7 +45,7 @@ const filtersSchema = z
 
 type FiltersType = z.infer<typeof filtersSchema>;
 
-export const GatewayEventsPage = () => {
+const GatewayEventsPageContent = () => {
   const { t } = useTranslation(["common", "events"]);
   const bookingEvents = useEventStore((state) => state.events);
   const processedTenants = useEventStore((state) => state.processedTenants);
@@ -74,11 +74,13 @@ export const GatewayEventsPage = () => {
   });
   useRouteMetadata(query.data?.seo);
 
-  if (!isGatewayPublicContentEnabled) {
-    return <PublicContentDisabledState />;
-  }
-
   const tenantIds = query.data?.events.bookingTenants ?? [];
+  const currentTenant = tenantIds[currentTenantIndex];
+  const shouldShowIntegration = Boolean(
+    currentTenant && !processedTenants.has(currentTenant.tenantId),
+  );
+  const currentLang = i18next.language as Language;
+  const [translationsReady, setTranslationsReady] = useState(false);
 
   const handleTenantDone = useCallback(() => {
     const currentTenant = tenantIds[currentTenantIndex];
@@ -93,9 +95,6 @@ export const GatewayEventsPage = () => {
       setLoading(false);
     }
   }, [currentTenantIndex, markProcessedTenants, tenantIds]);
-
-  const currentTenant = tenantIds[currentTenantIndex];
-  const shouldShowIntegration = currentTenant && !processedTenants.has(currentTenant.tenantId);
 
   useEffect(() => {
     if (tenantIds.length === 0) {
@@ -238,9 +237,6 @@ export const GatewayEventsPage = () => {
     pagination.setPageCount(query.data?.events.pageCount ?? 1);
   }, [allEvents.length, query.data]);
 
-  const currentLang = i18next.language as Language;
-  const [translationsReady, setTranslationsReady] = useState(false);
-
   // Progressive loading: show content immediately, load translations in background
   useEffect(() => {
     // Only set to true if not already loaded and not a booking integration
@@ -372,6 +368,14 @@ export const GatewayEventsPage = () => {
       </section>
     </main>
   );
+};
+
+export const GatewayEventsPage = () => {
+  if (!isGatewayPublicContentEnabled) {
+    return <PublicContentDisabledState />;
+  }
+
+  return <GatewayEventsPageContent />;
 };
 
 function toRadians(angle: number): number {

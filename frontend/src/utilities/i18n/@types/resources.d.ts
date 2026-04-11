@@ -80,8 +80,10 @@ interface Resources {
     },
     "bookingComponent": {
       "notFound": "Leider konnte das gewünschte Angebot nicht gefunden werden.",
-      "offer": "Unser Angebot"
+      "offer": "Unser Angebot",
+      "description": "Beschreibung"
     },
+    "noResults": "Keine Ergebnisse gefunden",
     "priceCard": {
       "included": "Im Raum inkludiert sind",
       "price": "Preis",

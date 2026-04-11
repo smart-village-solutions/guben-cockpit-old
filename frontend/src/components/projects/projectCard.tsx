@@ -11,7 +11,7 @@ export default function ProjectCard({ project, school }: IProps) {
   return (
     <Link to={`/projects/${project.id}`} className="h-full">
       <GenericCard
-        imageUrl={project.imageUrl}
+        imageUrl={project.imageUrl ?? undefined}
         imageAlt={project.title}
         title={project.title}
         titleSize="text-lg"
