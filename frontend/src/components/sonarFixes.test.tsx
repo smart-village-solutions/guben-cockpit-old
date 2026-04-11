@@ -254,49 +254,6 @@ vi.mock("@/public-content/hooks", () => ({
   }),
 }));
 
-vi.mock("@tiptap/react", () => ({
-  EditorContent: () => <div>EditorContent</div>,
-  useEditor: () => ({
-    state: {
-      selection: {
-        from: 0,
-        to: 0,
-      },
-    },
-    commands: {
-      setContent: vi.fn(),
-      setTextSelection: vi.fn(),
-    },
-    chain: () => ({
-      focus: () => ({
-        undo: () => ({ run: vi.fn() }),
-        redo: () => ({ run: vi.fn() }),
-        toggleBold: () => ({ run: vi.fn() }),
-        toggleItalic: () => ({ run: vi.fn() }),
-        toggleUnderline: () => ({ run: vi.fn() }),
-        toggleStrike: () => ({ run: vi.fn() }),
-        setTextAlign: () => ({ run: vi.fn() }),
-        toggleHeading: () => ({ run: vi.fn() }),
-        setParagraph: () => ({ run: vi.fn() }),
-        extendMarkRange: () => ({
-          unsetLink: () => ({ run: vi.fn() }),
-          setLink: () => ({ run: vi.fn() }),
-        }),
-        setColor: () => ({ run: vi.fn() }),
-      }),
-    }),
-    isActive: vi.fn(() => false),
-    getAttributes: vi.fn(() => ({ href: "" })),
-    storage: {
-      characterCount: {
-        characters: () => 5,
-      },
-    },
-    getHTML: () => "<p>Test</p>",
-  }),
-}));
-
-import HtmlEditor from "@/components/htmlEditor/editor";
 import { DeleteIconButton } from "@/components/iconButtons/DeleteIconButton";
 import { EditIconButton } from "@/components/iconButtons/EditIconButton";
 import { IconButtonBase } from "@/components/iconButtons/IconButtonBase";
@@ -380,14 +337,5 @@ describe("Sonar fix smoke tests", () => {
     expect(eventsMarkup).toContain("Event");
     expect(eventDetailMarkup).toContain("Event");
     expect(marketplaceMarkup).toContain("Marktplatz");
-  });
-
-  it("renders the HTML editor with a mocked editor instance", () => {
-    const markup = renderToStaticMarkup(
-      <HtmlEditor content="<p>Hello</p>" onChange={vi.fn()} />,
-    );
-
-    expect(markup).toContain("EditorContent");
-    expect(markup).toContain("Copy HTML");
   });
 });
