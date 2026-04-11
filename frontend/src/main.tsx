@@ -45,7 +45,7 @@ if (rootElement.hasChildNodes()) {
   root.render(<App />)
 }
 
-function App() {
+export function App() {
   useEffect(() => {
     // Only load Matomo in production (not on localhost)
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';

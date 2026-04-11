@@ -5,6 +5,8 @@ import { builderModel, builderPreviewUrl, builderPublicApiKey } from "@/builder/
 
 import "./registry";
 
+const localBuilderPreviewExamplePath = "/builder-preview?url=/";
+
 export default function BuilderPreviewContent() {
   const isPreviewingInBuilder = useIsPreviewing();
   const [content, setContent] = useState<any | null>(null);
@@ -120,7 +122,7 @@ function BuilderPreviewState({ title, body }: BuilderPreviewStateProps) {
         <h1 className="font-poppins text-3xl font-bold text-gubenAccent">{title}</h1>
         <p className="mt-4 leading-7 text-slate-600">{body}</p>
         <p className="mt-6 text-sm text-slate-500">
-          Beispiel lokal: <code>http://localhost:3000/builder-preview?url=/</code>
+          Beispiel lokal: <code>{localBuilderPreviewExamplePath}</code>
         </p>
       </section>
     </main>

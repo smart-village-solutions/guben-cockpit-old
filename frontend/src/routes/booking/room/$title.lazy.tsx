@@ -5,7 +5,7 @@ export const Route = createLazyFileRoute('/booking/room/$title')({
   component: BookingInformation,
 });
 
-function BookingInformation() {
+export function BookingInformation() {
   return (
     <BookingRoom />
   )

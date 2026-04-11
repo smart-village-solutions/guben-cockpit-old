@@ -19,7 +19,7 @@ export const Route = createLazyFileRoute('/booking/')({
   component: Booking,
 })
 
-function Booking() {
+export function Booking() {
   const { t } = useTranslation("booking");
 
   const [loading, setLoading] = useState(true)

@@ -2,7 +2,7 @@ import type { Coordinates } from "@shared/public-content/contracts";
 import { BookingEvent, Ticket, useEventStore } from "@/stores/eventStore";
 import { useEffect } from "react";
 
-const trimTrailingSlashes = (value: string) => {
+export const trimTrailingSlashes = (value: string) => {
   let end = value.length;
   while (end > 0 && value[end - 1] === "/") {
     end -= 1;

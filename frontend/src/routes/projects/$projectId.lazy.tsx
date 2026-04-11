@@ -6,8 +6,12 @@ export const Route = createLazyFileRoute('/projects/$projectId')({
   component: RouteComponent,
 })
 
-function RouteComponent() {
+export function ProjectDetailRoute({ projectId }: { projectId: string }) {
+  return <GatewayProjectDetailPage projectId={projectId} />
+}
+
+export function RouteComponent() {
   const { projectId } = Route.useParams()
 
-  return <GatewayProjectDetailPage projectId={projectId} />
+  return <ProjectDetailRoute projectId={projectId} />
 }

@@ -20,11 +20,11 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-function HomeComponent() {
+export function HomeComponent() {
   return <GatewayHomeRoute />;
 }
 
-function GatewayHomeRoute() {
+export function GatewayHomeRoute() {
   const query = useGatewayHomeContent();
   useRouteMetadata(query.data?.seo);
 

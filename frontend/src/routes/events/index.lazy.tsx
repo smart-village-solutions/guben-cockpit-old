@@ -7,7 +7,7 @@ export const Route = createLazyFileRoute('/events/')({
   component: RouteComponent,
 })
 
-function RouteComponent() {
+export function RouteComponent() {
   return (
     <div className="w-full h-full flex flex-col">
       <Breadcrumb items={[

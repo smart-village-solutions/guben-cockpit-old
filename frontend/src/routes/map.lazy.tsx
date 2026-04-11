@@ -9,7 +9,7 @@ export const Route = createLazyFileRoute('/map')({
   component: MapComponent,
 })
 
-function MapComponent() {
+export function MapComponent() {
   const query = useGatewayMapContent();
   useRouteMetadata(query.data?.seo);
 

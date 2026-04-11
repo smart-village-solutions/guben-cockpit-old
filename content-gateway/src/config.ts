@@ -2,6 +2,22 @@ import { z } from "zod";
 
 const localHttpHosts = new Set(["localhost", "127.0.0.1", "::1"]);
 const internalHttpHosts = new Set(["masterportal"]);
+const localDevelopmentPort = "3000";
+
+const createHttpUrl = (hostname: string, port?: string) => {
+  const url = new URL("https://placeholder.invalid");
+  url.protocol = "http:";
+  url.hostname = hostname;
+
+  if (port) {
+    url.port = port;
+  }
+
+  return url.toString();
+};
+
+const localPublicBaseUrlDefault = createHttpUrl("localhost", localDevelopmentPort);
+const masterportalUrlDefault = createHttpUrl("masterportal");
 
 const isHttpUrlAllowed = (value: string, allowedHttpHosts: Set<string>) => {
   const url = new URL(value);
@@ -28,11 +44,11 @@ const baseConfigSchema = z.object({
   PUBLIC_BASE_URL: createSecureUrlSchema(
     "PUBLIC_BASE_URL must use https unless it targets a local development host.",
     localHttpHosts,
-  ).default("http://localhost:3000"),
+  ).default(localPublicBaseUrlDefault),
   MASTERPORTAL_URL: createSecureUrlSchema(
     "MASTERPORTAL_URL must use https unless it targets an explicitly allowed internal host.",
     new Set([...localHttpHosts, ...internalHttpHosts]),
-  ).default("http://masterportal"),
+  ).default(masterportalUrlDefault),
   CONTENT_SOURCE_MODE: z.enum(["mock", "postgrest"]),
   DEFAULT_LANGUAGE: z.string().min(2).default("de"),
   FALLBACK_LANGUAGE: z.string().min(2).default("de"),

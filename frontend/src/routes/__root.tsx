@@ -14,7 +14,7 @@ export const Route = createRootRoute({
   component: RootComponent,
 })
 
-function RootComponent() {
+export function RootComponent() {
   return (
     <div className={"min-h-screen h-screen flex flex-col bg-background"}>
       <Navbar />

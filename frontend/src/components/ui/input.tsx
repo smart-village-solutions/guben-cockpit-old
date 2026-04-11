@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-const isValidFloatInput = (value: string) => {
+export const isValidFloatInput = (value: string) => {
   let index = 0;
   let seenDecimalPoint = false;
 
