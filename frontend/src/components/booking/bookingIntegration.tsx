@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { Booking, Ticket, useBookingStore } from "@/stores/bookingStore";
+import { trimTrailingSlashes } from "@/utilities/urlUtils";
 
-const bookingBaseUrl = (import.meta.env.VITE_BOOKING_URL || "/api/booking").replace(/\/+$/, "");
+export { trimTrailingSlashes } from "@/utilities/urlUtils";
+
+const bookingBaseUrl = trimTrailingSlashes(import.meta.env.VITE_BOOKING_URL || "/api/booking");
 
 type BookingIntegrationProps = {
   tenantId: string;

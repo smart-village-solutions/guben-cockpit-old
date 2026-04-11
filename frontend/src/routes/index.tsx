@@ -1,28 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { z } from "zod";
+import { Suspense, lazy } from "react";
 import Markdown from "react-markdown";
 
 import { PublicContentErrorState } from "@/components/public-content/PublicContentErrorState";
-import { DashboardDropdownTabs } from "@/components/home/DashboardDropdownNav";
 import { useGatewayHomeContent } from "@/public-content/hooks";
 import { useRouteMetadata } from "@/public-content/useRouteMetadata";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const SelectedTabSchema = z.object({
-  selectedTabId: z.string().optional(),
-});
+const DashboardDropdownTabs = lazy(() =>
+  import("@/components/home/DashboardDropdownNav").then((module) => ({
+    default: module.DashboardDropdownTabs,
+  })),
+);
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
-  validateSearch: zodValidator(SelectedTabSchema),
+  validateSearch: (search) => ({
+    selectedTabId: typeof search.selectedTabId === "string" ? search.selectedTabId : undefined,
+  }),
 });
 
-function HomeComponent() {
+export function HomeComponent() {
   return <GatewayHomeRoute />;
 }
 
-function GatewayHomeRoute() {
+export function GatewayHomeRoute() {
   const query = useGatewayHomeContent();
   useRouteMetadata(query.data?.seo);
 
@@ -56,7 +58,9 @@ function GatewayHomeRoute() {
         </div>
       </article>
       <section className="max-w-7xl mx-auto px-4 w-full">
-        <DashboardDropdownTabs dropdowns={query.data.dashboard.dropdowns} />
+        <Suspense fallback={<Skeleton className="h-[36rem] w-full" />}>
+          <DashboardDropdownTabs dropdowns={query.data.dashboard.dropdowns} />
+        </Suspense>
       </section>
     </main>
   );

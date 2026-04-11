@@ -1,8 +1,11 @@
 import type { Coordinates } from "@shared/public-content/contracts";
 import { BookingEvent, Ticket, useEventStore } from "@/stores/eventStore";
 import { useEffect } from "react";
+import { trimTrailingSlashes } from "@/utilities/urlUtils";
 
-const bookingBaseUrl = (import.meta.env.VITE_BOOKING_URL || "/api/booking").replace(/\/+$/, "");
+export { trimTrailingSlashes } from "@/utilities/urlUtils";
+
+const bookingBaseUrl = trimTrailingSlashes(import.meta.env.VITE_BOOKING_URL || "/api/booking");
 
 type EventIntegrationProps = {
   tenantId: string;
