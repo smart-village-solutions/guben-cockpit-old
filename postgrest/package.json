@@ -1,0 +1,8 @@
+{
+  "name": "guben-cockpit-postgrest",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/smoke.test.mjs"
+  }
+}

@@ -19,6 +19,8 @@
     "verify:prerender": "tsx scripts/verify-prerender.ts"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tanstack/eslint-plugin-query": "^5.58.1",
     "@tanstack/router-plugin": "^1.58.12",
@@ -31,6 +33,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
     "i18next-resources-for-ts": "^1.5.0",
+    "jsdom": "^26.1.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
     "tsx": "^4.19.3",
