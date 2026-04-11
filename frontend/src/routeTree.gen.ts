@@ -41,7 +41,7 @@ const ProjectsLazyRoute = ProjectsLazyImport.update({
 const MapRoute = MapImport.update({
   path: '/map',
   getParentRoute: () => rootRoute,
-} as any)
+} as any).lazy(() => import('./routes/map.lazy').then((d) => d.Route))
 
 const EventsRoute = EventsImport.update({
   path: '/events',
@@ -68,12 +68,12 @@ const ProjectsIndexLazyRoute = ProjectsIndexLazyImport.update({
 const EventsIndexRoute = EventsIndexImport.update({
   path: '/',
   getParentRoute: () => EventsRoute,
-} as any)
+} as any).lazy(() => import('./routes/events/index.lazy').then((d) => d.Route))
 
 const BookingIndexRoute = BookingIndexImport.update({
   path: '/booking/',
   getParentRoute: () => rootRoute,
-} as any)
+} as any).lazy(() => import('./routes/booking/index.lazy').then((d) => d.Route))
 
 const ProjectsSchoolsLazyRoute = ProjectsSchoolsLazyImport.update({
   path: '/schools',
@@ -92,22 +92,30 @@ const ProjectsMarketplaceLazyRoute = ProjectsMarketplaceLazyImport.update({
 const ProjectsProjectIdRoute = ProjectsProjectIdImport.update({
   path: '/$projectId',
   getParentRoute: () => ProjectsLazyRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/projects/$projectId.lazy').then((d) => d.Route),
+)
 
 const EventsEventIdRoute = EventsEventIdImport.update({
   path: '/$eventId',
   getParentRoute: () => EventsRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/events/$eventId.lazy').then((d) => d.Route),
+)
 
 const BookingTitleRoute = BookingTitleImport.update({
   path: '/booking/$title',
   getParentRoute: () => rootRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/booking/$title.lazy').then((d) => d.Route),
+)
 
 const BookingRoomTitleRoute = BookingRoomTitleImport.update({
   path: '/booking/room/$title',
   getParentRoute: () => rootRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/booking/room/$title.lazy').then((d) => d.Route),
+)
 
 // Populate the FileRoutesByPath interface
 

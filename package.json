@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "Monorepo for Guben Cockpit",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
