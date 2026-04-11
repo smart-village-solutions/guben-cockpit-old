@@ -43,6 +43,11 @@ jobs:
       - name: Generate coverage reports
         run: npm run test:coverage
 
+      - name: Normalize LCOV paths for monorepo Sonar scan
+        run: |
+          sed -i 's#^SF:src/#SF:content-gateway/src/#' content-gateway/coverage/lcov.info
+          sed -i 's#^SF:src/#SF:frontend/src/#' frontend/coverage/lcov.info
+
       - name: Validate Sonar configuration
         run: |
           test -n "$SONAR_TOKEN"
@@ -52,6 +57,8 @@ jobs:
           fi
           test -f content-gateway/coverage/lcov.info
           test -f frontend/coverage/lcov.info
+          grep -q '^SF:content-gateway/src/' content-gateway/coverage/lcov.info
+          grep -q '^SF:frontend/src/' frontend/coverage/lcov.info
 
       - name: Build Sonar scanner args
         id: sonar_args
