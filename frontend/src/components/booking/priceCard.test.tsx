@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import PriceCard from "./priceCard";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -19,9 +20,7 @@ vi.mock("./BookingAvailability", () => ({
 }));
 
 describe("priceCard", () => {
-  it("renders a non-bookable state without a checkout button for invalid booking urls", async () => {
-    const { default: PriceCard } = await import("./priceCard");
-
+  it("renders a non-bookable state without a checkout button for invalid booking urls", () => {
     render(
       <PriceCard
         bookingUrl=""
@@ -37,9 +36,7 @@ describe("priceCard", () => {
     expect(screen.getByText("Wetterfest")).toBeTruthy();
   });
 
-  it("renders price details, availability and checkout link for valid booking urls", async () => {
-    const { default: PriceCard } = await import("./priceCard");
-
+  it("renders price details, availability and checkout link for valid booking urls", () => {
     render(
       <PriceCard
         bookingUrl="https://guben.smart-city-booking.de/admin/checkout?id=box-1"
@@ -61,8 +58,7 @@ describe("priceCard", () => {
     expect(screen.getByText("priceCard.place: Bahnhof")).toBeTruthy();
     expect(screen.getByText("Online bezahlen")).toBeTruthy();
     expect(screen.getByText("availability:tenant-1:box-1")).toBeTruthy();
-    expect(screen.getByRole("link")).toHaveAttribute(
-      "href",
+    expect((screen.getByRole("link") as HTMLAnchorElement).getAttribute("href")).toBe(
       "https://guben.smart-city-booking.de/admin/checkout?id=box-1",
     );
   });

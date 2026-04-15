@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import BookingComponent from "./bookingComponent";
 
 const navigateMock = vi.fn();
 
@@ -44,8 +45,8 @@ vi.mock("../ui/DetailPageLayout", () => ({
     backLabel,
   }: {
     title: string;
-    metadata: React.ReactNode;
-    children: React.ReactNode;
+    metadata: unknown;
+    children: unknown;
     onBack?: () => void;
     backLabel?: string;
   }) => (
@@ -73,8 +74,6 @@ describe("bookingComponent", () => {
 
   it("renders a loading state while hydration is running", async () => {
     hydrationState.isHydrating = true;
-
-    const { default: BookingComponent } = await import("./bookingComponent");
     render(<BookingComponent />);
 
     expect(screen.getByText("bookingComponent.loading")).toBeTruthy();
@@ -82,21 +81,18 @@ describe("bookingComponent", () => {
 
   it("renders the scoped booking error state when hydration fails before data is available", async () => {
     hydrationState.hydrationError = new Error("kaputt");
-
-    const { default: BookingComponent } = await import("./bookingComponent");
     render(<BookingComponent />);
 
     expect(screen.getByText("error:detail")).toBeTruthy();
   });
 
   it("renders not found when no hydrated booking exists", async () => {
-    const { default: BookingComponent } = await import("./bookingComponent");
     render(<BookingComponent />);
 
     expect(screen.getByText("bookingComponent.notFound")).toBeTruthy();
   });
 
-  it("renders metadata, description and the fallback price card for direct bookings", async () => {
+  it("renders metadata, description and the fallback price card for direct bookings", () => {
     hydrationState.booking = {
       tenantId: "tenant-1",
       title: "Fahrradbox Laternengasse",
@@ -113,7 +109,6 @@ describe("bookingComponent", () => {
       tickets: [],
     };
 
-    const { default: BookingComponent } = await import("./bookingComponent");
     render(<BookingComponent />);
 
     expect(screen.getByText("bookingComponent.description")).toBeTruthy();
@@ -127,7 +122,7 @@ describe("bookingComponent", () => {
     expect(navigateMock).toHaveBeenCalledWith({ to: "/booking" });
   });
 
-  it("renders one price card per ticket when ticket offers exist", async () => {
+  it("renders one price card per ticket when ticket offers exist", () => {
     hydrationState.booking = {
       tenantId: "tenant-1",
       title: "Großes Angebot",
@@ -166,7 +161,6 @@ describe("bookingComponent", () => {
       ],
     };
 
-    const { default: BookingComponent } = await import("./bookingComponent");
     render(<BookingComponent />);
 
     expect(screen.getByText("price-card:Ticket A:tenant-1:ticket-a")).toBeTruthy();

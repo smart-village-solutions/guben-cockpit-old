@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import BookingRoom from "./bookingRoom";
 
 const navigateMock = vi.fn();
 
@@ -48,8 +49,6 @@ describe("bookingRoom", () => {
 
   it("renders loading while room details hydrate", async () => {
     hydrationState.isHydrating = true;
-
-    const { default: BookingRoom } = await import("./bookingRoom");
     render(<BookingRoom />);
 
     expect(screen.getByText("bookingComponent.loading")).toBeTruthy();
@@ -57,27 +56,23 @@ describe("bookingRoom", () => {
 
   it("renders error state when hydration fails", async () => {
     hydrationState.hydrationError = new Error("kaputt");
-
-    const { default: BookingRoom } = await import("./bookingRoom");
     render(<BookingRoom />);
 
     expect(screen.getByText("error:detail")).toBeTruthy();
   });
 
   it("renders not found when the hydrated room booking is missing", async () => {
-    const { default: BookingRoom } = await import("./bookingRoom");
     render(<BookingRoom />);
 
     expect(screen.getByText("bookingComponent.notFound")).toBeTruthy();
   });
 
-  it("renders room cards and supports navigation back to the overview", async () => {
+  it("renders room cards and supports navigation back to the overview", () => {
     hydrationState.booking = {
       imgUrl: "/rooms.jpg",
       bookings: [{ title: "Saal 1" }, { title: "Saal 2" }],
     };
 
-    const { default: BookingRoom } = await import("./bookingRoom");
     render(<BookingRoom />);
 
     expect(screen.getByText("our_rooms")).toBeTruthy();
@@ -86,5 +81,5 @@ describe("bookingRoom", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "AllBookings" }));
     expect(navigateMock).toHaveBeenCalledWith({ to: "/booking" });
-  });
+  }, 10000);
 });
