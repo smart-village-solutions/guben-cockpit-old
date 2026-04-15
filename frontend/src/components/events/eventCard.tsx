@@ -9,6 +9,12 @@ import { TranslatedHtml, TranslatedText } from "@/utilities/translateUtils";
 import { GenericCard } from "@/components/ui/GenericCard";
 import { BaseImgTag } from "@/components/ui/BaseImgTag";
 
+const formatCalendarDate = (value: Date) =>
+  typeof value.formatDate === "function" ? value.formatDate() : value.toISOString().slice(0, 10);
+
+const formatCalendarTime = (value: Date) =>
+  typeof value.formatTime === "function" ? value.formatTime() : value.toISOString().slice(11, 16);
+
 interface EventCardProps {
   event: Event;
 }
@@ -105,7 +111,10 @@ function EventCard({ event }: EventCardProps) {
       <div className="flex items-start gap-2 text-sm">
         <ClockIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <p className="line-clamp-2">
-          {startDate.formatDateTime()} - {endDate.formatDateTime()}
+          {startDate.formatDateTime()} -{" "}
+          {formatCalendarDate(startDate) === formatCalendarDate(endDate)
+            ? formatCalendarTime(endDate)
+            : endDate.formatDateTime()}
         </p>
       </div>
     </div>

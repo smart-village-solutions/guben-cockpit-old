@@ -21,6 +21,13 @@ import { PostgrestContentMapper, distanceInKm } from "./postgrest-content-mapper
 import { PostgrestContentSource } from "./postgrest-content-source.js";
 import { EventFilters, EventCategoryRow, EventImageRow, EventUrlRow } from "./postgrest-content-types.js";
 
+const additionalBookingTenants = [
+  {
+    id: "smart-city-booking-bike-boxes",
+    tenantId: "2b12ce76-c513-40d0-bb56-51a597556f9d",
+  },
+] as const;
+
 export class PostgrestContentRepository implements PublicContentRepository {
   private readonly mapper: PostgrestContentMapper;
   private readonly source: PostgrestContentSource;
@@ -167,11 +174,23 @@ export class PostgrestContentRepository implements PublicContentRepository {
   }
 
   public async getBookingTenants(): Promise<BookingTenantsContent> {
-    return bookingTenantsContentSchema.parse({
-      tenants: (await this.source.getBookingTenantRows()).map((row) => ({
+    const tenants = [
+      ...(await this.source.getBookingTenantRows()).map((row) => ({
         id: row.id,
         tenantId: row.tenant_id,
       })),
+      ...additionalBookingTenants,
+    ];
+
+    return bookingTenantsContentSchema.parse({
+      tenants: Array.from(
+        tenants.reduce((deduped, tenant) => {
+          if (!deduped.has(tenant.tenantId)) {
+            deduped.set(tenant.tenantId, tenant);
+          }
+          return deduped;
+        }, new Map<string, (typeof tenants)[number]>()),
+      ).map(([, tenant]) => tenant),
     });
   }
 

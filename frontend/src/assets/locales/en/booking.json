@@ -27,10 +27,38 @@
   },
   "bookingComponent": {
     "notFound": "Unfortunately, the requested offer could not be found.",
+    "loading": "Booking data is loading.",
     "offer": "Our Offer",
     "description": "Description"
   },
+  "overview": {
+    "loading": "Booking overview is loading."
+  },
   "noResults": "No results found",
+  "availability": {
+    "loading": "Availability is loading ...",
+    "label": "Availability",
+    "available": "Available",
+    "unavailable": "Currently occupied",
+    "remaining": "Remaining: {{count}}",
+    "capacity": "Capacity: {{count}}"
+  },
+  "errorState": {
+    "title": {
+      "overview": "Bookings are currently unavailable",
+      "detail": "Booking details are currently unavailable",
+      "availability": "Availability is currently unavailable"
+    },
+    "code": {
+      "BOOKING_API_CONFIG_ERROR": "The booking platform is not configured correctly for this deployment.",
+      "BOOKING_API_TRANSPORT_ERROR": "The booking platform is currently unreachable.",
+      "BOOKING_API_HTTP_ERROR": "The booking platform is currently returning an error.",
+      "BOOKING_API_INVALID_PAYLOAD": "The booking data is currently incomplete or invalid.",
+      "default": "The booking data could not be loaded."
+    },
+    "httpStatus": "HTTP status: {{status}}",
+    "retry": "Retry"
+  },
   "priceCard": {
     "included": "Included in the room are",
     "price": "Price",

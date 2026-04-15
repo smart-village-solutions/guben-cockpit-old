@@ -16,6 +16,12 @@ import type { EventDetailContent } from "@shared/public-content/contracts";
 import { PublicContentErrorState } from "./PublicContentErrorState";
 import { PublicContentDisabledState } from "./PublicContentDisabledState";
 
+const formatCalendarDate = (value: Date) =>
+  typeof value.formatDate === "function" ? value.formatDate() : value.toISOString().slice(0, 10);
+
+const formatCalendarTime = (value: Date) =>
+  typeof value.formatTime === "function" ? value.formatTime() : value.toISOString().slice(11, 16);
+
 export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
@@ -72,7 +78,13 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
         <p className="flex gap-1 text-neutral-800">
           {startDate && <span>{startDate.formatDateTime()}</span>}
           {startDate && endDate && "-"}
-          {endDate && <span>{endDate.formatDateTime()}</span>}
+          {endDate && (
+            <span>
+              {startDate && formatCalendarDate(startDate) === formatCalendarDate(endDate)
+                ? formatCalendarTime(endDate)
+                : endDate.formatDateTime()}
+            </span>
+          )}
         </p>
       </div>
 

@@ -2,7 +2,7 @@ import { CustomTooltip } from "@/components/general/Tooltip";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from '@tanstack/react-router';
 import { CalendarDaysIcon, HomeIcon, MapIcon, PlaneIcon, ShieldIcon } from "lucide-react";
-import React, { createContext, HtmlHTMLAttributes, PropsWithChildren, useContext, useMemo } from 'react';
+import React, { createContext, PropsWithChildren, useContext, useMemo } from 'react';
 import { useTranslation } from "react-i18next";
 import { ServicePortalIcon, SmartCityGubenLogoIcon } from "../icons";
 import i18next from "i18next";
@@ -39,7 +39,7 @@ const NavLink = (props: { name: string, to: string, children: React.ReactNode, t
 }
 
 const NavList = ({ children, className }: PropsWithChildren & WithClassName) => (
-  <ul className={cn('flex-1 flex gap-2 h-full items-center justify-center self-center py-2', className)}>
+  <ul className={cn('flex-1 flex gap-2 h-full items-center justify-center self-center py-0', className)}>
     {children}
   </ul>
 );
@@ -51,53 +51,59 @@ export const Navbar = () => {
 
   return (
     <NavContext.Provider value={{ location: location.pathname }}>
-      <div className="w-full h-20 bg-white sticky top-0 shadow px-4 rounded-b flex items-center justify-between z-50 gap-5">
-        <div id="logo" className="flex justify-start items-center h-full">
-          <Link to="/" className="h-full flex justify-center items-center">
+      <div className="sticky top-0 z-50 grid h-20 w-full grid-cols-[auto_1fr_auto] items-center gap-5 rounded-b bg-white px-4 shadow">
+        <div id="logo" className="flex h-full items-center justify-start">
+          <Link
+            to="/"
+            search={() => ({ selectedTabId: undefined })}
+            className="h-full flex justify-center items-center"
+          >
             <SmartCityGubenLogoIcon className="w-[128px] h-auto" />
           </Link>
         </div>
 
-        <NavList>
-          <NavLink to="/" name={t("Dashboard")}>
-            <div className="flex flex-col items-center w-20">
-              <HomeIcon className={iconStyle} />
-              <span className="mt-1 text-xs font-nunito">{t('Dashboard')}</span>
-            </div>
-          </NavLink>
-          <NavLink to="/projects" name={t("Projects")}>
-            <div className="flex flex-col items-center w-20">
-              <MyGubenIcon className={iconStyle} />
-              <span className="mt-1 text-xs font-nunito">{t('Projects')}</span>
-            </div>
-          </NavLink>
-          <NavLink to="/map" name={t("Map")}>
-            <div className="flex flex-col items-center w-20">
-              <MapIcon className={iconStyle} />
-              <span className="mt-1 text-xs font-nunito">{t('Map')}</span>
-            </div>
-          </NavLink>
-          <NavLink to="/events" name={t("Events")}>
-            <div className="flex flex-col items-center w-20">
-              <CalendarDaysIcon className={iconStyle} />
-              <span className="mt-1 text-xs font-nunito">{t('Events')}</span>
-            </div>
-          </NavLink>
-          <NavLink to="/booking" name={t("Booking")}>
-            <div className="flex flex-col items-center w-20">
-              <PlaneIcon className={iconStyle} />
-              <span className="mt-1 text-xs font-nunito">{t('Booking')}</span>
-            </div>
-          </NavLink>
-          <NavLink name={t("ServicePortal")} to="https://serviceportal.dikom-bb.de/stadt-guben" target="_blank">
-            <div className="flex flex-col items-center w-20">
-              <ServicePortalIcon className={iconStyle} />
-              <span className="mt-1 text-xs whitespace-nowrap font-nunito">{t('ServicePortal')}</span>
-            </div>
-          </NavLink>
-        </NavList>
+        <div className="flex min-w-0 items-center justify-center">
+          <NavList className="flex-none">
+            <NavLink to="/" name={t("Dashboard")}>
+              <div className="flex flex-col items-center w-20">
+                <HomeIcon className={iconStyle} />
+                <span className="mt-1 text-xs font-nunito">{t('Dashboard')}</span>
+              </div>
+            </NavLink>
+            <NavLink to="/projects" name={t("Projects")}>
+              <div className="flex flex-col items-center w-20">
+                <MyGubenIcon className={iconStyle} />
+                <span className="mt-1 text-xs font-nunito">{t('Projects')}</span>
+              </div>
+            </NavLink>
+            <NavLink to="/map" name={t("Map")}>
+              <div className="flex flex-col items-center w-20">
+                <MapIcon className={iconStyle} />
+                <span className="mt-1 text-xs font-nunito">{t('Map')}</span>
+              </div>
+            </NavLink>
+            <NavLink to="/events" name={t("Events")}>
+              <div className="flex flex-col items-center w-20">
+                <CalendarDaysIcon className={iconStyle} />
+                <span className="mt-1 text-xs font-nunito">{t('Events')}</span>
+              </div>
+            </NavLink>
+            <NavLink to="/booking" name={t("Booking")}>
+              <div className="flex flex-col items-center w-20">
+                <PlaneIcon className={iconStyle} />
+                <span className="mt-1 text-xs font-nunito">{t('Booking')}</span>
+              </div>
+            </NavLink>
+            <NavLink name={t("ServicePortal")} to="https://serviceportal.dikom-bb.de/stadt-guben" target="_blank">
+              <div className="flex flex-col items-center w-20">
+                <ServicePortalIcon className={iconStyle} />
+                <span className="mt-1 text-xs whitespace-nowrap font-nunito">{t('ServicePortal')}</span>
+              </div>
+            </NavLink>
+          </NavList>
+        </div>
 
-        <NavList className={"justify-end"}>
+        <NavList className="flex-none justify-end">
           <li>
             <CustomTooltip text="Admin">
               <a

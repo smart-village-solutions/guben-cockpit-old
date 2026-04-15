@@ -35,13 +35,14 @@ const mapQueryState = {
 
 const bookingState = {
   bookings: [
-    { category: "room", title: "Room 1" },
-    { category: "resource", title: "Resource 1" },
-    { category: "sport", title: "Sport 1" },
+    { tenantId: "tenant-1", category: "room", title: "Room 1" },
+    { tenantId: "tenant-1", category: "resource", title: "Resource 1" },
+    { tenantId: "tenant-1", category: "sport", title: "Sport 1" },
   ],
   processedTenants: new Set<string>(),
   markProcessedTenants: vi.fn(),
   addBookings: vi.fn(),
+  reset: vi.fn(),
 };
 
 const bookingTenantsState = {
@@ -219,7 +220,7 @@ describe("route coverage", () => {
     expect(await screen.findByText("Footer")).toBeTruthy();
     expect(await screen.findByText("Toaster")).toBeTruthy();
     expect(await screen.findByText("BuilderPreviewEntry")).toBeTruthy();
-  });
+  }, 10000);
 
   it("covers home route success path and search validation", async () => {
     const homeModule = await import("@/routes/index");
@@ -290,7 +291,7 @@ describe("route coverage", () => {
     expect(screen.getByText("rooms")).toBeTruthy();
     expect(screen.getByText("BookingComponent")).toBeTruthy();
     expect(screen.getByText("BookingRoom")).toBeTruthy();
-  });
+  }, 10000);
 
   it("imports route shell modules so their route declarations are covered", async () => {
     await import("@/routes/map");

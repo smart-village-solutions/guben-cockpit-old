@@ -53,7 +53,7 @@ curl -fsS -X PUT \
 ```bash
 curl -fsS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
 curl -fsS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
-curl -fsS -o /dev/null -w "booking/default/bookables: %{http_code}\n" https://cockpit.guben.de/api/booking/html/default/bookables
+curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/api/default/bookables/public
 ```
 
 Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schritte 3-6 wiederholen.
@@ -116,9 +116,10 @@ docker manifest inspect ghcr.io/smart-village-solutions/guben-cockpit-content-ga
 2. Sicherstellen, dass `stack.prod.yml` folgende Web-Umgebung enthaelt:
    - `PRERENDER_CONTENT_GATEWAY_URL=http://content-gateway:5100`
    - `INTERNAL_CONTENT_GATEWAY_URL=http://content-gateway:5100`
-   - `INTERNAL_BOOKING_URL=https://backend.booking.guben.de`
+   - `INTERNAL_BOOKING_URL=https://backend.booking.guben.de` fuer die noch nicht migrierten Legacy-Event-Flows
    - `VITE_CONTENT_GATEWAY_URL=${FRONTEND_BASEURI}`
-   - `VITE_BOOKING_URL=/api/booking`
+   - `VITE_BOOKING_API_URL=https://guben-api.smart-city-booking.de`
+   - `VITE_BOOKING_URL=/api/booking` fuer die noch nicht migrierten Legacy-Event-Flows
 3. In `Environment variables` setzen:
    - `VERSION_WEB=<zieltag>`
    - `VERSION_API=<bestehender API-Tag>` (nur aendern, wenn API-Release geplant)
@@ -157,10 +158,24 @@ curl -fsS -X PUT \
 ```bash
 curl -fsS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
 curl -fsS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
-curl -fsS -o /dev/null -w "booking/default/bookables: %{http_code}\n" https://cockpit.guben.de/api/booking/html/default/bookables
+curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/api/default/bookables/public
 ```
 
 Erwartung: jeweils `200`.
+
+Browser-/CORS-Check fuer den Booking-Rollout:
+
+```js
+await fetch("https://guben-api.smart-city-booking.de/api/default/bookables/public", {
+  headers: { Accept: "application/json" },
+}).then((response) => response.ok)
+```
+
+Diesen Check vor Rollout einmal aus einer lokalen Frontend-Origin und einmal aus einer deployten Zielumgebung im Browser ausfuehren.
+
+Hinweis zum Booking-Link:
+- Die Smart-City-Booking-API liefert fuer Bookables aktuell keinen fertigen `bookingUrl`.
+- Das Frontend konstruiert deshalb den Portal-Link deterministisch aus `VITE_BOOKING_API_URL`, indem der API-Host auf den User-Host abgebildet und `tenantId` plus `bookableId` als Query-Parameter uebergeben werden.
 
 Zusatzcheck Container:
 

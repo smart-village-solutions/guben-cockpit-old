@@ -207,4 +207,48 @@ describe("PostgrestContentRepository", () => {
       statusCode: 404,
     });
   });
+
+  it("augments booking tenants with the smart city booking bike-box tenant", async () => {
+    const repository = new PostgrestContentRepository(config, {
+      select: async () => [],
+    } as never);
+
+    (repository as any).source = {
+      getBookingTenantRows: async () => [{ id: "tenant-1", tenant_id: "bk-1" }],
+    };
+
+    const result = await repository.getBookingTenants();
+
+    expect(result.tenants).toEqual([
+      { id: "tenant-1", tenantId: "bk-1" },
+      {
+        id: "smart-city-booking-bike-boxes",
+        tenantId: "2b12ce76-c513-40d0-bb56-51a597556f9d",
+      },
+    ]);
+  });
+
+  it("deduplicates booking tenants by tenant id when the additional tenant is already present", async () => {
+    const repository = new PostgrestContentRepository(config, {
+      select: async () => [],
+    } as never);
+
+    (repository as any).source = {
+      getBookingTenantRows: async () => [
+        {
+          id: "existing-bike-box-tenant",
+          tenant_id: "2b12ce76-c513-40d0-bb56-51a597556f9d",
+        },
+      ],
+    };
+
+    const result = await repository.getBookingTenants();
+
+    expect(result.tenants).toEqual([
+      {
+        id: "existing-bike-box-tenant",
+        tenantId: "2b12ce76-c513-40d0-bb56-51a597556f9d",
+      },
+    ]);
+  });
 });

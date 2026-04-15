@@ -14,6 +14,7 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import i18next from 'i18next'
 import { Language } from '@/utilities/i18n/Languages'
 import { translateBatchedMultiple, translateHtmlBatchedMultiple } from '@/utilities/translateUtils'
+import { BookingErrorState } from '@/components/booking/BookingErrorState'
 
 export const Route = createLazyFileRoute('/booking/')({
   component: Booking,
@@ -26,6 +27,8 @@ export function Booking() {
   const bookables = useBookingStore((state) => state.bookings)
   const processedTenants = useBookingStore((state) => state.processedTenants);
   const markProcessedTenants = useBookingStore((state) => state.markProcessedTenants);
+  const resetBookings = useBookingStore((state) => state.reset);
+  const [bookingError, setBookingError] = useState<unknown>(null);
 
   const rooms = useMemo(() => bookables.filter((b) => b.category === 'room'), [bookables])
   const resources = useMemo(() => bookables.filter((b) => b.category === 'resource'), [bookables])
@@ -50,8 +53,20 @@ export function Booking() {
     }
   }, [currentTenantIndex, tenantIds?.tenants, markProcessedTenants]);
 
+  const handleTenantError = useCallback((error: unknown) => {
+    setBookingError(error);
+    setLoading(false);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    resetBookings();
+    setCurrentTenantIndex(0);
+    setBookingError(null);
+    setLoading(true);
+  }, [resetBookings]);
+
   const currentTenant = tenantIds?.tenants[currentTenantIndex];
-  const shouldShowIntegration = currentTenant && !processedTenants.has(currentTenant.tenantId);
+  const shouldShowIntegration = currentTenant && !processedTenants.has(currentTenant.tenantId) && !bookingError;
 
   useEffect(() => {
     if (!tenantIds || tenantIds.tenants.length === 0) {
@@ -68,7 +83,7 @@ export function Booking() {
   const currentLang = i18next.language as Language;
 
   useEffect(() => {
-    if (!shouldShowIntegration && currentLang !== "de" && bookables.length > 0) {
+    if (!shouldShowIntegration && !bookingError && currentLang !== "de" && bookables.length > 0) {
       const translateAll = async () => {
         setTranslationsReady(false);
         try {
@@ -101,7 +116,7 @@ export function Booking() {
     } else {
       setTranslationsReady(true);
     }
-  }, [currentLang, shouldShowIntegration, bookables]);
+  }, [currentLang, shouldShowIntegration, bookables, bookingError]);
 
   return (
     <main className="w-full h-full flex flex-col">
@@ -120,12 +135,17 @@ export function Booking() {
         </div>
       </article>
       <div className="w-full flex flex-col items-center">
+        {bookingError ? <BookingErrorState error={bookingError} onRetry={handleRetry} /> : null}
+        {!bookingError && loading ? (
+          <div className="w-full max-w-7xl px-4 py-6 text-neutral-500">{t("overview.loading")}</div>
+        ) : null}
         {shouldShowIntegration && currentTenant && (
           <BookingIntegration
             key={`${currentTenant.tenantId}`}
             tenantId={currentTenant.tenantId}
             setLoading={setLoading}
             onDone={handleTenantDone}
+            onError={handleTenantError}
           />
         )}
         <div className="max-w-7xl mx-auto px-4 w-full">
