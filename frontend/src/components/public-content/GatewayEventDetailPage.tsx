@@ -72,7 +72,13 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
         <p className="flex gap-1 text-neutral-800">
           {startDate && <span>{startDate.formatDateTime()}</span>}
           {startDate && endDate && "-"}
-          {endDate && <span>{endDate.formatDateTime()}</span>}
+          {endDate && (
+            <span>
+              {startDate && startDate.formatDate() === endDate.formatDate()
+                ? endDate.formatTime()
+                : endDate.formatDateTime()}
+            </span>
+          )}
         </p>
       </div>
 
