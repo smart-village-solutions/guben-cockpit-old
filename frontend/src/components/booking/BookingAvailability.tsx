@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadBookableOccupancy } from "@/booking-api/client";
 import type { BookingAvailability as BookingAvailabilityModel } from "@/stores/bookingStore";
 import { BookingErrorState } from "./BookingErrorState";
@@ -18,6 +19,7 @@ const buildOccupancyWindow = () => {
 };
 
 export default function BookingAvailability({ tenantId, bookableId }: BookingAvailabilityProps) {
+  const { t } = useTranslation("booking");
   const [availability, setAvailability] = useState<BookingAvailabilityModel | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
@@ -75,7 +77,7 @@ export default function BookingAvailability({ tenantId, bookableId }: BookingAva
   }
 
   if (loading) {
-    return <p className="text-sm text-white/90">Verfuegbarkeit wird geladen ...</p>;
+    return <p className="text-sm text-white/90">{t("availability.loading")}</p>;
   }
 
   if (!availability) {
@@ -85,10 +87,15 @@ export default function BookingAvailability({ tenantId, bookableId }: BookingAva
   return (
     <div className="space-y-1 text-sm">
       <p>
-        Verfuegbarkeit: {availability.isAvailable ? "Verfuegbar" : "Derzeit belegt"}
+        {t("availability.label")}:{" "}
+        {availability.isAvailable ? t("availability.available") : t("availability.unavailable")}
       </p>
-      {availability.remaining !== null ? <p>Verbleibend: {availability.remaining}</p> : null}
-      {availability.totalCapacity !== null ? <p>Kapazitaet: {availability.totalCapacity}</p> : null}
+      {availability.remaining !== null ? (
+        <p>{t("availability.remaining", { count: availability.remaining })}</p>
+      ) : null}
+      {availability.totalCapacity !== null ? (
+        <p>{t("availability.capacity", { count: availability.totalCapacity })}</p>
+      ) : null}
     </div>
   );
 }

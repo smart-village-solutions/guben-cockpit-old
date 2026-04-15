@@ -30,7 +30,34 @@
     "loading": "Ładowanie danych rezerwacji.",
     "offer": "Nasza oferta"
   },
+  "overview": {
+    "loading": "Ładowanie przeglądu rezerwacji."
+  },
   "noResults": "Brak wyników",
+  "availability": {
+    "loading": "Ładowanie dostępności ...",
+    "label": "Dostępność",
+    "available": "Dostępne",
+    "unavailable": "Obecnie zajęte",
+    "remaining": "Pozostało: {{count}}",
+    "capacity": "Pojemność: {{count}}"
+  },
+  "errorState": {
+    "title": {
+      "overview": "Rezerwacje są obecnie niedostępne",
+      "detail": "Szczegóły rezerwacji są obecnie niedostępne",
+      "availability": "Dostępność jest obecnie niedostępna"
+    },
+    "code": {
+      "BOOKING_API_CONFIG_ERROR": "Platforma rezerwacyjna nie jest poprawnie skonfigurowana dla tego wdrożenia.",
+      "BOOKING_API_TRANSPORT_ERROR": "Platforma rezerwacyjna jest obecnie niedostępna.",
+      "BOOKING_API_HTTP_ERROR": "Platforma rezerwacyjna zwraca obecnie błąd.",
+      "BOOKING_API_INVALID_PAYLOAD": "Dane rezerwacji są obecnie niekompletne lub nieprawidłowe.",
+      "default": "Nie udało się załadować danych rezerwacji."
+    },
+    "httpStatus": "Status HTTP: {{status}}",
+    "retry": "Spróbuj ponownie"
+  },
   "priceCard": {
     "included": "W pokoju zawarte są",
     "price": "Cena",

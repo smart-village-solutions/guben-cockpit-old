@@ -24,9 +24,15 @@ export const useBookingDetailHydration = (title: string) => {
   const retry = useCallback(() => {
     setHydrationError(null);
     setRetryToken((token) => token + 1);
-  }, []);
+    void gatewayTenantIdsQuery.refetch?.();
+  }, [gatewayTenantIdsQuery]);
 
   useEffect(() => {
+    if (gatewayTenantIdsQuery.error) {
+      setHydrationError(gatewayTenantIdsQuery.error);
+      return;
+    }
+
     if (!gatewayTenantIdsQuery.data || booking) {
       return;
     }
@@ -45,22 +51,36 @@ export const useBookingDetailHydration = (title: string) => {
       setIsHydrating(true);
 
       try {
-        const loadedBookings = await Promise.all(
-          tenantsToLoad.map((tenant) => loadPublicBookings(tenant.tenantId)),
-        );
+        let nextBookings = bookings;
+        let firstError: unknown = null;
 
-        if (cancelled) {
-          return;
+        for (const tenant of tenantsToLoad) {
+          if (cancelled) {
+            return;
+          }
+
+          try {
+            const tenantBookings = await loadPublicBookings(tenant.tenantId);
+
+            if (cancelled) {
+              return;
+            }
+
+            addBookings(tenantBookings);
+            markProcessedTenants(tenant.tenantId);
+            nextBookings = [...nextBookings, ...tenantBookings];
+
+            if (findBookingByTitle(nextBookings, title)) {
+              firstError = null;
+              break;
+            }
+          } catch (error) {
+            firstError ??= error;
+          }
         }
 
-        addBookings(loadedBookings.flat());
-        tenantsToLoad.forEach((tenant) => {
-          markProcessedTenants(tenant.tenantId);
-        });
-        setHydrationError(null);
-      } catch (error) {
         if (!cancelled) {
-          setHydrationError(error);
+          setHydrationError(firstError);
         }
       } finally {
         if (!cancelled) {
@@ -77,16 +97,18 @@ export const useBookingDetailHydration = (title: string) => {
   }, [
     addBookings,
     booking,
+    gatewayTenantIdsQuery.error,
     gatewayTenantIdsQuery.data,
+    gatewayTenantIdsQuery,
     markProcessedTenants,
-    processedTenants,
     retryToken,
+    title,
   ]);
 
   return {
     booking,
     isHydrating: gatewayTenantIdsQuery.isLoading || isHydrating,
-    hydrationError,
+    hydrationError: hydrationError ?? gatewayTenantIdsQuery.error,
     retry,
   };
 };

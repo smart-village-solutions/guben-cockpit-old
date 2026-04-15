@@ -136,6 +136,9 @@ export function Booking() {
       </article>
       <div className="w-full flex flex-col items-center">
         {bookingError ? <BookingErrorState error={bookingError} onRetry={handleRetry} /> : null}
+        {!bookingError && loading ? (
+          <div className="w-full max-w-7xl px-4 py-6 text-neutral-500">{t("overview.loading")}</div>
+        ) : null}
         {shouldShowIntegration && currentTenant && (
           <BookingIntegration
             key={`${currentTenant.tenantId}`}

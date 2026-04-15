@@ -84,7 +84,34 @@ interface Resources {
       "offer": "Unser Angebot",
       "description": "Beschreibung"
     },
+    "overview": {
+      "loading": "Buchungsübersicht wird geladen."
+    },
     "noResults": "Keine Ergebnisse gefunden",
+    "availability": {
+      "loading": "Verfügbarkeit wird geladen ...",
+      "label": "Verfügbarkeit",
+      "available": "Verfügbar",
+      "unavailable": "Derzeit belegt",
+      "remaining": "Verbleibend: {{count}}",
+      "capacity": "Kapazität: {{count}}"
+    },
+    "errorState": {
+      "title": {
+        "overview": "Buchungen aktuell nicht verfügbar",
+        "detail": "Buchungsdetails aktuell nicht verfügbar",
+        "availability": "Verfügbarkeit aktuell nicht verfügbar"
+      },
+      "code": {
+        "BOOKING_API_CONFIG_ERROR": "Die Buchungsplattform ist für diese Auslieferung nicht korrekt konfiguriert.",
+        "BOOKING_API_TRANSPORT_ERROR": "Die Buchungsplattform ist aktuell nicht erreichbar.",
+        "BOOKING_API_HTTP_ERROR": "Die Buchungsplattform antwortet aktuell mit einem Fehler.",
+        "BOOKING_API_INVALID_PAYLOAD": "Die Buchungsdaten sind aktuell unvollständig oder fehlerhaft.",
+        "default": "Die Buchungsdaten konnten nicht geladen werden."
+      },
+      "httpStatus": "HTTP-Status: {{status}}",
+      "retry": "Erneut laden"
+    },
     "priceCard": {
       "included": "Im Raum inkludiert sind",
       "price": "Preis",
