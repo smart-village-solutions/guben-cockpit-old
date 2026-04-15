@@ -93,6 +93,32 @@ describe("loadGatewayProjectDetailContent", () => {
     });
   });
 
+  it("applies the local school image override for known school profiles", async () => {
+    const fetcher = vi.fn() as unknown as ProjectFetcher & ReturnType<typeof vi.fn>;
+    vi.mocked(fetcher).mockResolvedValue({
+      ...createProjectsContent([], 1),
+      schools: [
+        {
+          id: "school-1",
+          type: 2,
+          title: "Corona-Schröter Grundschule",
+          description: "School project",
+          fullText: "School full text",
+          imageCaption: null,
+          imageUrl: null,
+          imageCredits: null,
+          published: true,
+        },
+      ],
+    });
+
+    const result = await loadGatewayProjectDetailContent("de", "school-1", fetcher);
+
+    expect(result.results[0]?.imageUrl).toBe(
+      "/images/Corona-Schroeter Grundschule Eingang.JPG",
+    );
+  });
+
   it("fetches additional business pages until the project is found", async () => {
     const fetcher = vi.fn() as unknown as ProjectFetcher & ReturnType<typeof vi.fn>;
     vi.mocked(fetcher)

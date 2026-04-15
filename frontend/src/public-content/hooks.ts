@@ -22,6 +22,42 @@ type ProjectFetcher = (
   searchParams?: Record<string, string | number | undefined>,
 ) => Promise<ProjectsContent>;
 
+const localSchoolImageByTitle: Array<[match: (title: string) => boolean, imageUrl: string]> = [
+  [
+    (title) => title.startsWith("Corona-Schröter Grundschule"),
+    "/images/Corona-Schroeter Grundschule Eingang.JPG",
+  ],
+  [
+    (title) => title.startsWith("Europaschule"),
+    "/images/Europaschule.JPG",
+  ],
+  [
+    (title) => title.startsWith("Friedensschule"),
+    "/images/Friedensschule vorne.JPG",
+  ],
+];
+
+const withLocalSchoolImage = (project: Project): Project => {
+  if (project.type !== 2) {
+    return project;
+  }
+
+  const override = localSchoolImageByTitle.find(([matches]) => matches(project.title));
+  if (!override) {
+    return project;
+  }
+
+  return {
+    ...project,
+    imageUrl: override[1],
+  };
+};
+
+const withLocalSchoolImages = (content: ProjectsContent): ProjectsContent => ({
+  ...content,
+  schools: content.schools.map(withLocalSchoolImage),
+});
+
 export type GatewayProjectDetailResult = {
   results: [Project & { _category: ProjectCategory }];
   _category: ProjectCategory;
@@ -39,11 +75,13 @@ export const loadGatewayProjectDetailContent = async (
   id: string,
   fetcher: ProjectFetcher = fetchGatewayJson,
 ): Promise<GatewayProjectDetailResult> => {
-  const firstData = await fetcher("/api/content/projects", projectsContentSchema, {
-    lang: language,
-    pageNumber: 1,
-    pageSize: 100,
-  });
+  const firstData = withLocalSchoolImages(
+    await fetcher("/api/content/projects", projectsContentSchema, {
+      lang: language,
+      pageNumber: 1,
+      pageSize: 100,
+    }),
+  );
 
   const firstPageProjects = [
     ...withCategory(firstData.featuredProjects, "featured"),
@@ -71,7 +109,7 @@ export const loadGatewayProjectDetailContent = async (
       pageSize: 100,
     });
 
-    const project = withCategory(data.businesses.results, "marketplace").find(
+    const project = withCategory(withLocalSchoolImages(data).businesses.results, "marketplace").find(
       (entry) => entry.id === id,
     );
 
@@ -117,7 +155,7 @@ export const useGatewayProjectsContent = (pageNumber: number, pageSize: number) 
         lang: language,
         pageNumber,
         pageSize,
-      }),
+      }).then(withLocalSchoolImages),
   });
 };
 
