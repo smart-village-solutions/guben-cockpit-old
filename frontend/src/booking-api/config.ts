@@ -46,8 +46,9 @@ export const getBookingAppBaseUrl = () => inferBookingAppUrl(getBookingApiBaseUr
 
 export const buildBookingPortalUrl = (tenantId: string, bookableId: string) => {
   const bookingAppBaseUrl = getBookingAppBaseUrl();
-  const url = new URL("/", bookingAppBaseUrl);
-  url.searchParams.set("tenantId", tenantId);
-  url.searchParams.set("bookableId", bookableId);
+  const url = new URL("/admin/checkout", bookingAppBaseUrl);
+  url.searchParams.set("id", bookableId);
+  url.searchParams.set("tenant", tenantId);
+  url.searchParams.set("amount", "1");
   return url.toString();
 };

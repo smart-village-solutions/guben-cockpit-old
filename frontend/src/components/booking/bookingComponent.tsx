@@ -4,16 +4,28 @@ import PriceCard from "./priceCard";
 import { useTranslation } from "react-i18next";
 import { DetailPageLayout } from "../ui/DetailPageLayout";
 import { TranslatedHtml } from "@/utilities/translateUtils";
-import { ReactNode } from "react";
 import { MapPinIcon } from "lucide-react";
+import { BookingErrorState } from "./BookingErrorState";
+import { useBookingDetailHydration } from "./useBookingDetailHydration";
 
 export default function BookingComponent() {
   const { t } = useTranslation("booking");
 
   const navigate = useNavigate();
   const { title } = useParams({ from: '/booking/$title' });
-  const bookings = useBookingStore(state => state.bookings);
-  let booking = bookings.find(b => b.title === title) || bookings.flatMap(b => b.bookings || []).find(b => b.title === title);
+  const { booking, isHydrating, hydrationError, retry } = useBookingDetailHydration(title);
+
+  if (isHydrating && !booking) {
+    return (
+      <div className="p-6 text-center text-gubenAccent font-semibold">
+        {t("bookingComponent.loading")}
+      </div>
+    );
+  }
+
+  if (hydrationError && !booking) {
+    return <BookingErrorState error={hydrationError} onRetry={retry} scope="detail" />;
+  }
 
   if (!booking) {
     return (
@@ -52,15 +64,6 @@ export default function BookingComponent() {
             </div>
           )}
 
-          {booking.description && (
-            <div>
-              <p className="text-xs text-neutral-500 font-semibold mb-2">BESCHREIBUNG</p>
-              <TranslatedHtml
-                className="text-sm text-gray-600 line-clamp-2"
-                text={booking.description}
-              />
-            </div>
-          )}
         </div>
       }
       onBack={() => navigate({ to: "/booking" })}
@@ -94,7 +97,6 @@ export default function BookingComponent() {
                 <PriceCard
                   key={ticket.bkid || index}
                   bookingUrl={ticket.bookingUrl}
-                  description={ticket.description}
                   price={ticket.price}
                   prices={ticket.prices || []}
                   title={ticket.title || title}

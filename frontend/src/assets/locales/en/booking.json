@@ -27,6 +27,7 @@
   },
   "bookingComponent": {
     "notFound": "Unfortunately, the requested offer could not be found.",
+    "loading": "Booking data is loading.",
     "offer": "Our Offer",
     "description": "Description"
   },

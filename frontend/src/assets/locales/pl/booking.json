@@ -27,6 +27,7 @@
   },
   "bookingComponent": {
     "notFound": "Niestety nie znaleziono żądanej oferty.",
+    "loading": "Ładowanie danych rezerwacji.",
     "offer": "Nasza oferta"
   },
   "noResults": "Brak wyników",

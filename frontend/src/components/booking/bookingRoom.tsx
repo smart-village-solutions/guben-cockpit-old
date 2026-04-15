@@ -1,28 +1,41 @@
-import { useBookingStore } from "@/stores/bookingStore";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import BookingDivider from "./bookingDivider";
 import BookingCard from "./bookingCard";
 import { Button } from "../ui/button";
 import { ArrowLeftIcon } from "lucide-react";
+import { BookingErrorState } from "./BookingErrorState";
+import { useBookingDetailHydration } from "./useBookingDetailHydration";
 
 export default function BookingRoom() {
   const { t } = useTranslation("booking");
 
   const navigate = useNavigate();
   const { title } = useParams({ from: '/booking/room/$title' });
-  const bookings = useBookingStore(state => state.bookings);
-  const booking = bookings.find(b => b.title === title);
+  const { booking, isHydrating, hydrationError, retry } = useBookingDetailHydration(title);
   const rooms = booking?.bookings;
 
-    if (!booking) {
+  if (isHydrating && !booking) {
+    return (
+      <div className="p-6 text-center text-gubenAccent font-semibold">
+        {t("bookingComponent.loading")}
+      </div>
+    );
+  }
+
+  if (hydrationError && !booking) {
+    return <BookingErrorState error={hydrationError} onRetry={retry} scope="detail" />;
+  }
+
+  if (!booking) {
     return (
       <div className="p-6 text-center text-gubenAccent font-semibold">
         {t("bookingComponent.notFound")}
       </div>
     );
   }
-    return (
+
+  return (
     <div>
       <div className="relative w-full h-72 overflow-hidden">
         <Button

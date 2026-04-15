@@ -80,6 +80,7 @@ interface Resources {
     },
     "bookingComponent": {
       "notFound": "Leider konnte das gewünschte Angebot nicht gefunden werden.",
+      "loading": "Buchungsdaten werden geladen.",
       "offer": "Unser Angebot",
       "description": "Beschreibung"
     },

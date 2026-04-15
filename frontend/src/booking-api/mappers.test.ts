@@ -39,7 +39,7 @@ describe("booking api mappers", () => {
       type: "room",
       category: "room",
       bkid: "bookable-1",
-      bookingUrl: expect.stringContaining("tenantId=tenant-1"),
+      bookingUrl: expect.stringContaining("/admin/checkout?id=bookable-1&tenant=tenant-1&amount=1"),
       prices: [{ price: "12,50 EUR", interval: "hour" }],
     });
     expect(booking.tickets).toHaveLength(1);
