@@ -1,0 +1,43 @@
+[
+  {
+    "id": "28471b76-45a1-4adf-847f-5e08a3bb7dc6",
+    "tenantId": "default",
+    "type": "resource",
+    "title": "Kamerasystem",
+    "description": "<p>Die <strong>Pix4Team 2 Auto-Follow-Kamera</strong> filmt Mannschaftssportarten automatisch.</p>",
+    "imgUrl": "https://nextcloud.guben.de/apps/files_sharing/publicpreview/example?file=/camera.jpg",
+    "flags": [],
+    "bookingNotes": "",
+    "autoCommitBooking": false,
+    "location": {
+      "display_address": ""
+    },
+    "priceCategories": [
+      {
+        "priceEur": null,
+        "unit": null,
+        "external": false
+      }
+    ],
+    "requiresLogin": false,
+    "attachments": [
+      {
+        "id": "12",
+        "title": "Nutzungsvereinbarung Kamera",
+        "caption": "",
+        "type": "agreement",
+        "url": "https://backend.booking.guben.de/api/default/files/get?name=/public/agreements/Nutzungsvereinbarung_Pix4Team2.pdf",
+        "show": true,
+        "required": true,
+        "mailAttach": false
+      }
+    ],
+    "externalProviders": [],
+    "isBookable": true,
+    "isPublic": true,
+    "amount": 1,
+    "minBookingDuration": null,
+    "maxBookingDuration": null,
+    "eventId": null
+  }
+]

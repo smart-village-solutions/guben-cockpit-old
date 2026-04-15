@@ -102,6 +102,8 @@ export default function BookingComponent() {
                   location={ticket.location || booking.location}
                   autoCommitNote={ticket.autoCommitNote || booking.autoCommitNote}
                   imgUrl={ticket.imgUrl}
+                  tenantId={ticket.tenantId}
+                  bookableId={ticket.bkid}
                 />
               ))
             ) : (
@@ -113,6 +115,9 @@ export default function BookingComponent() {
                 flags={booking.flags}
                 location={booking.location}
                 autoCommitNote={booking.autoCommitNote}
+                imgUrl={booking.imgUrl}
+                tenantId={booking.tenantId}
+                bookableId={booking.bkid}
               />
             )}
           </div>

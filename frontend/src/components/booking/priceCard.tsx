@@ -3,6 +3,7 @@ import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { useTranslation } from "react-i18next";
 import { TranslatedHtml, TranslatedText } from "@/utilities/translateUtils";
+import BookingAvailability from "./BookingAvailability";
 
 type PriceCardProps = {
   bookingUrl: string;
@@ -14,9 +15,23 @@ type PriceCardProps = {
   autoCommitNote?: string;
   imgUrl?: string;
   prices?: { price: string; interval?: string; category?: string }[];
+  tenantId?: string;
+  bookableId?: string;
 }
 
-export default function ({ bookingUrl, price, title, flags, description, location, autoCommitNote, imgUrl, prices }: PriceCardProps) {
+export default function ({
+  bookingUrl,
+  price,
+  title,
+  flags,
+  description,
+  location,
+  autoCommitNote,
+  imgUrl,
+  prices,
+  tenantId,
+  bookableId,
+}: PriceCardProps) {
   const { t } = useTranslation("booking");
 
   const isValidUrl = bookingUrl && bookingUrl.startsWith("http");
@@ -89,6 +104,7 @@ export default function ({ bookingUrl, price, title, flags, description, locatio
                 { autoCommitNote && (
                   <TranslatedText text={autoCommitNote}/>
                 )}
+                <BookingAvailability tenantId={tenantId} bookableId={bookableId} />
               </div>
 
               {/* CTA Button */}

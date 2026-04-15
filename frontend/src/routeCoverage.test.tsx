@@ -35,13 +35,14 @@ const mapQueryState = {
 
 const bookingState = {
   bookings: [
-    { category: "room", title: "Room 1" },
-    { category: "resource", title: "Resource 1" },
-    { category: "sport", title: "Sport 1" },
+    { tenantId: "tenant-1", category: "room", title: "Room 1" },
+    { tenantId: "tenant-1", category: "resource", title: "Resource 1" },
+    { tenantId: "tenant-1", category: "sport", title: "Sport 1" },
   ],
   processedTenants: new Set<string>(),
   markProcessedTenants: vi.fn(),
   addBookings: vi.fn(),
+  reset: vi.fn(),
 };
 
 const bookingTenantsState = {

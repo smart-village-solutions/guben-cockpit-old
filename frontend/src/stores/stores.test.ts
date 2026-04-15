@@ -18,6 +18,7 @@ describe("stores and permissions", () => {
 
     useBookingStore.getState().addBookings([
       {
+        tenantId: "tenant-1",
         title: "Booking 1",
         description: "A",
         location: "Guben",
@@ -30,6 +31,7 @@ describe("stores and permissions", () => {
         bkid: "bk-1",
       },
       {
+        tenantId: "tenant-1",
         title: "Booking 1 duplicate",
         description: "B",
         location: "Guben",
@@ -42,6 +44,7 @@ describe("stores and permissions", () => {
         bkid: "bk-1",
       },
       {
+        tenantId: "tenant-1",
         title: "Booking 2",
         description: "C",
         location: "Guben",
@@ -59,6 +62,8 @@ describe("stores and permissions", () => {
     expect(state.bookings).toHaveLength(2);
     expect(state.bookings[0].title).toBe("Booking 1 duplicate");
     expect(Array.from(state.processedTenants)).toEqual(["tenant-1"]);
+    useBookingStore.getState().reset();
+    expect(useBookingStore.getState().bookings).toEqual([]);
   });
 
   it("deduplicates events and resolves tickets by bkid", () => {
