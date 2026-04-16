@@ -47,7 +47,7 @@ export const DashboardDropdownTabs = ({
 
   return (
     <div>
-      <div className="flex flex-row font-bold pl-2">
+      <div className="flex flex-wrap gap-2 pl-2 font-bold">
         {dropdowns.map(({ id, title, tabs, links, isLink }) => (
           <DashboardDropdownMenu
             key={id}
@@ -62,9 +62,12 @@ export const DashboardDropdownTabs = ({
       </div>
 
       {activeTab && tab && (
-        <div key={activeTab} className={"flex min-h-[70vh] h-full"}>
-          <MapComponent src={tab.mapUrl} />
-          <div className={"flex-1 h-full px-4 pt-2"}>
+        <div key={activeTab} className={"flex h-full min-h-[70vh] flex-col gap-4 lg:flex-row lg:gap-0"}>
+          <MapComponent
+            src={tab.mapUrl}
+            className="min-h-[18rem] overflow-hidden rounded-lg bg-white shadow-sm lg:min-h-0 lg:rounded-none lg:bg-transparent lg:shadow-none"
+          />
+          <div className={"flex-1 h-full px-0 pt-2 lg:px-4"}>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 auto-rows-fr">
               {tab?.informationCards?.map((card, index) => {
                 return <InfoCard key={index} card={card} />;
@@ -100,7 +103,7 @@ function DashboardDropdownMenu({
     "rounded-md border border-gray-300 bg-gray-200 rounded-b-none",
     "px-3 py-2 text-sm font-semibold",
     "hover:bg-white hover:text-accent-foreground",
-    "transition-colors",
+    "transition-colors max-w-full",
   );
 
   const items = isLink
@@ -132,10 +135,10 @@ function DashboardDropdownMenu({
           variant="ghost"
           className={cn(
             baseButtonClasses,
-            "data-[state=open]:bg-white data-[state=open]:shadow-sm",
+            "data-[state=open]:bg-white data-[state=open]:shadow-sm whitespace-normal text-left h-auto justify-between",
           )}
         >
-          {title}
+          <span className="break-words">{title}</span>
           <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
         </Button>
       </DropdownMenuTrigger>

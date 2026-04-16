@@ -23,8 +23,8 @@ const GatewayFooter = () => {
 
   if (!isGatewayPublicContentEnabled) {
     return (
-      <footer className="bg-gubenAccent relative text-gubenAccent-foreground p-4 h-14 flex justify-center items-center">
-        <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"h-full left-2 absolute"}/>
+      <footer className="relative flex min-h-14 items-center justify-center bg-gubenAccent p-4 text-gubenAccent-foreground">
+        <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"absolute left-2 hidden h-full md:block"}/>
         <p className="text-sm">Oeffentliche Inhalte deaktiviert</p>
       </footer>
     );
@@ -38,9 +38,11 @@ const GatewayFooter = () => {
   ];
 
   return (
-    <footer className="bg-gubenAccent relative text-gubenAccent-foreground p-4 h-14 flex justify-center items-center">
-      <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"h-full left-2 absolute"}/>
-      <ul className={"flex flex-row gap-10"}>
+    <footer className="relative bg-gubenAccent px-4 py-3 text-gubenAccent-foreground md:h-14 md:py-4">
+      <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"absolute left-2 top-1/2 hidden h-full -translate-y-1/2 md:block"}/>
+      <div className="flex flex-col items-center gap-3 md:h-full md:justify-center">
+        <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"h-10 w-auto md:hidden"}/>
+        <ul className={"flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm md:flex-nowrap md:gap-10 md:text-base"}>
         {
           isPending
             ? <LoadingIndicator/>
@@ -62,7 +64,8 @@ const GatewayFooter = () => {
             </a>
           </li>
         ))}
-      </ul>
+        </ul>
+      </div>
     </footer>
   );
 };
@@ -78,11 +81,11 @@ export default function FooterItemDialog({footerItem}: FooterItemDialogProps) {
       <DialogTrigger>{footerItem.name}</DialogTrigger>
       <DialogContent className={cn(
         "bg-white rounded-lg text-lg",
-        "flex flex-col gap-4 p-16",
+        "flex flex-col gap-4 p-4 sm:p-8 md:p-16",
         "min-w-[100svw] max-w-[100svw] min-h-[100svh] max-h-[100svh] md:min-w-[80svw] md:max-w-[80svw] md:min-h-[80svh] md:max-h-[80svh]"
       )}>
         <DialogHeader className="gap-4">
-          <DialogTitle className="text-4xl">{footerItem.name}</DialogTitle>
+          <DialogTitle className="text-2xl sm:text-3xl md:text-4xl">{footerItem.name}</DialogTitle>
         </DialogHeader>
 
         {!isNullOrUndefinedOrWhiteSpace(footerItem.content) &&

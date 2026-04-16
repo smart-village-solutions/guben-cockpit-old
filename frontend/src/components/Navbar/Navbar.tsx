@@ -10,6 +10,13 @@ import { getLocalizedLanguagename, Language } from "@/utilities/i18n/Languages";
 import { WithClassName } from "@/types/WithClassName";
 import { useLanguageUpdater } from "@/hooks/useLanguageUpdater";
 import { MyGubenIcon } from "../icons/MyGubenIcon";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 type TNavContext = { location: string }
 const NavContext = createContext<TNavContext>({ location: "/" });
@@ -44,6 +51,22 @@ const NavList = ({ children, className }: PropsWithChildren & WithClassName) => 
   </ul>
 );
 
+type NavigationLabelKey = "Dashboard" | "Projects" | "Map" | "Events" | "Booking" | "ServicePortal";
+
+const navItems = [
+  { to: "/", labelKey: "Dashboard", icon: HomeIcon },
+  { to: "/projects", labelKey: "Projects", icon: MyGubenIcon },
+  { to: "/map", labelKey: "Map", icon: MapIcon },
+  { to: "/events", labelKey: "Events", icon: CalendarDaysIcon },
+  { to: "/booking", labelKey: "Booking", icon: PlaneIcon },
+  { to: "https://serviceportal.dikom-bb.de/stadt-guben", labelKey: "ServicePortal", icon: ServicePortalIcon, target: "_blank" as const },
+] satisfies Array<{
+  to: string;
+  labelKey: NavigationLabelKey;
+  icon: React.ComponentType<{ className?: string }>;
+  target?: "_blank";
+}>;
+
 export const Navbar = () => {
   const iconStyle = "icon size-8";
   const { t } = useTranslation("navigation");
@@ -51,105 +74,126 @@ export const Navbar = () => {
 
   return (
     <NavContext.Provider value={{ location: location.pathname }}>
-      <div className="sticky top-0 z-50 grid h-20 w-full grid-cols-[auto_1fr_auto] items-center gap-5 rounded-b bg-white px-4 shadow">
-        <div id="logo" className="flex h-full items-center justify-start">
-          <Link
-            to="/"
-            search={() => ({ selectedTabId: undefined })}
-            className="h-full flex justify-center items-center"
-          >
-            <SmartCityGubenLogoIcon className="w-[128px] h-auto" />
-          </Link>
+      <div className="sticky top-0 z-50 w-full overflow-hidden rounded-b bg-white shadow">
+        <div className="lg:hidden">
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <div id="logo" className="min-w-0">
+              <Link
+                to="/"
+                search={() => ({ selectedTabId: undefined })}
+                className="flex items-center"
+              >
+                <SmartCityGubenLogoIcon className="h-auto w-[112px]" />
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <AdminLink />
+              <LanguageSection compact />
+            </div>
+          </div>
+
+          <nav aria-label={t("Dashboard")} className="border-t border-neutral-200 px-2 pb-2 pt-1">
+            <ul className="flex items-stretch gap-2 overflow-x-auto pb-1">
+              {navItems.map(({ to, labelKey, icon: Icon, target }) => (
+                <li key={to} className="shrink-0">
+                  <NavLink to={to} name={t(labelKey)} target={target}>
+                    <div className="flex min-w-[72px] flex-col items-center px-1">
+                      <Icon className="size-6" />
+                      <span className="mt-1 text-center text-[11px] font-nunito leading-tight">
+                        {t(labelKey)}
+                      </span>
+                    </div>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
 
-        <div className="flex min-w-0 items-center justify-center">
-          <NavList className="flex-none">
-            <NavLink to="/" name={t("Dashboard")}>
-              <div className="flex flex-col items-center w-20">
-                <HomeIcon className={iconStyle} />
-                <span className="mt-1 text-xs font-nunito">{t('Dashboard')}</span>
-              </div>
-            </NavLink>
-            <NavLink to="/projects" name={t("Projects")}>
-              <div className="flex flex-col items-center w-20">
-                <MyGubenIcon className={iconStyle} />
-                <span className="mt-1 text-xs font-nunito">{t('Projects')}</span>
-              </div>
-            </NavLink>
-            <NavLink to="/map" name={t("Map")}>
-              <div className="flex flex-col items-center w-20">
-                <MapIcon className={iconStyle} />
-                <span className="mt-1 text-xs font-nunito">{t('Map')}</span>
-              </div>
-            </NavLink>
-            <NavLink to="/events" name={t("Events")}>
-              <div className="flex flex-col items-center w-20">
-                <CalendarDaysIcon className={iconStyle} />
-                <span className="mt-1 text-xs font-nunito">{t('Events')}</span>
-              </div>
-            </NavLink>
-            <NavLink to="/booking" name={t("Booking")}>
-              <div className="flex flex-col items-center w-20">
-                <PlaneIcon className={iconStyle} />
-                <span className="mt-1 text-xs font-nunito">{t('Booking')}</span>
-              </div>
-            </NavLink>
-            <NavLink name={t("ServicePortal")} to="https://serviceportal.dikom-bb.de/stadt-guben" target="_blank">
-              <div className="flex flex-col items-center w-20">
-                <ServicePortalIcon className={iconStyle} />
-                <span className="mt-1 text-xs whitespace-nowrap font-nunito">{t('ServicePortal')}</span>
-              </div>
-            </NavLink>
+        <div className="hidden h-20 w-full grid-cols-[auto_1fr_auto] items-center gap-5 px-4 lg:grid">
+          <div id="logo" className="flex h-full items-center justify-start">
+            <Link
+              to="/"
+              search={() => ({ selectedTabId: undefined })}
+              className="flex h-full items-center justify-center"
+            >
+              <SmartCityGubenLogoIcon className="h-auto w-[128px]" />
+            </Link>
+          </div>
+
+          <div className="flex min-w-0 items-center justify-center">
+            <NavList className="flex-none">
+              {navItems.map(({ to, labelKey, icon: Icon, target }) => (
+                <NavLink key={to} to={to} name={t(labelKey)} target={target}>
+                  <div className="flex w-20 flex-col items-center">
+                    <Icon className={iconStyle} />
+                    <span className="mt-1 text-xs font-nunito whitespace-nowrap">{t(labelKey)}</span>
+                  </div>
+                </NavLink>
+              ))}
+            </NavList>
+          </div>
+
+          <NavList className="flex-none justify-end">
+            <li>
+              <AdminLink />
+            </li>
+            <LanguageSection />
           </NavList>
         </div>
-
-        <NavList className="flex-none justify-end">
-          <li>
-            <CustomTooltip text="Admin">
-              <a
-                href="https://booking.guben.de/login/sso"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1.5 flex items-center justify-center rounded-xl text-gubenAccent hover:bg-gubenAccent hover:text-gubenAccent-foreground"
-              >
-                <ShieldIcon className="size-6" />
-              </a>
-            </CustomTooltip>
-          </li>
-          <LanguageSection/>
-        </NavList>
-
       </div>
     </NavContext.Provider>
   )
 }
 
 
-const LanguageSection = () => {
+const AdminLink = () => (
+  <CustomTooltip text="Admin">
+    <a
+      href="https://booking.guben.de/login/sso"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center justify-center rounded-xl p-1.5 text-gubenAccent hover:bg-gubenAccent hover:text-gubenAccent-foreground"
+      aria-label="Admin"
+    >
+      <ShieldIcon className="size-6" />
+    </a>
+  </CustomTooltip>
+);
+
+const LanguageSection = ({ compact = false }: { compact?: boolean }) => {
   const updateLanguage = useLanguageUpdater();
   const currentLanguage = i18next.language.split('-')[0];
 
   return (
-    <div className="relative flex items-center justify-center">
-      <div className="group">
-        {/* Display current language */}
-        <button className="p-1 mx-3 rounded-lg text-[#cd1421] group-hover:bg-[#cd1421] group-hover:text-white whitespace-nowrap">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className={cn(
+            "rounded-lg text-[#cd1421] hover:bg-[#cd1421] hover:text-white",
+            compact ? "h-9 px-2 text-sm" : "mx-3 h-9 px-3 text-base",
+          )}
+          aria-label="Sprache wählen"
+        >
           {getLocalizedLanguagename(currentLanguage)}
-        </button>
-
-        {/* Dropdown Menu - positioned from the left to stay within bounds */}
-        <div className="absolute left-0 top-full hidden rounded-lg shadow-lg group-hover:block bg-white border z-50 mt-1">
-          {Object.values(Language).map((lang) => (
-            <button
-              key={lang}
-              className="w-full text-left px-2 py-1 rounded-lg text-[#cd1421] hover:bg-[#cd1421] hover:text-white whitespace-nowrap"
-              onClick={async () => await updateLanguage(lang)}
-            >
-              {getLocalizedLanguagename(lang)}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[9rem]">
+        {Object.values(Language).map((lang) => (
+          <DropdownMenuItem
+            key={lang}
+            className={cn(
+              "cursor-pointer",
+              lang === currentLanguage && "font-semibold",
+            )}
+            onClick={async () => await updateLanguage(lang)}
+          >
+            {getLocalizedLanguagename(lang)}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
