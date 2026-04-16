@@ -25,6 +25,7 @@ export function MapComponent() {
     <div className="relative min-h-[28rem] flex-1 p-0">
       <iframe
         className="absolute inset-0 h-full w-full overflow-hidden border-none"
+        title="Gateway map"
         src={query.data.map.embedUrl}
       />
     </div>

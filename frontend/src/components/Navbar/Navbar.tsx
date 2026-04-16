@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 type TNavContext = { location: string }
 const NavContext = createContext<TNavContext>({ location: "/" });
 
-const NavLink = (props: { name: string, to: string, children: React.ReactNode, target?: "_blank" | "_self"}) => {
+const NavLink = (props: { name: string, to: string, children: React.ReactNode, target?: "_blank" | "_self", itemClassName?: string}) => {
   const { location } = useContext(NavContext);
 
   const isActive = useMemo(() => {
@@ -30,7 +30,7 @@ const NavLink = (props: { name: string, to: string, children: React.ReactNode, t
   }, [location]);
 
   return (
-    <li className="h-auto">
+    <li className={cn("h-auto", props.itemClassName)}>
       <CustomTooltip text={props.name}>
         <Link to={props.to} target={props.target} className={cn(
           'px-3 py-1.5 mt-3 mb-3 flex items-center justify-center w-auto rounded-xl',
@@ -93,19 +93,17 @@ export const Navbar = () => {
             </div>
           </div>
 
-          <nav aria-label={t("Dashboard")} className="border-t border-neutral-200 px-2 pb-2 pt-1">
+          <nav aria-label="Main navigation" className="border-t border-neutral-200 px-2 pb-2 pt-1">
             <ul className="flex items-stretch gap-2 overflow-x-auto pb-1">
               {navItems.map(({ to, labelKey, icon: Icon, target }) => (
-                <li key={to} className="shrink-0">
-                  <NavLink to={to} name={t(labelKey)} target={target}>
-                    <div className="flex min-w-[72px] flex-col items-center px-1">
-                      <Icon className="size-6" />
-                      <span className="mt-1 text-center text-[11px] font-nunito leading-tight">
-                        {t(labelKey)}
-                      </span>
-                    </div>
-                  </NavLink>
-                </li>
+                <NavLink key={to} to={to} name={t(labelKey)} target={target} itemClassName="shrink-0">
+                  <div className="flex min-w-[72px] flex-col items-center px-1">
+                    <Icon className="size-6" />
+                    <span className="mt-1 text-center text-[11px] font-nunito leading-tight">
+                      {t(labelKey)}
+                    </span>
+                  </div>
+                </NavLink>
               ))}
             </ul>
           </nav>
