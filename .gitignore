@@ -81,6 +81,7 @@ nbproject
 public/uploads/*
 !public/uploads/.gitkeep
 appsettings.*.json
+output/*
 
 ############################
 # Node.js
