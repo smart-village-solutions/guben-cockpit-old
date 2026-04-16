@@ -22,12 +22,11 @@ export function MapComponent() {
   }
 
   return (
-    <div className="p-0 flex-grow relative h-[calc(100dvh-8.5rem)] w-full">
+    <div className="relative flex h-full min-h-0 w-full flex-1 p-0">
       <iframe
-        className="overflow-hidden border-none"
+        className="h-full w-full overflow-hidden border-none"
         src={query.data.map.embedUrl}
-        style={{ height: '100%', width: '100%' }}
-      ></iframe>
+      />
     </div>
   );
 }
