@@ -14,7 +14,7 @@ export function MapComponent() {
   useRouteMetadata(query.data?.seo);
 
   if (query.isPending) {
-    return <Skeleton className="h-[calc(100dvh-8.5rem)] w-full rounded-none" />;
+    return <Skeleton className="min-h-[28rem] flex-1 w-full rounded-none" />;
   }
 
   if (query.error || !query.data) {
@@ -22,9 +22,10 @@ export function MapComponent() {
   }
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-1 p-0">
+    <div className="relative min-h-[28rem] flex-1 p-0">
       <iframe
-        className="h-full w-full overflow-hidden border-none"
+        className="absolute inset-0 h-full w-full overflow-hidden border-none"
+        title="Gateway map"
         src={query.data.map.embedUrl}
       />
     </div>

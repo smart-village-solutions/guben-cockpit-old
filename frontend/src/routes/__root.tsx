@@ -16,9 +16,9 @@ export const Route = createRootRoute({
 
 export function RootComponent() {
   return (
-    <div className={"min-h-screen h-screen flex flex-col bg-background"}>
+    <div className={"min-h-screen flex flex-col bg-background"}>
       <Navbar />
-      <div className={"w-full min-h-0 flex-1 bg-neutral-100 pt-5"}>
+      <div className={"flex w-full flex-1 flex-col bg-neutral-100 pt-5"}>
         <Outlet/>
       </div>
       <Suspense fallback={<div className="bg-gubenAccent h-14" />}>

@@ -63,13 +63,19 @@
 }
 
 @layer base {
+    html,
+    body,
+    #app {
+        height: 100%;
+    }
+
     * {
         @apply border-border;
         font-family: Arial, sans-serif;
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply overflow-x-hidden bg-background text-foreground;
     }
 }
 
@@ -101,4 +107,3 @@
     border-radius: 4px;
     background-color: #888;
 }
-
