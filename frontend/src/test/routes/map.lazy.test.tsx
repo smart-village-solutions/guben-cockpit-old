@@ -42,7 +42,7 @@ describe("map route", () => {
   });
 
   it("renders the loading skeleton with the responsive sizing classes", async () => {
-    const { MapComponent } = await import("./map.lazy");
+    const { MapComponent } = await import("@/routes/map.lazy");
 
     mapQueryState.isPending = true;
     render(<MapComponent />);
@@ -53,7 +53,7 @@ describe("map route", () => {
   });
 
   it("renders the error state when the map query fails", async () => {
-    const { MapComponent } = await import("./map.lazy");
+    const { MapComponent } = await import("@/routes/map.lazy");
 
     mapQueryState.error = new Error("boom");
     render(<MapComponent />);
@@ -62,7 +62,7 @@ describe("map route", () => {
   });
 
   it("renders an accessible iframe for the map", async () => {
-    const { MapComponent } = await import("./map.lazy");
+    const { MapComponent } = await import("@/routes/map.lazy");
 
     const { container } = render(<MapComponent />);
 
