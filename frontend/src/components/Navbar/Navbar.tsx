@@ -147,9 +147,9 @@ export const Navbar = () => {
 
 
 const AdminLink = () => (
-  <CustomTooltip text="Admin">
+  <CustomTooltip text="Login">
     <a
-      href="https://booking.guben.de/login/sso"
+      href="https://booking.guben.de/login/"
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center justify-center rounded-xl p-1.5 text-gubenAccent hover:bg-gubenAccent hover:text-gubenAccent-foreground"
