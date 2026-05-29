@@ -11,7 +11,6 @@ services:
       INTERNAL_CONTENT_GATEWAY_URL: http://content-gateway:5100
       INTERNAL_BOOKING_URL: ${INTERNAL_BOOKING_URL:-https://backend.booking.guben.de}
       VITE_CONTENT_GATEWAY_URL: ${FRONTEND_BASEURI}
-      VITE_MASTERPORTAL_URL: ${MASTERPORTAL_URL}
       VITE_BOOKING_URL: /api/booking
     networks:
       - websites
