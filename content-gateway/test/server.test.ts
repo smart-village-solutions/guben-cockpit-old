@@ -88,6 +88,7 @@ describe("server bootstrap", () => {
     const listen = vi.fn(async () => undefined);
     const checkReadiness = vi.fn(async () => true);
     const checkGraphqlReadiness = vi.fn(async () => ({ eventRecords: [{ id: "sv-1" }] }));
+    const smartVillageEventRepositoryOptions: Array<Record<string, unknown>> = [];
     const createApp = vi.fn(() => ({
       listen,
       log: {
@@ -125,7 +126,9 @@ describe("server bootstrap", () => {
     }));
     vi.doMock("../src/content/smart-village-event-repository.js", () => ({
       SmartVillageEventRepository: class SmartVillageEventRepository {
-        public constructor() {}
+        public constructor(options: Record<string, unknown>) {
+          smartVillageEventRepositoryOptions.push(options);
+        }
       },
     }));
     vi.doMock("../src/upstream/postgrest-client.js", () => ({
@@ -172,6 +175,7 @@ describe("server bootstrap", () => {
     expect(checkReadiness).toHaveBeenCalled();
     expect(checkGraphqlReadiness).toHaveBeenCalledWith(expect.stringContaining("eventRecords"));
     expect(options.repository).toBe(wrapperRepositoryInstances[0]);
+    expect(smartVillageEventRepositoryOptions[0]?.warn).toEqual(expect.any(Function));
   });
 
   it("reports Smart Village readiness separately without failing the overall readiness payload construction", async () => {
@@ -180,6 +184,7 @@ describe("server bootstrap", () => {
     const checkGraphqlReadiness = vi.fn(async () => {
       throw new Error("smart village unavailable");
     });
+    const smartVillageEventRepositoryOptions: Array<Record<string, unknown>> = [];
     const createApp = vi.fn(() => ({
       listen,
       log: {
@@ -214,7 +219,9 @@ describe("server bootstrap", () => {
     }));
     vi.doMock("../src/content/smart-village-event-repository.js", () => ({
       SmartVillageEventRepository: class SmartVillageEventRepository {
-        public constructor() {}
+        public constructor(options: Record<string, unknown>) {
+          smartVillageEventRepositoryOptions.push(options);
+        }
       },
     }));
     vi.doMock("../src/upstream/postgrest-client.js", () => ({
@@ -259,5 +266,6 @@ describe("server bootstrap", () => {
     });
     expect(checkReadiness).toHaveBeenCalled();
     expect(checkGraphqlReadiness).toHaveBeenCalledWith(expect.stringContaining("eventRecords"));
+    expect(smartVillageEventRepositoryOptions[0]?.warn).toEqual(expect.any(Function));
   });
 });

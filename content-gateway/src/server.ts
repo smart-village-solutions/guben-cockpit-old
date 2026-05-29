@@ -19,6 +19,9 @@ const smartVillageReadinessQuery = `
     }
   }
 `;
+const createSmartVillageWarnHook = () => (message: string, context: Record<string, unknown>) => {
+  app?.log.warn(context, message);
+};
 
 const mockReadinessProbe = async () => ({
   ready: true,
@@ -40,6 +43,7 @@ const createPostgrestMode = (postgrestConfig: PostgrestConfig) => {
   const smartVillageEventRepository = new SmartVillageEventRepository({
     client: smartVillageGraphQLClient,
     publicBaseUrl: postgrestConfig.PUBLIC_BASE_URL,
+    warn: createSmartVillageWarnHook(),
   });
 
   return {
