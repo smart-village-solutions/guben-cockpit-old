@@ -131,6 +131,17 @@ describe("SmartVillageEventMapper", () => {
     });
   });
 
+  it("skips records when the internal id is missing even if externalId is present", () => {
+    const events = mapper.eventsFromRecord(
+      makeRecord({
+        id: null,
+        externalId: "99193148",
+      }),
+    );
+
+    expect(events).toEqual([]);
+  });
+
   it("falls back to date when dates is empty", () => {
     const events = mapper.eventsFromRecord(
       makeRecord({

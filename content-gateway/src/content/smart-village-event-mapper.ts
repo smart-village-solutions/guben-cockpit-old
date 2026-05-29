@@ -85,13 +85,12 @@ export class SmartVillageEventMapper {
     const eventId = nonEmptyString(record.externalId) ?? internalId;
     const dateStart = nonEmptyString(occurrence.dateStart);
 
-    if (!title || !eventId || !dateStart) {
+    if (!title || !internalId || !eventId || !dateStart) {
       return null;
     }
 
     const address = record.addresses?.[0];
-    const occurrenceIdBase = internalId ?? eventId;
-    const occurrenceId = this.buildOccurrenceId(occurrenceIdBase, dateStart, occurrence.timeStart);
+    const occurrenceId = this.buildOccurrenceId(internalId, dateStart, occurrence.timeStart);
     const coordinates =
       toCoordinates(address?.geoLocation ?? null) ??
       toCoordinates(record.location?.geoLocation ?? null);
