@@ -34,6 +34,15 @@ const normalizeTime = (value: string | null | undefined): string | null => {
   return null;
 };
 
+const normalizeOccurrenceIdTime = (value: string | null | undefined): string | null => {
+  const normalizedTime = normalizeTime(value);
+  if (!normalizedTime) {
+    return null;
+  }
+
+  return normalizedTime.endsWith(":00") ? normalizedTime.slice(0, 5) : normalizedTime;
+};
+
 const toCoordinates = (value: SmartVillageGeoLocation) => {
   if (!value || value.latitude === null || value.longitude === null) {
     return null;
@@ -45,9 +54,9 @@ const toCoordinates = (value: SmartVillageGeoLocation) => {
   };
 };
 
-const toIsoDateTime = (date: string, time: string | null | undefined): string => {
+const toLocalDateTime = (date: string, time: string | null | undefined): string => {
   const normalizedTime = normalizeTime(time) ?? "00:00:00";
-  return `${date}T${normalizedTime}.000Z`;
+  return `${date}T${normalizedTime}`;
 };
 
 export class SmartVillageEventMapper {
@@ -91,7 +100,7 @@ export class SmartVillageEventMapper {
       terminId: occurrenceId,
       title,
       description: nonEmptyString(record.description) ?? "",
-      startDate: toIsoDateTime(dateStart, occurrence.timeStart),
+      startDate: toLocalDateTime(dateStart, occurrence.timeStart),
       endDate: this.toEndDate(occurrence),
       location: {
         id: nonEmptyString(record.location?.id) ?? eventId,
@@ -143,7 +152,7 @@ export class SmartVillageEventMapper {
   }
 
   private buildOccurrenceId(eventId: string, dateStart: string, timeStart: string | null | undefined) {
-    const normalizedTime = nonEmptyString(timeStart) ?? "all-day";
+    const normalizedTime = normalizeOccurrenceIdTime(timeStart) ?? "all-day";
     return `${encodeURIComponent(eventId)}:${encodeURIComponent(dateStart)}:${encodeURIComponent(normalizedTime)}`;
   }
 
@@ -153,7 +162,7 @@ export class SmartVillageEventMapper {
       return "";
     }
 
-    return toIsoDateTime(
+    return toLocalDateTime(
       dateEnd,
       normalizeTime(occurrence.timeEnd) ?? normalizeTime(occurrence.timeStart),
     );
