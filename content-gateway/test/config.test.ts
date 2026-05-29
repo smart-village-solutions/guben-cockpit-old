@@ -2,12 +2,28 @@ import { describe, expect, it } from "vitest";
 
 import { loadConfig } from "../src/config.js";
 
+const expectString = (value: string) => value;
+
 describe("loadConfig", () => {
   it("allows mock mode without postgrest or cms configuration", () => {
     const config = loadConfig({
       CONTENT_SOURCE_MODE: "mock",
       PUBLIC_BASE_URL: "http://localhost:3000",
       MASTERPORTAL_URL: "http://masterportal",
+    });
+
+    expect(config.CONTENT_SOURCE_MODE).toBe("mock");
+  });
+
+  it("ignores invalid Smart Village configuration in mock mode", () => {
+    const config = loadConfig({
+      CONTENT_SOURCE_MODE: "mock",
+      PUBLIC_BASE_URL: "http://localhost:3000",
+      MASTERPORTAL_URL: "http://masterportal",
+      SV_GRAPHQL_URL: "not-a-url",
+      SV_OAUTH_TOKEN_URL: "still-not-a-url",
+      SV_CLIENT_ID: "",
+      SV_CLIENT_SECRET: "",
     });
 
     expect(config.CONTENT_SOURCE_MODE).toBe("mock");
@@ -67,6 +83,14 @@ describe("loadConfig", () => {
       SV_CLIENT_SECRET: "application-secret",
     });
 
+    if (config.CONTENT_SOURCE_MODE !== "postgrest") {
+      throw new Error("expected postgrest config");
+    }
+
+    expectString(config.SV_GRAPHQL_URL);
+    expectString(config.SV_OAUTH_TOKEN_URL);
+    expectString(config.SV_CLIENT_ID);
+    expectString(config.SV_CLIENT_SECRET);
     expect(config.SV_GRAPHQL_URL).toBe("https://bb-guben.server.smart-village.app/graphql");
     expect(config.SV_OAUTH_TOKEN_URL).toBe("https://bb-guben.server.smart-village.app/oauth/token");
     expect(config.SV_CLIENT_ID).toBe("application-id");

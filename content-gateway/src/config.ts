@@ -62,23 +62,26 @@ const baseConfigSchema = z.object({
   CONTENT_SOURCE_MODE: z.enum(["mock", "postgrest"]),
   DEFAULT_LANGUAGE: z.string().min(2).default("de"),
   FALLBACK_LANGUAGE: z.string().min(2).default("de"),
+});
+
+const smartVillageConfigSchema = z.object({
   SV_GRAPHQL_URL: createSecureUrlSchema(
     "SV_GRAPHQL_URL must use https unless it targets a local development host.",
     localHttpHosts,
-  ).optional(),
+  ),
   SV_OAUTH_TOKEN_URL: createSecureUrlSchema(
     "SV_OAUTH_TOKEN_URL must use https unless it targets a local development host.",
     localHttpHosts,
-  ).optional(),
-  SV_CLIENT_ID: z.string().min(1).optional(),
-  SV_CLIENT_SECRET: z.string().min(1).optional(),
+  ),
+  SV_CLIENT_ID: z.string().min(1),
+  SV_CLIENT_SECRET: z.string().min(1),
 });
 
 const mockConfigSchema = baseConfigSchema.extend({
   CONTENT_SOURCE_MODE: z.literal("mock"),
 });
 
-const postgrestConfigSchema = baseConfigSchema.extend({
+const postgrestConfigSchema = baseConfigSchema.merge(smartVillageConfigSchema).extend({
   CONTENT_SOURCE_MODE: z.literal("postgrest"),
   POSTGREST_URL: z.string().url(),
   POSTGREST_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
@@ -88,13 +91,9 @@ const postgrestConfigSchema = baseConfigSchema.extend({
 export type Config = z.infer<typeof mockConfigSchema> | z.infer<typeof postgrestConfigSchema>;
 export type PostgrestConfig = z.infer<typeof postgrestConfigSchema>;
 
-const ensureRequiredSmartVillageConfig = (config: Config): Config => {
-  if (config.CONTENT_SOURCE_MODE !== "postgrest") {
-    return config;
-  }
-
+const ensureRequiredSmartVillageConfig = (env: NodeJS.ProcessEnv) => {
   const missingSmartVillageFields = smartVillageFields.filter((field) => {
-    const value = config[field];
+    const value = env[field];
     return typeof value !== "string" || value.trim().length === 0;
   });
 
@@ -103,8 +102,6 @@ const ensureRequiredSmartVillageConfig = (config: Config): Config => {
       `Smart Village upstream configuration requires all of: ${smartVillageFields.join(", ")}`,
     );
   }
-
-  return config;
 };
 
 export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
@@ -113,10 +110,10 @@ export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
     CONTENT_SOURCE_MODE: env.CONTENT_SOURCE_MODE ?? "mock",
   };
 
-  const parsedConfig =
-    normalizedEnv.CONTENT_SOURCE_MODE === "postgrest"
-      ? postgrestConfigSchema.parse(normalizedEnv)
-      : mockConfigSchema.parse(normalizedEnv);
+  if (normalizedEnv.CONTENT_SOURCE_MODE === "postgrest") {
+    ensureRequiredSmartVillageConfig(normalizedEnv);
+    return postgrestConfigSchema.parse(normalizedEnv);
+  }
 
-  return ensureRequiredSmartVillageConfig(parsedConfig);
+  return mockConfigSchema.parse(normalizedEnv);
 };
