@@ -11,6 +11,7 @@ services:
       INTERNAL_CONTENT_GATEWAY_URL: http://content-gateway:5100
       INTERNAL_BOOKING_URL: ${INTERNAL_BOOKING_URL:-https://backend.booking.guben.de}
       VITE_CONTENT_GATEWAY_URL: ${FRONTEND_BASEURI}
+      VITE_MASTERPORTAL_URL: ${MASTERPORTAL_URL}
       VITE_BOOKING_URL: /api/booking
     networks:
       - websites
@@ -85,6 +86,10 @@ services:
       POSTGREST_URL: http://guben-postgrest-prod:3000
       PUBLIC_BASE_URL: ${FRONTEND_BASEURI}
       MASTERPORTAL_URL: ${MASTERPORTAL_URL}
+      SV_GRAPHQL_URL: ${SV_GRAPHQL_URL:?SV_GRAPHQL_URL is required for Smart Village events}
+      SV_OAUTH_TOKEN_URL: ${SV_OAUTH_TOKEN_URL:?SV_OAUTH_TOKEN_URL is required for Smart Village events}
+      SV_CLIENT_ID: ${SV_CLIENT_ID:?SV_CLIENT_ID is required for Smart Village events}
+      SV_CLIENT_SECRET: ${SV_CLIENT_SECRET:?SV_CLIENT_SECRET is required for Smart Village events}
       DEFAULT_LANGUAGE: de
       FALLBACK_LANGUAGE: de
     networks:
