@@ -33,12 +33,15 @@ const isValidTokenResponse = (
 ): payload is SmartVillageOAuthTokenResponse =>
   typeof payload.access_token === "string" &&
   payload.access_token.length > 0 &&
+  typeof payload.token_type === "string" &&
+  payload.token_type.trim().toLowerCase() === "bearer" &&
   typeof payload.expires_in === "number" &&
   Number.isFinite(payload.expires_in) &&
   payload.expires_in > 0;
 
 export class SmartVillageOAuthClient {
   private cachedToken: CachedToken | null = null;
+  private inFlightTokenRequest: Promise<string> | null = null;
 
   public constructor(private readonly options: SmartVillageOAuthClientOptions) {}
 
@@ -50,6 +53,20 @@ export class SmartVillageOAuthClient {
       return this.cachedToken.accessToken;
     }
 
+    if (this.inFlightTokenRequest !== null) {
+      return this.inFlightTokenRequest;
+    }
+
+    this.inFlightTokenRequest = this.fetchAccessToken();
+
+    try {
+      return await this.inFlightTokenRequest;
+    } finally {
+      this.inFlightTokenRequest = null;
+    }
+  }
+
+  private async fetchAccessToken(): Promise<string> {
     const payload = await requestJson<SmartVillageOAuthTokenResponse>({
       url: this.options.tokenUrl,
       method: "POST",
@@ -70,7 +87,7 @@ export class SmartVillageOAuthClient {
     if (!isValidTokenResponse(payload)) {
       throw new GatewayError({
         code: "INVALID_UPSTREAM_PAYLOAD",
-        message: "smartvillage oauth response did not include a usable access token",
+        message: "smartvillage oauth response did not include a usable bearer access token",
         statusCode: 502,
         upstream: "smartvillage",
         retryable: false,
