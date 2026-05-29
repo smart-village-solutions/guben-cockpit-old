@@ -11,6 +11,8 @@ const defaultFilters: EventFilters = {
   pageSize: 25,
 };
 
+type WarnHook = (message: string, context: Record<string, unknown>) => void;
+
 type GraphQLClientStub = {
   request: ReturnType<typeof vi.fn>;
 };
@@ -57,11 +59,16 @@ const makeRecord = (
   ...overrides,
 });
 
-const createRepository = (client: GraphQLClientStub, cacheTtlMs = 60_000) =>
+const createRepository = (
+  client: GraphQLClientStub,
+  cacheTtlMs = 60_000,
+  warn?: WarnHook,
+) =>
   new SmartVillageEventRepository({
     client,
     cacheTtlMs,
     publicBaseUrl: "http://localhost:3000",
+    warn,
   });
 
 describe("TTLCache", () => {
@@ -376,7 +383,67 @@ describe("SmartVillageEventRepository", () => {
     expect(result.seo.title).toBe("Veranstaltungen");
   });
 
-  it("resolves a synthetic occurrence id back to the parent internal id for detail lookups", async () => {
+  it("logs context when malformed upstream records or occurrences are skipped", async () => {
+    const warn = vi.fn<WarnHook>();
+    const client = {
+      request: vi.fn(async () => ({
+        eventRecords: [
+          makeRecord({
+            id: null,
+            externalId: "99193148",
+          }),
+          makeRecord({
+            id: "1937531",
+            externalId: "99193149",
+            dates: [
+              {
+                dateStart: null,
+                dateEnd: "2026-06-18",
+                timeStart: "18:00",
+                timeEnd: "20:00",
+              },
+              {
+                dateStart: "2026-06-18",
+                dateEnd: "2026-06-18",
+                timeStart: "19:00",
+                timeEnd: "20:00",
+              },
+            ],
+          }),
+        ],
+      })),
+    };
+    const repository = createRepository(client, 60_000, warn);
+
+    const result = await repository.getEvents("de", defaultFilters);
+
+    expect(result.events.totalCount).toBe(1);
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenNthCalledWith(
+      1,
+      "Skipped malformed Smart Village event record/occurrence during mapping",
+      expect.objectContaining({
+        internalId: null,
+        externalId: "99193148",
+        title: "Sommerfest",
+        occurrenceCandidates: 1,
+        mappedOccurrences: 0,
+      }),
+    );
+    expect(warn).toHaveBeenNthCalledWith(
+      2,
+      "Skipped malformed Smart Village event record/occurrence during mapping",
+      expect.objectContaining({
+        internalId: "1937531",
+        externalId: "99193149",
+        title: "Sommerfest",
+        occurrenceCandidates: 2,
+        mappedOccurrences: 1,
+      }),
+    );
+  });
+
+  it("resolves a decoded synthetic occurrence id back to the parent internal id for detail lookups", async () => {
     const client = {
       request: vi.fn(async (_query: string, variables?: Record<string, unknown>) => {
         expect(variables).toEqual({ id: "1937530" });
@@ -401,14 +468,14 @@ describe("SmartVillageEventRepository", () => {
       }),
     };
     const repository = createRepository(client);
-    const id = "1937530:2026-06-14:10%3A00";
+    const id = "1937530:2026-06-14:10:00";
 
     const result = await repository.getEventById("de", id);
 
     expect(result.event).toMatchObject({
-      id,
+      id: "1937530:2026-06-14:10%3A00",
       eventId: "99193148",
-      terminId: id,
+      terminId: "1937530:2026-06-14:10%3A00",
       title: "Sommerfest",
     });
     expect(result.seo.canonical).toBe("http://localhost:3000/events/1937530:2026-06-14:10%3A00");

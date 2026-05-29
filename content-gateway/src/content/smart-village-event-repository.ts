@@ -100,6 +100,7 @@ type SmartVillageEventRepositoryOptions = {
     request<T>(query: string, variables?: Record<string, unknown>): Promise<T>;
   };
   publicBaseUrl: string;
+  warn?: (message: string, context: Record<string, unknown>) => void;
   cacheTtlMs?: number;
   now?: () => number;
   mapper?: SmartVillageEventMapper;
@@ -115,6 +116,7 @@ type EventRecordQueryResponse = {
 
 type ParsedOccurrenceId = {
   internalId: string;
+  canonicalId: string;
 };
 
 const localizedEventsPageCopy: Record<string, { title: string; description: string }> = {
@@ -189,7 +191,11 @@ export class SmartVillageEventRepository {
 
   public async getEventById(language: string, id: string): Promise<EventDetailContent> {
     const normalizedLanguage = normalizeLanguage(language);
-    const cacheKey = JSON.stringify([normalizedLanguage, id]);
+    const parsedOccurrenceId = this.parseOccurrenceId(id);
+    const cacheKey = JSON.stringify([
+      normalizedLanguage,
+      parsedOccurrenceId?.canonicalId ?? id,
+    ]);
 
     return this.detailCache.getOrLoad(cacheKey, async () =>
       this.loadEventById(normalizedLanguage, id),
@@ -201,7 +207,7 @@ export class SmartVillageEventRepository {
     const records = this.expectEventRecords(response);
 
     let results = records
-      .flatMap((record) => this.mapper.eventsFromRecord(record))
+      .flatMap((record) => this.mapRecordWithDiagnostics(record, "eventRecords"))
       .filter((event) => event.published);
 
     results = this.filterEvents(results, filters);
@@ -250,9 +256,9 @@ export class SmartVillageEventRepository {
       throw notFoundError();
     }
 
-    const event = this.mapper
-      .eventsFromRecord(response.eventRecord)
-      .find((candidate) => candidate.id === id && candidate.published);
+    const event = this.mapRecordWithDiagnostics(response.eventRecord, "eventRecord").find(
+      (candidate) => candidate.id === parsedOccurrenceId.canonicalId && candidate.published,
+    );
 
     if (!event) {
       throw notFoundError();
@@ -260,7 +266,7 @@ export class SmartVillageEventRepository {
 
     return eventDetailContentSchema.parse({
       event,
-      seo: this.createSeo(`/events/${id}`, event.title, event.description),
+      seo: this.createSeo(`/events/${event.id}`, event.title, event.description),
     });
   }
 
@@ -273,21 +279,66 @@ export class SmartVillageEventRepository {
   }
 
   private parseOccurrenceId(value: string): ParsedOccurrenceId | null {
-    const parts = value.split(":");
-    if (parts.length !== 3 || parts.some((part) => part.length === 0)) {
+    const firstSeparator = value.indexOf(":");
+    const secondSeparator =
+      firstSeparator >= 0 ? value.indexOf(":", firstSeparator + 1) : -1;
+
+    if (firstSeparator <= 0 || secondSeparator <= firstSeparator + 1 || secondSeparator >= value.length - 1) {
       return null;
     }
 
     try {
-      const internalId = decodeURIComponent(parts[0] ?? "");
+      const internalId = decodeURIComponent(value.slice(0, firstSeparator));
+      const dateStart = decodeURIComponent(value.slice(firstSeparator + 1, secondSeparator));
+      const occurrenceTime = decodeURIComponent(value.slice(secondSeparator + 1));
+
       if (internalId.length === 0) {
         return null;
       }
 
-      return { internalId };
+      return {
+        internalId,
+        canonicalId: [
+          encodeURIComponent(internalId),
+          encodeURIComponent(dateStart),
+          encodeURIComponent(occurrenceTime),
+        ].join(":"),
+      };
     } catch {
       return null;
     }
+  }
+
+  private mapRecordWithDiagnostics(
+    record: SmartVillageEventRecord,
+    source: "eventRecords" | "eventRecord",
+  ) {
+    const mappedEvents = this.mapper.eventsFromRecord(record);
+    const occurrenceCandidates = this.getOccurrenceCandidateCount(record);
+
+    if (occurrenceCandidates > mappedEvents.length) {
+      this.options.warn?.(
+        "Skipped malformed Smart Village event record/occurrence during mapping",
+        {
+          source,
+          internalId: record.id ?? null,
+          externalId: record.externalId ?? null,
+          title: record.title ?? null,
+          occurrenceCandidates,
+          mappedOccurrences: mappedEvents.length,
+        },
+      );
+    }
+
+    return mappedEvents;
+  }
+
+  private getOccurrenceCandidateCount(record: SmartVillageEventRecord) {
+    if (Array.isArray(record.dates) && record.dates.length > 0) {
+      return record.dates.length;
+    }
+
+    return record.date ? 1 : 0;
   }
 
   private filterEvents(events: Event[], filters: EventFilters) {
