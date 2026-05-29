@@ -77,7 +77,7 @@ describe("PostgrestContentRepository", () => {
     expect(result.page.seo.canonical).toBe("http://localhost:3000/projects");
   });
 
-  it("filters and sorts events before pagination", async () => {
+  it("filters and sorts legacy PostgREST events before pagination", async () => {
     const repository = new PostgrestContentRepository(config, {
       select: async () => [],
     } as never);
@@ -197,7 +197,7 @@ describe("PostgrestContentRepository", () => {
     expect(result.events.bookingTenants).toEqual([{ id: "tenant-1", tenantId: "bk-1" }]);
   });
 
-  it("raises not found when an event detail is missing", async () => {
+  it("raises not found when a legacy PostgREST event detail is missing", async () => {
     const repository = new PostgrestContentRepository(config, {
       select: async () => [],
     } as never);

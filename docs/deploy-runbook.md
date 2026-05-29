@@ -53,6 +53,10 @@ curl -fsS -X PUT \
 ```bash
 curl -fsS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
 curl -fsS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
+curl -fsS -o /tmp/content-events.json -w "content/events: %{http_code}\n" "https://cockpit.guben.de/api/content/events?pageNumber=1&pageSize=1"
+EVENT_ID="$(jq -r '.events.results[0].id' /tmp/content-events.json)"
+test "$EVENT_ID" != "null"
+curl -fsS -o /dev/null -w "content/event-detail: %{http_code}\n" "https://cockpit.guben.de/api/content/events/$EVENT_ID"
 curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/api/default/bookables/public
 ```
 
@@ -72,6 +76,11 @@ Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schrit
 - GitHub Tag fuer Release ist gepusht (z. B. `v0.8.6`)
 - GitHub Action fuer Image-Build ist erfolgreich
 - Portainer-URL, Stack-ID und Endpoint-ID liegen aus der privaten Betriebsdokumentation oder direkt aus Portainer vor
+- Die Smart-Village-Zugangsdaten fuer den Event-Cutover liegen vor:
+  - `SV_GRAPHQL_URL`
+  - `SV_OAUTH_TOKEN_URL`
+  - `SV_CLIENT_ID`
+  - `SV_CLIENT_SECRET`
 - In Portainer existieren lauffaehige GHCR-Registries mit passenden Accounts:
   - fuer `smart-village-solutions/*`
   - fuer `agriculturedev/*`
@@ -121,8 +130,12 @@ docker manifest inspect ghcr.io/smart-village-solutions/guben-cockpit-content-ga
    - `VITE_BOOKING_API_URL=https://guben-api.smart-city-booking.de`
    - `VITE_BOOKING_URL=/api/booking` fuer die noch nicht migrierten Legacy-Event-Flows
 3. In `Environment variables` setzen:
-   - `VERSION_WEB=<zieltag>`
-   - `VERSION_API=<bestehender API-Tag>` (nur aendern, wenn API-Release geplant)
+  - `VERSION_WEB=<zieltag>`
+  - `VERSION_API=<bestehender API-Tag>` (nur aendern, wenn API-Release geplant)
+  - `SV_GRAPHQL_URL=<smart-village-graphql-url>`
+  - `SV_OAUTH_TOKEN_URL=<smart-village-oauth-token-url>`
+  - `SV_CLIENT_ID=<smart-village-client-id>`
+  - `SV_CLIENT_SECRET=<smart-village-client-secret>`
 4. `Update the stack` ausfuehren
 
 ## 3. Deploy (Portainer API, optional)
@@ -158,10 +171,18 @@ curl -fsS -X PUT \
 ```bash
 curl -fsS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
 curl -fsS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
+curl -fsS -o /tmp/content-events.json -w "content/events: %{http_code}\n" "https://cockpit.guben.de/api/content/events?pageNumber=1&pageSize=1"
+EVENT_ID="$(jq -r '.events.results[0].id' /tmp/content-events.json)"
+test "$EVENT_ID" != "null"
+curl -fsS -o /dev/null -w "content/event-detail: %{http_code}\n" "https://cockpit.guben.de/api/content/events/$EVENT_ID"
 curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/api/default/bookables/public
 ```
 
 Erwartung: jeweils `200`.
+
+Hinweis zum Event-Detail-Smoke-Test:
+- Die Event-IDs kommen seit dem Smart-Village-Cutover als synthetische Occurrence-IDs zurueck, z. B. `1937530:2026-06-14:10%3A00`.
+- Wenn eine ID manuell in eine URL kopiert wird, muss sie URL-encodiert bleiben. Der Ablauf oben liest bereits die encodierte ID aus der Listen-Response.
 
 Browser-/CORS-Check fuer den Booking-Rollout:
 
@@ -239,5 +260,5 @@ Rollback via API (Kurzform):
 2. Portainer-Registries fuer alle benoetigten Namespaces verifiziert
 3. Stack mit korrekten Env-Variablen aktualisiert
 4. Alle 5 Kerncontainer laufen (`web`, `api`, `db`, `postgrest`, `content-gateway`)
-5. Drei Smoke-Endpunkte liefern `200`
+5. Frontend, Home, Event-Liste, Event-Detail und Booking-Smoke-Checks liefern `200`
 6. Bei Problemen: gezielter Rollback auf letzten stabilen `VERSION_WEB`

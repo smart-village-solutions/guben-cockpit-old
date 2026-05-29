@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   MockContentRepository,
   PostgrestContentRepository,
+  SmartVillagePostgrestContentRepository,
 } from "../src/content/content-repository.js";
 import {
   mockDashboardContent,
@@ -46,7 +47,7 @@ describe("content repository glue", () => {
     });
   });
 
-  it("keeps the exported PostgrestContentRepository alias wired to the main implementation", () => {
+  it("keeps the exported PostgrestContentRepository alias wired to the legacy PostgREST implementation", () => {
     const repository = new PostgrestContentRepository(config, {
       select: async () => [],
     } as never);
@@ -54,5 +55,48 @@ describe("content repository glue", () => {
     expect(repository).toBeInstanceOf(PostgrestContentRepository);
     expect(typeof repository.getHome).toBe("function");
     expect(typeof repository.getEvents).toBe("function");
+  });
+
+  it("routes runtime event reads through Smart Village while keeping other content on PostgREST", async () => {
+    const postgrestRepository = {
+      getHome: async () => ({ source: "postgrest", scope: "home" }),
+      getProjects: async () => ({ source: "postgrest", scope: "projects" }),
+      getDashboard: async () => ({ source: "postgrest", scope: "dashboard" }),
+      getMap: async () => ({ source: "postgrest", scope: "map" }),
+      getFooter: async () => ({ source: "postgrest", scope: "footer" }),
+      getBookingTenants: async () => ({ source: "postgrest", scope: "booking-tenants" }),
+    };
+    const smartVillageEventRepository = {
+      getEvents: async () => ({ source: "smartvillage", scope: "events" }),
+      getEventById: async () => ({ source: "smartvillage", scope: "event-detail" }),
+    };
+    const repository = new SmartVillagePostgrestContentRepository({
+      postgrestRepository: postgrestRepository as never,
+      smartVillageEventRepository: smartVillageEventRepository as never,
+    });
+
+    await expect(repository.getHome("de")).resolves.toEqual({ source: "postgrest", scope: "home" });
+    await expect(repository.getProjects("de", 1, 10)).resolves.toEqual({
+      source: "postgrest",
+      scope: "projects",
+    });
+    await expect(repository.getEvents("de", {} as never)).resolves.toEqual({
+      source: "smartvillage",
+      scope: "events",
+    });
+    await expect(repository.getEventById("de", "event-id")).resolves.toEqual({
+      source: "smartvillage",
+      scope: "event-detail",
+    });
+    await expect(repository.getDashboard("de")).resolves.toEqual({
+      source: "postgrest",
+      scope: "dashboard",
+    });
+    await expect(repository.getMap("de")).resolves.toEqual({ source: "postgrest", scope: "map" });
+    await expect(repository.getFooter()).resolves.toEqual({ source: "postgrest", scope: "footer" });
+    await expect(repository.getBookingTenants()).resolves.toEqual({
+      source: "postgrest",
+      scope: "booking-tenants",
+    });
   });
 });
