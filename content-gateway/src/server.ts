@@ -11,7 +11,6 @@ import { SmartVillageGraphQLClient } from "./upstream/smart-village-graphql-clie
 import { SmartVillageOAuthClient } from "./upstream/smart-village-oauth-client.js";
 
 const config = loadConfig();
-let app: ReturnType<typeof createApp>;
 const smartVillageReadinessQuery = `
   query ContentGatewayReadiness {
     eventRecords(limit: 1) {
@@ -84,7 +83,7 @@ const { repository, readinessProbe } =
       }
     : createPostgrestMode(config);
 
-app = createApp({
+const app = createApp({
   config,
   repository,
   readinessProbe,

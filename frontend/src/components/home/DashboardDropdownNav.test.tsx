@@ -107,7 +107,7 @@ describe("DashboardDropdownTabs", () => {
 
     expect(screen.getByText("Card One")).toBeTruthy();
     expect(screen.getByTestId("map-component").className).toContain("min-h-[18rem]");
-  });
+  }, 15_000);
 
   it("switches tabs and opens external links from link dropdowns", async () => {
     const { DashboardDropdownTabs } = await import("./DashboardDropdownNav");

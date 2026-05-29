@@ -353,6 +353,12 @@ beforeAll(() => {
     },
     configurable: true,
   });
+  Object.defineProperty(Date.prototype, "formatTime", {
+    value: function formatTime() {
+      return this.toISOString().slice(11, 16);
+    },
+    configurable: true,
+  });
 });
 
 beforeEach(() => {

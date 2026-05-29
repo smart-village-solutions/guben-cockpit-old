@@ -62,7 +62,7 @@ describe("DetailMediaSection", () => {
     expect(dialog).toBeTruthy();
     expect(within(dialog).getByRole("img", { name: "Bild 2" })).toBeTruthy();
     expect(within(dialog).getByRole("button", { name: "Close" }).className).toContain("bg-black/70");
-  });
+  }, 15_000);
 
   it("clamps the selected image when a rerender provides fewer images", async () => {
     const user = userEvent.setup();

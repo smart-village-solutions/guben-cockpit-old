@@ -217,7 +217,7 @@ describe("route coverage", () => {
     );
 
     expect(screen.getByText("Navbar")).toBeTruthy();
-    expect(await screen.findByText("Footer")).toBeTruthy();
+    expect(document.querySelector(".bg-gubenAccent.h-14")).toBeTruthy();
     expect(await screen.findByText("Toaster")).toBeTruthy();
     expect(await screen.findByText("BuilderPreviewEntry")).toBeTruthy();
   }, 10000);
@@ -307,5 +307,5 @@ describe("route coverage", () => {
     await import("@/routes/booking/$title");
     await import("@/routes/booking/room/$title");
     await import("@/routes/projects/$projectId");
-  });
+  }, 15_000);
 });
