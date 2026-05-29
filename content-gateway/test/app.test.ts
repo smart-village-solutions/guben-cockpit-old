@@ -102,6 +102,38 @@ describe("content gateway", () => {
     expect(footerResponse.json().items).toHaveLength(3);
   });
 
+  it("routes event list and detail requests through the PublicContentRepository contract", async () => {
+    const app = createApp({ config: baseConfig, repository });
+
+    const listResponse = await app.inject({
+      method: "GET",
+      url: "/api/content/events?pageNumber=2&pageSize=10&title=markt&category=culture&startDate=2026-05-01&endDate=2026-05-31&sortBy=title&ordering=desc&distance=5",
+      headers: {
+        "accept-language": "en-GB,en;q=0.8",
+      },
+    });
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: "/api/content/events/smart-village-id?lang=pl",
+    });
+
+    expect(listResponse.statusCode).toBe(200);
+    expect(detailResponse.statusCode).toBe(200);
+    expect(repository.getEvents).toHaveBeenCalledWith("en", {
+      lang: undefined,
+      pageNumber: 2,
+      pageSize: 10,
+      title: "markt",
+      category: "culture",
+      startDate: "2026-05-01",
+      endDate: "2026-05-31",
+      sortBy: "title",
+      ordering: "desc",
+      distance: 5,
+    });
+    expect(repository.getEventById).toHaveBeenCalledWith("pl", "smart-village-id");
+  });
+
   it("exposes separate liveness and readiness endpoints", async () => {
     const app = createApp({
       config: baseConfig,

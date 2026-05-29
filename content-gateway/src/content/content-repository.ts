@@ -22,6 +22,7 @@ import { PostgrestContentRepository as PostgrestRepository } from "./postgrest-c
 import { EventFilters } from "./postgrest-content-types.js";
 
 export type { EventFilters } from "./postgrest-content-types.js";
+export { SmartVillagePostgrestContentRepository } from "./smart-village-postgrest-content-repository.js";
 
 export interface PublicContentRepository {
   getHome(language: string): Promise<HomeContent>;

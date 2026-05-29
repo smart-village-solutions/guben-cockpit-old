@@ -1,38 +1,89 @@
-import { loadConfig } from "./config.js";
+import { loadConfig, type PostgrestConfig } from "./config.js";
 import { createApp } from "./app.js";
 import {
   MockContentRepository,
   PostgrestContentRepository,
 } from "./content/content-repository.js";
+import { SmartVillagePostgrestContentRepository } from "./content/smart-village-postgrest-content-repository.js";
+import { SmartVillageEventRepository } from "./content/smart-village-event-repository.js";
 import { PostgrestClient } from "./upstream/postgrest-client.js";
+import { SmartVillageGraphQLClient } from "./upstream/smart-village-graphql-client.js";
+import { SmartVillageOAuthClient } from "./upstream/smart-village-oauth-client.js";
 
 const config = loadConfig();
-const postgrestClient = config.CONTENT_SOURCE_MODE === "postgrest" ? new PostgrestClient(config) : null;
-const repository =
-  config.CONTENT_SOURCE_MODE === "mock"
-    ? new MockContentRepository()
-    : new PostgrestContentRepository(config, postgrestClient!);
+let app: ReturnType<typeof createApp>;
+const smartVillageReadinessQuery = `
+  query ContentGatewayReadiness {
+    eventRecords(limit: 1) {
+      id
+    }
+  }
+`;
 
-const app = createApp({
+const mockReadinessProbe = async () => ({
+  ready: true,
+  checks: {},
+});
+
+const createPostgrestMode = (postgrestConfig: PostgrestConfig) => {
+  const postgrestClient = new PostgrestClient(postgrestConfig);
+  const postgrestRepository = new PostgrestContentRepository(postgrestConfig, postgrestClient);
+  const smartVillageOAuthClient = new SmartVillageOAuthClient({
+    tokenUrl: postgrestConfig.SV_OAUTH_TOKEN_URL,
+    clientId: postgrestConfig.SV_CLIENT_ID,
+    clientSecret: postgrestConfig.SV_CLIENT_SECRET,
+  });
+  const smartVillageGraphQLClient = new SmartVillageGraphQLClient({
+    graphqlUrl: postgrestConfig.SV_GRAPHQL_URL,
+    oauthClient: smartVillageOAuthClient,
+  });
+  const smartVillageEventRepository = new SmartVillageEventRepository({
+    client: smartVillageGraphQLClient,
+    publicBaseUrl: postgrestConfig.PUBLIC_BASE_URL,
+  });
+
+  return {
+    repository: new SmartVillagePostgrestContentRepository({
+      postgrestRepository,
+      smartVillageEventRepository,
+    }),
+    readinessProbe: async () => {
+      const postgrestReady = await postgrestClient.checkReadiness();
+      const smartVillageReady = await smartVillageGraphQLClient
+        .request<{ eventRecords: Array<{ id: string }> }>(smartVillageReadinessQuery)
+        .then(() => true)
+        .catch((error: unknown) => {
+          app.log.warn({ err: error }, "Smart Village readiness check failed");
+          return false;
+        });
+
+      return {
+        ready: postgrestReady && smartVillageReady,
+        checks: {
+          postgrest: {
+            ready: postgrestReady,
+          },
+          smartvillage: {
+            ready: smartVillageReady,
+          },
+        },
+      };
+    },
+  };
+};
+
+const { repository, readinessProbe } =
+  config.CONTENT_SOURCE_MODE === "mock"
+    ? {
+        repository: new MockContentRepository(),
+        readinessProbe: mockReadinessProbe,
+      }
+    : createPostgrestMode(config);
+
+app = createApp({
   config,
   repository,
-  readinessProbe:
-    config.CONTENT_SOURCE_MODE === "mock"
-      ? async () => ({
-          ready: true,
-          checks: {},
-        })
-      : async () => {
-          const ready = await postgrestClient!.checkReadiness();
-          return {
-            ready,
-            checks: {
-              postgrest: {
-                ready,
-              },
-            },
-          };
-        },
+  readinessProbe,
 });
 
 try {
