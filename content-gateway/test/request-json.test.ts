@@ -77,6 +77,28 @@ describe("requestJson", () => {
     });
   });
 
+  it("uses the provided smartvillage upstream name in timeout errors", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(
+      new DOMException("The operation was aborted.", "AbortError"),
+    );
+
+    await expect(
+      requestJson({
+        url: "http://smartvillage.test/graphql",
+        method: "POST",
+        timeoutMs: 1,
+        retryAttempts: 0,
+        retryBackoffMs: 0,
+        upstream: "smartvillage",
+      }),
+    ).rejects.toMatchObject({
+      code: "UPSTREAM_TIMEOUT",
+      statusCode: 503,
+      upstream: "smartvillage",
+      retryable: true,
+    });
+  });
+
   it("raises an unavailable gateway error for unexpected failures", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("socket hang up"));
 
