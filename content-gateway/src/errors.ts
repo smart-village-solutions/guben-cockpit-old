@@ -5,7 +5,7 @@ export type GatewayErrorCode =
   | "NOT_FOUND"
   | "INTERNAL_ERROR";
 
-export type UpstreamName = "postgrest" | "gateway";
+export type UpstreamName = "postgrest" | "smartvillage" | "gateway";
 
 export class GatewayError extends Error {
   public readonly code: GatewayErrorCode;

@@ -106,6 +106,13 @@ describe("Footer", () => {
     expect(screen.getByRole("link", { name: "Kontakt" }).getAttribute("href")).toBe("/contact");
   });
 
+  it("keeps a consistent gap before the footer bar", async () => {
+    const { Footer } = await import("./Footer");
+    const { container } = render(<Footer />);
+
+    expect(container.querySelector("footer")?.className).toContain("mt-5");
+  });
+
   it("renders the footer item dialog content with mobile-friendly spacing classes", async () => {
     const module = await import("./Footer");
 

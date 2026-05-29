@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import sanitizeHtml from "sanitize-html";
 
 import { DetailPageLayout } from "@/components/ui/DetailPageLayout";
+import { DetailMediaSection } from "@/components/ui/detailMediaSection";
 import { useGatewayProjectDetailContent } from "@/public-content/hooks";
 import { isGatewayPublicContentEnabled } from "@/public-content/source";
 import { useRouteMetadata } from "@/public-content/useRouteMetadata";
@@ -28,6 +29,10 @@ export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) =
 
   const project = query.data?.results?.[0] as Project | undefined;
   const category = (query.data as any)?._category as string | undefined;
+  const detailImages = project?.imageUrl ? [{ src: project.imageUrl, alt: project.title }] : [];
+  const hasProjectDescription = !isNullOrUndefinedOrWhiteSpace(project?.description);
+  const hasProjectFullText = !isNullOrUndefinedOrWhiteSpace(project?.fullText);
+  const hasProjectText = hasProjectDescription || hasProjectFullText;
 
   if (!query.isPending && !project) {
     return <PublicContentErrorState error={query.error} />;
@@ -63,38 +68,46 @@ export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) =
 
   return (
     <DetailPageLayout
-      heroImage={project?.imageUrl ?? undefined}
       heroAlt={project?.title ?? undefined}
       title={project?.title || "Projekt"}
       breadcrumbItems={project ? getBreadcrumbItems() : undefined}
-      metadata={
-        project ? (
-          <div className="space-y-3">
-            {!isNullOrUndefinedOrWhiteSpace(project.description) && (
-              <div>
-                <p className="text-xs text-neutral-500 font-semibold mb-1">ÜBERSICHT</p>
-                {/* Check if description contains HTML */}
-                {project.description.includes('<') && project.description.includes('>') ? (
-                  <div
-                    className="prose prose-sm max-w-none text-gray-700"
-                    dangerouslySetInnerHTML={{
-                      __html: sanitizeHtml(project.description),
-                    }}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-700 leading-relaxed">{project.description}</p>
-                )}
-              </div>
-            )}
-          </div>
-        ) : undefined
-      }
       onBack={() => navigate({ to: "/projects" })}
       backLabel="Zurück zu Projekten"
     >
       <div className="space-y-8">
-        {/* Full Text Content */}
-        {!isNullOrUndefinedOrWhiteSpace(project?.fullText) && (
+        {hasProjectDescription && project && (
+          <DetailMediaSection
+            heading="Übersicht"
+            body={
+              project.description.includes("<") && project.description.includes(">") ? (
+                <div
+                  className="prose max-w-none text-gray-700"
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(project.description),
+                  }}
+                />
+              ) : (
+                <p className="text-sm leading-relaxed text-gray-700">{project.description}</p>
+              )
+            }
+            images={detailImages}
+          />
+        )}
+
+        {hasProjectFullText && !hasProjectDescription && detailImages.length > 0 && project ? (
+          <DetailMediaSection
+            heading="Projektdetails"
+            body={
+              <div
+                className="prose max-w-none text-neutral-700 leading-relaxed"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(project.fullText),
+                }}
+              />
+            }
+            images={detailImages}
+          />
+        ) : hasProjectFullText ? (
           <div>
             <h2 className="font-bold text-xl mb-4">Projektdetails</h2>
             <div
@@ -104,7 +117,15 @@ export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) =
               }}
             />
           </div>
-        )}
+        ) : null}
+
+        {!hasProjectText && detailImages.length > 0 ? (
+          <DetailMediaSection
+            heading={null}
+            body={null}
+            images={detailImages}
+          />
+        ) : null}
       </div>
     </DetailPageLayout>
   );

@@ -5,7 +5,7 @@ import { Language } from './Languages';
 import i18next from 'i18next';
 import { FetchInterceptor } from "@/utilities/fetchApiExtensions";
 
-const localeModules = import.meta.glob("../../assets/locales/*/*.json");
+const localeModules = import.meta.glob<{ default: Record<string, unknown> }>("../../assets/locales/*/*.json");
 
 const loadLocaleModule = async (language: string, namespace: string) => {
   const loader = localeModules[`../../assets/locales/${language}/${namespace}.json`];
@@ -15,7 +15,7 @@ const loadLocaleModule = async (language: string, namespace: string) => {
   }
 
   const module = await loader();
-  return "default" in module ? module.default : module;
+  return module.default;
 };
 
 i18next

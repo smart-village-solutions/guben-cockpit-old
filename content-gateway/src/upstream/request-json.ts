@@ -1,4 +1,6 @@
-import { GatewayError } from "../errors.js";
+import { GatewayError, type UpstreamName } from "../errors.js";
+
+type RequestJsonUpstream = Extract<UpstreamName, "postgrest" | "smartvillage">;
 
 type RequestJsonOptions = {
   url: string;
@@ -8,7 +10,7 @@ type RequestJsonOptions = {
   timeoutMs: number;
   retryAttempts: number;
   retryBackoffMs: number;
-  upstream: "postgrest";
+  upstream: RequestJsonUpstream;
 };
 
 const delay = (ms: number) =>

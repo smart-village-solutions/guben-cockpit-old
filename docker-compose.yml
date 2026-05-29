@@ -76,6 +76,10 @@ services:
       LOG_LEVEL: info
       PUBLIC_BASE_URL: http://localhost:3000
       MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
+      SV_GRAPHQL_URL: ${SV_GRAPHQL_URL:-}
+      SV_OAUTH_TOKEN_URL: ${SV_OAUTH_TOKEN_URL:-}
+      SV_CLIENT_ID: ${SV_CLIENT_ID:-}
+      SV_CLIENT_SECRET: ${SV_CLIENT_SECRET:-}
       CONTENT_SOURCE_MODE: postgrest
       DEFAULT_LANGUAGE: de
       FALLBACK_LANGUAGE: de

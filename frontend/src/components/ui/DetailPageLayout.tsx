@@ -11,7 +11,7 @@ interface DetailPageLayoutProps {
   // Hero section
   heroImage?: string;
   heroAlt?: string;
-  title: string;
+  title: ReactNode;
 
   // Content
   children: ReactNode;
@@ -41,6 +41,8 @@ export const DetailPageLayout = ({
   metadata,
   className,
 }: DetailPageLayoutProps) => {
+  const fallbackHeroAlt = typeof title === "string" ? title : "Detailbild";
+
   return (
     <main className={cn("relative w-full", className)}>
       {/* Breadcrumb Navigation */}
@@ -66,7 +68,7 @@ export const DetailPageLayout = ({
             {heroImage && (
               <img
                 src={heroImage}
-                alt={heroAlt || title}
+                alt={heroAlt || fallbackHeroAlt}
                 className="w-full h-64 object-cover"
               />
             )}

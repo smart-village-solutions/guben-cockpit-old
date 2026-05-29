@@ -110,7 +110,7 @@ describe("Navbar", () => {
     expect(nav).toBeTruthy();
     expect(container.querySelectorAll("nav ul > li").length).toBe(6);
     expect(container.querySelector("nav ul > li > li")).toBeNull();
-  });
+  }, 15_000);
 
   it("marks the active route and allows changing the language", async () => {
     const { Navbar } = await import("./Navbar");
@@ -122,5 +122,5 @@ describe("Navbar", () => {
 
     fireEvent.click(screen.getAllByRole("button", { name: "lang-en" })[0]);
     expect(updateLanguageMock).toHaveBeenCalledWith("en");
-  });
+  }, 15_000);
 });

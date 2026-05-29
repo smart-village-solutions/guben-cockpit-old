@@ -2,6 +2,69 @@ import type { ReactNode } from "react";
 import { Trash2Icon } from "lucide-react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { Project } from "@shared/public-content/contracts";
+
+type MockEvent = {
+  id: string;
+  eventId: string;
+  terminId: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  location: {
+    id: string;
+    name: string;
+    city: string;
+    street: string;
+    telephoneNumber: null;
+    fax: null;
+    email: null;
+    website: null;
+    zip: string;
+  };
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  urls: [];
+  categories: Array<{ id: string; name: string }>;
+  images: [];
+  published: boolean;
+};
+
+type ProjectsQueryData = {
+  businesses: {
+    totalCount: number;
+    pageCount: number;
+    results: Project[];
+  };
+  seo: undefined;
+};
+
+type ProjectDetailQueryData = {
+  results: Project[];
+  _category: string;
+  seo: undefined;
+};
+
+type EventDetailQueryData = {
+  event: MockEvent;
+  seo: undefined;
+};
+
+type EventsQueryData = {
+  events: {
+    results: MockEvent[];
+    categories: Array<{ id: string; name: string }>;
+    bookingTenants: Array<{ id: string; tenantId: string }>;
+    pageCount: number;
+    pageNumber?: number;
+    pageSize?: number;
+    totalCount?: number;
+  };
+  seo: undefined;
+};
 
 const mockState = vi.hoisted(() => {
   const project = {
@@ -63,7 +126,7 @@ const mockState = vi.hoisted(() => {
           results: [project],
         },
         seo: undefined,
-      },
+      } as ProjectsQueryData | null,
       error: null as unknown,
       isPending: false,
       refetch: vi.fn(),
@@ -73,7 +136,7 @@ const mockState = vi.hoisted(() => {
         results: [project],
         _category: "marketplace",
         seo: undefined,
-      },
+      } as ProjectDetailQueryData | null,
       error: null as unknown,
       isPending: false,
       refetch: vi.fn(),
@@ -82,7 +145,7 @@ const mockState = vi.hoisted(() => {
       data: {
         event,
         seo: undefined,
-      },
+      } as EventDetailQueryData | null,
       error: null as unknown,
       isPending: false,
       refetch: vi.fn(),
@@ -96,7 +159,7 @@ const mockState = vi.hoisted(() => {
           pageCount: 1,
         },
         seo: undefined,
-      },
+      } as EventsQueryData | null,
       error: null as unknown,
       isPending: false,
       refetch: vi.fn(),
@@ -290,6 +353,12 @@ beforeAll(() => {
     },
     configurable: true,
   });
+  Object.defineProperty(Date.prototype, "formatTime", {
+    value: function formatTime() {
+      return this.toISOString().slice(11, 16);
+    },
+    configurable: true,
+  });
 });
 
 beforeEach(() => {
@@ -322,7 +391,7 @@ beforeEach(() => {
         ],
       },
       seo: undefined,
-    },
+    } as ProjectsQueryData | null,
     error: null,
     isPending: false,
     refetch: vi.fn(),
@@ -344,7 +413,7 @@ beforeEach(() => {
       ],
       _category: "marketplace",
       seo: undefined,
-    },
+    } as ProjectDetailQueryData | null,
     error: null,
     isPending: false,
     refetch: vi.fn(),
@@ -380,7 +449,7 @@ beforeEach(() => {
         published: true,
       },
       seo: undefined,
-    },
+    } as EventDetailQueryData | null,
     error: null,
     isPending: false,
     refetch: vi.fn(),
@@ -423,7 +492,7 @@ beforeEach(() => {
         pageCount: 1,
       },
       seo: undefined,
-    },
+    } as EventsQueryData | null,
     error: null,
     isPending: false,
     refetch: vi.fn(),

@@ -1,11 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import {
+  eventDetailContentSchema,
+  eventsContentSchema,
+} from "../../shared/public-content/contracts.js";
 
 import {
   MockContentRepository,
   PostgrestContentRepository,
+  SmartVillagePostgrestContentRepository,
 } from "../src/content/content-repository.js";
 import {
   mockDashboardContent,
+  mockEventDetail,
   mockEventsContent,
   mockFooterContent,
   mockHomeContent,
@@ -22,6 +29,10 @@ const config: PostgrestConfig = {
   CONTENT_SOURCE_MODE: "postgrest",
   DEFAULT_LANGUAGE: "de",
   FALLBACK_LANGUAGE: "de",
+  SV_GRAPHQL_URL: "https://smart-village.example.com/graphql",
+  SV_OAUTH_TOKEN_URL: "https://smart-village.example.com/oauth/token",
+  SV_CLIENT_ID: "test-client-id",
+  SV_CLIENT_SECRET: "test-client-secret",
   POSTGREST_URL: "http://postgrest",
   POSTGREST_TIMEOUT_MS: 100,
   POSTGREST_SCHEMA: "public_content",
@@ -42,7 +53,7 @@ describe("content repository glue", () => {
     });
   });
 
-  it("keeps the exported PostgrestContentRepository alias wired to the main implementation", () => {
+  it("keeps the exported PostgrestContentRepository alias wired to the legacy PostgREST implementation", () => {
     const repository = new PostgrestContentRepository(config, {
       select: async () => [],
     } as never);
@@ -50,5 +61,76 @@ describe("content repository glue", () => {
     expect(repository).toBeInstanceOf(PostgrestContentRepository);
     expect(typeof repository.getHome).toBe("function");
     expect(typeof repository.getEvents).toBe("function");
+  });
+
+  it("routes runtime event reads through Smart Village while keeping the wrapper outputs contract-shaped", async () => {
+    const filters = {
+      pageNumber: 1,
+      pageSize: 25,
+      title: "Frühlingsmarkt",
+      category: mockEventsContent.events.categories[0]?.id,
+      startDate: "2026-04-01T00:00:00.000Z",
+      endDate: "2026-04-30T23:59:59.000Z",
+      sortBy: "startDate",
+      ordering: "asc",
+      distance: 25,
+    };
+    const postgrestRepository = {
+      getHome: vi.fn(async () => mockHomeContent),
+      getProjects: vi.fn(async () => mockProjectsContent),
+      getDashboard: vi.fn(async () => mockDashboardContent),
+      getMap: vi.fn(async () => mockMapContent),
+      getFooter: vi.fn(async () => mockFooterContent),
+      getBookingTenants: vi.fn(async () => ({
+        tenants: mockEventsContent.events.bookingTenants,
+      })),
+    };
+    const smartVillageEventRepository = {
+      getEvents: vi.fn(async () => mockEventsContent),
+      getEventById: vi.fn(async () => mockEventDetail),
+    };
+    const repository = new SmartVillagePostgrestContentRepository({
+      postgrestRepository: postgrestRepository as never,
+      smartVillageEventRepository: smartVillageEventRepository as never,
+    });
+    const home = await repository.getHome("de");
+    const projects = await repository.getProjects("de", 1, 12);
+    const events = await repository.getEvents("de", filters);
+    const eventDetail = await repository.getEventById("de", mockEventDetail.event.id);
+    const dashboard = await repository.getDashboard("de");
+    const map = await repository.getMap("de");
+    const footer = await repository.getFooter();
+    const bookingTenants = await repository.getBookingTenants();
+
+    expect(home).toEqual(mockHomeContent);
+    expect(projects).toEqual(mockProjectsContent);
+    expect(events).toEqual(eventsContentSchema.parse(mockEventsContent));
+    expect(eventDetail).toEqual(eventDetailContentSchema.parse(mockEventDetail));
+    expect(dashboard).toEqual(mockDashboardContent);
+    expect(map).toEqual(mockMapContent);
+    expect(footer).toEqual(mockFooterContent);
+    expect(bookingTenants).toEqual({
+      tenants: mockEventsContent.events.bookingTenants,
+    });
+
+    expect(postgrestRepository.getHome).toHaveBeenCalledWith("de");
+    expect(postgrestRepository.getProjects).toHaveBeenCalledWith("de", 1, 12);
+    expect(smartVillageEventRepository.getEvents).toHaveBeenCalledWith("de", filters);
+    expect(smartVillageEventRepository.getEventById).toHaveBeenCalledWith("de", mockEventDetail.event.id);
+    expect(postgrestRepository.getDashboard).toHaveBeenCalledWith("de");
+    expect(postgrestRepository.getMap).toHaveBeenCalledWith("de");
+    expect(postgrestRepository.getFooter).toHaveBeenCalledWith();
+    expect(postgrestRepository.getBookingTenants).toHaveBeenCalledWith();
+    expect(events).toMatchObject({
+      events: {
+        results: [
+          {
+            id: mockEventsContent.events.results[0]?.id,
+            eventId: mockEventsContent.events.results[0]?.eventId,
+            terminId: mockEventsContent.events.results[0]?.terminId,
+          },
+        ],
+      },
+    });
   });
 });

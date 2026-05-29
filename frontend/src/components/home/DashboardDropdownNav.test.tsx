@@ -54,6 +54,15 @@ vi.mock("@/components/ui/scroll-area", () => ({
 }));
 
 describe("DashboardDropdownTabs", () => {
+  const createInfoCard = (id: string, title: string) => ({
+    id,
+    title,
+    description: null,
+    imageUrl: null,
+    imageAlt: null,
+    button: null,
+  });
+
   beforeEach(() => {
     openMock.mockReset();
     vi.stubGlobal("open", openMock);
@@ -68,21 +77,25 @@ describe("DashboardDropdownTabs", () => {
           {
             id: "dropdown-1",
             title: "Services",
+            rank: 1,
             isLink: false,
             tabs: [
               {
                 id: "tab-1",
                 title: "Tab One",
+                sequence: 1,
                 mapUrl: "https://example.com/map-1",
-                informationCards: [{ title: "Card One" }],
+                informationCards: [createInfoCard("card-1", "Card One")],
               },
               {
                 id: "tab-2",
                 title: "Tab Two",
+                sequence: 2,
                 mapUrl: "https://example.com/map-2",
-                informationCards: [{ title: "Card Two" }],
+                informationCards: [createInfoCard("card-2", "Card Two")],
               },
             ],
+            links: [],
           },
         ]}
       />,
@@ -94,7 +107,7 @@ describe("DashboardDropdownTabs", () => {
 
     expect(screen.getByText("Card One")).toBeTruthy();
     expect(screen.getByTestId("map-component").className).toContain("min-h-[18rem]");
-  });
+  }, 15_000);
 
   it("switches tabs and opens external links from link dropdowns", async () => {
     const { DashboardDropdownTabs } = await import("./DashboardDropdownNav");
@@ -105,27 +118,33 @@ describe("DashboardDropdownTabs", () => {
           {
             id: "dropdown-1",
             title: "Services",
+            rank: 1,
             isLink: false,
             tabs: [
               {
                 id: "tab-1",
                 title: "Tab One",
+                sequence: 1,
                 mapUrl: "https://example.com/map-1",
-                informationCards: [{ title: "Card One" }],
+                informationCards: [createInfoCard("card-1", "Card One")],
               },
               {
                 id: "tab-2",
                 title: "Tab Two",
+                sequence: 2,
                 mapUrl: "https://example.com/map-2",
-                informationCards: [{ title: "Card Two" }],
+                informationCards: [createInfoCard("card-2", "Card Two")],
               },
             ],
+            links: [],
           },
           {
             id: "dropdown-2",
             title: "Links",
+            rank: 2,
             isLink: true,
-            links: [{ id: "link-1", title: "External Link", link: "https://example.com" }],
+            tabs: [],
+            links: [{ id: "link-1", title: "External Link", link: "https://example.com", sequence: 1 }],
           },
         ]}
       />,

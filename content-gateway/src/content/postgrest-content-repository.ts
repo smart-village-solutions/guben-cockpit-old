@@ -91,6 +91,9 @@ export class PostgrestContentRepository implements PublicContentRepository {
     });
   }
 
+  // Legacy-only PostgREST event path. Production /api/content/events* traffic is
+  // composed through SmartVillagePostgrestContentRepository so the remaining
+  // PostgREST event assumptions stay isolated here for maintenance and fallback use.
   public async getEvents(language: string, filters: EventFilters): Promise<EventsContent> {
     const [pages, bundle] = await Promise.all([this.source.getPage("Events"), this.source.getEventsBundle()]);
     const locations = new Map(bundle.locationRows.map((row) => [row.id, row]));

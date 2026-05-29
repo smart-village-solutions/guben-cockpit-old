@@ -5,21 +5,18 @@ import { ClockIcon, MapPinIcon } from "lucide-react";
 import { useState, useCallback, useMemo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { getEventImage } from "@/lib/DefaultEventImage";
+import { formatEventDateRange } from "@/utilities/eventDateRange";
+import { formatEventLocation } from "@/utilities/location";
 import { TranslatedHtml, TranslatedText } from "@/utilities/translateUtils";
 import { GenericCard } from "@/components/ui/GenericCard";
 import { BaseImgTag } from "@/components/ui/BaseImgTag";
-
-const formatCalendarDate = (value: Date) =>
-  typeof value.formatDate === "function" ? value.formatDate() : value.toISOString().slice(0, 10);
-
-const formatCalendarTime = (value: Date) =>
-  typeof value.formatTime === "function" ? value.formatTime() : value.toISOString().slice(11, 16);
 
 interface EventCardProps {
   event: Event;
 }
 
 function EventCard({ event }: EventCardProps) {
+  const bookingEvent = event as Event & { isBookingEvent?: boolean };
   const [selectedImage, setSelectedImage] = useState(0);
   const { t } = useTranslation("common");
 
@@ -85,7 +82,7 @@ function EventCard({ event }: EventCardProps) {
   }));
 
   // Description
-  const description = (event as any).isBookingEvent ? (
+  const description = bookingEvent.isBookingEvent ? (
     <TranslatedHtml
       className="text-sm text-gray-600 line-clamp-3"
       text={event.description}
@@ -104,41 +101,46 @@ function EventCard({ event }: EventCardProps) {
     <div className="space-y-2 flex flex-col">
       <div className="flex items-start gap-2 text-sm">
         <MapPinIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
-        <p className="line-clamp-2">
-          {event.location.street}, {event.location.zip} {event.location.city}
-        </p>
+        <p className="line-clamp-2">{formatEventLocation(event.location)}</p>
       </div>
       <div className="flex items-start gap-2 text-sm">
         <ClockIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
-        <p className="line-clamp-2">
-          {startDate.formatDateTime()} -{" "}
-          {formatCalendarDate(startDate) === formatCalendarDate(endDate)
-            ? formatCalendarTime(endDate)
-            : endDate.formatDateTime()}
-        </p>
+        <p className="line-clamp-2">{formatEventDateRange(startDate, endDate)}</p>
       </div>
     </div>
   );
 
   // Link navigation
-  const linkProps =
-    (event as any).isBookingEvent
-      ? { to: "/events/" + event.id, state: { event } }
-      : { to: "/events/" + event.id };
+  const card = (
+    <GenericCard
+      customImageElement={<ImageCarousel />}
+      title={event.title}
+      titleSize="text-lg"
+      description={description}
+      descriptionLines={3}
+      tags={categoryTags}
+      extraInfo={extraInfo}
+      buttonLabel="Mehr erfahren"
+      className="relative overflow-hidden"
+    />
+  );
+
+  if (bookingEvent.isBookingEvent) {
+    return (
+      <Link
+        to="/events/$eventId"
+        params={{ eventId: event.id }}
+        state={(prev) => ({ ...(prev ?? {}), event })}
+        className="h-full w-full"
+      >
+        {card}
+      </Link>
+    );
+  }
 
   return (
-    <Link {...linkProps} className="h-full w-full">
-      <GenericCard
-        customImageElement={<ImageCarousel />}
-        title={event.title}
-        titleSize="text-lg"
-        description={description}
-        descriptionLines={3}
-        tags={categoryTags}
-        extraInfo={extraInfo}
-        buttonLabel="Mehr erfahren"
-        className="relative overflow-hidden"
-      />
+    <Link to="/events/$eventId" params={{ eventId: event.id }} className="h-full w-full">
+      {card}
     </Link>
   );
 }

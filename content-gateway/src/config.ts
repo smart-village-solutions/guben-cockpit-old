@@ -18,6 +18,12 @@ const createHttpUrl = (hostname: string, port?: string) => {
 
 const localPublicBaseUrlDefault = createHttpUrl("localhost", localDevelopmentPort);
 const masterportalUrlDefault = createHttpUrl("masterportal");
+const smartVillageFields = [
+  "SV_GRAPHQL_URL",
+  "SV_OAUTH_TOKEN_URL",
+  "SV_CLIENT_ID",
+  "SV_CLIENT_SECRET",
+] as const;
 
 const isHttpUrlAllowed = (value: string, allowedHttpHosts: Set<string>) => {
   try {
@@ -58,11 +64,24 @@ const baseConfigSchema = z.object({
   FALLBACK_LANGUAGE: z.string().min(2).default("de"),
 });
 
+const smartVillageConfigSchema = z.object({
+  SV_GRAPHQL_URL: createSecureUrlSchema(
+    "SV_GRAPHQL_URL must use https unless it targets a local development host.",
+    localHttpHosts,
+  ),
+  SV_OAUTH_TOKEN_URL: createSecureUrlSchema(
+    "SV_OAUTH_TOKEN_URL must use https unless it targets a local development host.",
+    localHttpHosts,
+  ),
+  SV_CLIENT_ID: z.string().min(1),
+  SV_CLIENT_SECRET: z.string().min(1),
+});
+
 const mockConfigSchema = baseConfigSchema.extend({
   CONTENT_SOURCE_MODE: z.literal("mock"),
 });
 
-const postgrestConfigSchema = baseConfigSchema.extend({
+const postgrestConfigSchema = baseConfigSchema.merge(smartVillageConfigSchema).extend({
   CONTENT_SOURCE_MODE: z.literal("postgrest"),
   POSTGREST_URL: z.string().url(),
   POSTGREST_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
@@ -72,13 +91,29 @@ const postgrestConfigSchema = baseConfigSchema.extend({
 export type Config = z.infer<typeof mockConfigSchema> | z.infer<typeof postgrestConfigSchema>;
 export type PostgrestConfig = z.infer<typeof postgrestConfigSchema>;
 
+const ensureRequiredSmartVillageConfig = (env: NodeJS.ProcessEnv) => {
+  const missingSmartVillageFields = smartVillageFields.filter((field) => {
+    const value = env[field];
+    return typeof value !== "string" || value.trim().length === 0;
+  });
+
+  if (missingSmartVillageFields.length > 0) {
+    throw new Error(
+      `Smart Village upstream configuration requires all of: ${smartVillageFields.join(", ")}`,
+    );
+  }
+};
+
 export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
   const normalizedEnv = {
     ...env,
     CONTENT_SOURCE_MODE: env.CONTENT_SOURCE_MODE ?? "mock",
   };
 
-  return normalizedEnv.CONTENT_SOURCE_MODE === "postgrest"
-    ? postgrestConfigSchema.parse(normalizedEnv)
-    : mockConfigSchema.parse(normalizedEnv);
+  if (normalizedEnv.CONTENT_SOURCE_MODE === "postgrest") {
+    ensureRequiredSmartVillageConfig(normalizedEnv);
+    return postgrestConfigSchema.parse(normalizedEnv);
+  }
+
+  return mockConfigSchema.parse(normalizedEnv);
 };

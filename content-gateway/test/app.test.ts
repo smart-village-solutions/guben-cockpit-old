@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createApp } from "../src/app.js";
 import { GatewayError } from "../src/errors.js";
@@ -31,13 +31,27 @@ const repositoryStub = (): PublicContentRepository => ({
 
 describe("content gateway", () => {
   let repository: PublicContentRepository;
+  const apps: Array<ReturnType<typeof createApp>> = [];
+
+  const createTestApp = () => {
+    const app = createApp({ config: baseConfig, repository });
+    apps.push(app);
+    return app;
+  };
 
   beforeEach(() => {
     repository = repositoryStub();
   });
 
-  it("serves health and content endpoints", async () => {
-    const app = createApp({ config: baseConfig, repository });
+  afterEach(async () => {
+    while (apps.length > 0) {
+      const app = apps.pop();
+      await app?.close();
+    }
+  });
+
+  it("serves health, home and dashboard endpoints", async () => {
+    const app = createTestApp();
 
     const healthResponse = await app.inject({
       method: "GET",
@@ -58,6 +72,10 @@ describe("content gateway", () => {
     });
     expect(dashboardResponse.statusCode).toBe(200);
     expect(dashboardResponse.json().dropdowns).toHaveLength(2);
+  }, 15_000);
+
+  it("serves projects and event content endpoints", async () => {
+    const app = createTestApp();
 
     const projectsResponse = await app.inject({
       method: "GET",
@@ -79,6 +97,10 @@ describe("content gateway", () => {
     });
     expect(eventDetailResponse.statusCode).toBe(200);
     expect(eventDetailResponse.json().event.title).toBe("Frühlingsmarkt");
+  });
+
+  it("serves booking, map and footer endpoints", async () => {
+    const app = createTestApp();
 
     const bookingTenantsResponse = await app.inject({
       method: "GET",
@@ -102,6 +124,38 @@ describe("content gateway", () => {
     expect(footerResponse.json().items).toHaveLength(3);
   });
 
+  it("routes event list and detail requests through the PublicContentRepository contract", async () => {
+    const app = createTestApp();
+
+    const listResponse = await app.inject({
+      method: "GET",
+      url: "/api/content/events?pageNumber=2&pageSize=10&title=markt&category=culture&startDate=2026-05-01&endDate=2026-05-31&sortBy=title&ordering=desc&distance=5",
+      headers: {
+        "accept-language": "en-GB,en;q=0.8",
+      },
+    });
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: "/api/content/events/smart-village-id?lang=pl",
+    });
+
+    expect(listResponse.statusCode).toBe(200);
+    expect(detailResponse.statusCode).toBe(200);
+    expect(repository.getEvents).toHaveBeenCalledWith("en", {
+      lang: undefined,
+      pageNumber: 2,
+      pageSize: 10,
+      title: "markt",
+      category: "culture",
+      startDate: "2026-05-01",
+      endDate: "2026-05-31",
+      sortBy: "title",
+      ordering: "desc",
+      distance: 5,
+    });
+    expect(repository.getEventById).toHaveBeenCalledWith("pl", "smart-village-id");
+  });
+
   it("exposes separate liveness and readiness endpoints", async () => {
     const app = createApp({
       config: baseConfig,
@@ -115,6 +169,7 @@ describe("content gateway", () => {
         },
       }),
     });
+    apps.push(app);
 
     const liveResponse = await app.inject({
       method: "GET",
@@ -155,6 +210,7 @@ describe("content gateway", () => {
     };
 
     const app = createApp({ config: baseConfig, repository: failingRepository });
+    apps.push(app);
     const response = await app.inject({
       method: "GET",
       url: "/api/content/projects",
@@ -185,6 +241,7 @@ describe("content gateway", () => {
     };
 
     const app = createApp({ config: baseConfig, repository: failingRepository });
+    apps.push(app);
     const response = await app.inject({
       method: "GET",
       url: "/api/content/events",
@@ -209,6 +266,7 @@ describe("content gateway", () => {
     };
 
     const app = createApp({ config: baseConfig, repository: failingRepository });
+    apps.push(app);
     const response = await app.inject({
       method: "GET",
       url: "/api/content/home",

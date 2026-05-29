@@ -165,7 +165,7 @@ describe("public content contracts", () => {
     ).toBe("event-1");
   });
 
-  it("keeps the standardized gateway error contract stable", () => {
+  it("keeps the standardized gateway error contract stable for PostgREST and Smart Village upstreams", () => {
     const payload = {
       error: {
         code: "UPSTREAM_TIMEOUT",
@@ -177,6 +177,21 @@ describe("public content contracts", () => {
     };
 
     expect(gatewayErrorSchema.parse(payload)).toEqual(payload);
+    expect(
+      gatewayErrorSchema.parse({
+        error: {
+          ...payload.error,
+          message: "smartvillage request timed out",
+          upstream: "smartvillage",
+        },
+      }),
+    ).toEqual({
+      error: {
+        ...payload.error,
+        message: "smartvillage request timed out",
+        upstream: "smartvillage",
+      },
+    });
     expect(() =>
       gatewayErrorSchema.parse({
         error: {

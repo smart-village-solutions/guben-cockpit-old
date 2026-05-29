@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import BookingComponent from "./bookingComponent";
@@ -41,17 +42,20 @@ vi.mock("../ui/DetailPageLayout", () => ({
     title,
     metadata,
     children,
+    heroImage,
     onBack,
     backLabel,
   }: {
-    title: string;
-    metadata: unknown;
-    children: unknown;
+    title: ReactNode;
+    metadata: ReactNode;
+    children: ReactNode;
+    heroImage?: string;
     onBack?: () => void;
     backLabel?: string;
   }) => (
     <div>
       <h1>{title}</h1>
+      {heroImage ? <img data-testid="detail-header-image" alt="" src={heroImage} /> : null}
       <button onClick={onBack}>{backLabel}</button>
       <div>{metadata}</div>
       <div>{children}</div>
@@ -116,6 +120,8 @@ describe("bookingComponent", () => {
     expect(screen.getByText("Ressource")).toBeTruthy();
     expect(screen.getByText("Ort")).toBeTruthy();
     expect(screen.getByText("Guben")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Fahrradbox Laternengasse" })).toBeTruthy();
+    expect(screen.queryByTestId("detail-header-image")).toBeNull();
     expect(screen.getByText("price-card:Fahrradbox Laternengasse:tenant-1:box-1")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "AllBookings" }));
