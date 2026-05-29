@@ -56,9 +56,9 @@ describe("SmartVillageEventMapper", () => {
 
     expect(events).toHaveLength(1);
     expect(events[0]).toEqual({
-      id: "99193148:2026-06-13:15%3A00",
+      id: "1937530:2026-06-13:15%3A00",
       eventId: "99193148",
-      terminId: "99193148:2026-06-13:15%3A00",
+      terminId: "1937530:2026-06-13:15%3A00",
       title: "Sommerfest",
       description: "Beschreibung",
       startDate: "2026-06-13T15:00:00",
@@ -114,10 +114,21 @@ describe("SmartVillageEventMapper", () => {
 
     expect(firstPass).toHaveLength(2);
     expect(firstPass.map((event) => event.id)).toEqual([
-      "99193148:2026-06-13:15%3A00",
-      "99193148:2026-06-14:10%3A00",
+      "1937530:2026-06-13:15%3A00",
+      "1937530:2026-06-14:10%3A00",
     ]);
     expect(secondPass.map((event) => event.id)).toEqual(firstPass.map((event) => event.id));
+  });
+
+  it("keeps eventId on externalId while synthetic ids use the internal id", () => {
+    const events = mapper.eventsFromRecord(makeRecord());
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      eventId: "99193148",
+      id: "1937530:2026-06-13:15%3A00",
+      terminId: "1937530:2026-06-13:15%3A00",
+    });
   });
 
   it("falls back to date when dates is empty", () => {
@@ -172,7 +183,7 @@ describe("SmartVillageEventMapper", () => {
       }),
     );
 
-    expect(first[0]?.id).toBe("99193148:2026-06-13:15%3A00");
+    expect(first[0]?.id).toBe("1937530:2026-06-13:15%3A00");
     expect(second[0]?.id).toBe(first[0]?.id);
     expect(second[0]?.terminId).toBe(first[0]?.terminId);
   });
@@ -195,7 +206,7 @@ describe("SmartVillageEventMapper", () => {
 
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({
-      id: "99193148:2026-08-02:all-day",
+      id: "1937530:2026-08-02:all-day",
       startDate: "2026-08-02T00:00:00",
       endDate: "2026-08-02T00:00:00",
     });
@@ -263,6 +274,6 @@ describe("SmartVillageEventMapper", () => {
           ],
         }),
       ).map((event) => event.id),
-    ).toEqual(["99193148:2026-06-14:10%3A00"]);
+    ).toEqual(["1937530:2026-06-14:10%3A00"]);
   });
 });

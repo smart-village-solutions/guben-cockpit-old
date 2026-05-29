@@ -81,7 +81,8 @@ export class SmartVillageEventMapper {
     occurrence: SmartVillageEventOccurrence,
   ): Event | null {
     const title = nonEmptyString(record.title);
-    const eventId = nonEmptyString(record.externalId) ?? nonEmptyString(record.id);
+    const internalId = nonEmptyString(record.id);
+    const eventId = nonEmptyString(record.externalId) ?? internalId;
     const dateStart = nonEmptyString(occurrence.dateStart);
 
     if (!title || !eventId || !dateStart) {
@@ -89,7 +90,8 @@ export class SmartVillageEventMapper {
     }
 
     const address = record.addresses?.[0];
-    const occurrenceId = this.buildOccurrenceId(eventId, dateStart, occurrence.timeStart);
+    const occurrenceIdBase = internalId ?? eventId;
+    const occurrenceId = this.buildOccurrenceId(occurrenceIdBase, dateStart, occurrence.timeStart);
     const coordinates =
       toCoordinates(address?.geoLocation ?? null) ??
       toCoordinates(record.location?.geoLocation ?? null);
