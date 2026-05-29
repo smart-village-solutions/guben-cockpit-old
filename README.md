@@ -73,7 +73,7 @@ npm run build
 npm start
 ```
 
-For local or production gateway runs in `CONTENT_SOURCE_MODE=postgrest`, configure these Smart Village event credentials in `content-gateway/.env`:
+For local gateway runs in `CONTENT_SOURCE_MODE=postgrest`, configure these Smart Village event credentials in `content-gateway/.env`:
 
 - `SV_GRAPHQL_URL`
 - `SV_OAUTH_TOKEN_URL`
