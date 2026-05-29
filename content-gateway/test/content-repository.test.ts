@@ -94,18 +94,33 @@ describe("content repository glue", () => {
       smartVillageEventRepository: smartVillageEventRepository as never,
     });
     const home = await repository.getHome("de");
+    const projects = await repository.getProjects("de", 1, 12);
     const events = await repository.getEvents("de", filters);
     const eventDetail = await repository.getEventById("de", mockEventDetail.event.id);
+    const dashboard = await repository.getDashboard("de");
+    const map = await repository.getMap("de");
+    const footer = await repository.getFooter();
+    const bookingTenants = await repository.getBookingTenants();
 
     expect(home).toEqual(mockHomeContent);
+    expect(projects).toEqual(mockProjectsContent);
     expect(events).toEqual(eventsContentSchema.parse(mockEventsContent));
     expect(eventDetail).toEqual(eventDetailContentSchema.parse(mockEventDetail));
+    expect(dashboard).toEqual(mockDashboardContent);
+    expect(map).toEqual(mockMapContent);
+    expect(footer).toEqual(mockFooterContent);
+    expect(bookingTenants).toEqual({
+      tenants: mockEventsContent.events.bookingTenants,
+    });
 
     expect(postgrestRepository.getHome).toHaveBeenCalledWith("de");
+    expect(postgrestRepository.getProjects).toHaveBeenCalledWith("de", 1, 12);
     expect(smartVillageEventRepository.getEvents).toHaveBeenCalledWith("de", filters);
     expect(smartVillageEventRepository.getEventById).toHaveBeenCalledWith("de", mockEventDetail.event.id);
-    expect(postgrestRepository.getProjects).not.toHaveBeenCalled();
-    expect(postgrestRepository.getBookingTenants).not.toHaveBeenCalled();
+    expect(postgrestRepository.getDashboard).toHaveBeenCalledWith("de");
+    expect(postgrestRepository.getMap).toHaveBeenCalledWith("de");
+    expect(postgrestRepository.getFooter).toHaveBeenCalledWith();
+    expect(postgrestRepository.getBookingTenants).toHaveBeenCalledWith();
     expect(events).toMatchObject({
       events: {
         results: [

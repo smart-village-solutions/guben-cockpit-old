@@ -10,6 +10,10 @@ Schnellablauf fuer akute Stoerungen oder dringende Releases.
 
 ```bash
 export TARGET_WEB_VERSION=v0.8.6
+export TARGET_SV_GRAPHQL_URL='https://smart-village.example.com/graphql'
+export TARGET_SV_OAUTH_TOKEN_URL='https://smart-village.example.com/oauth/token'
+export TARGET_SV_CLIENT_ID='<smart-village-client-id>'
+export TARGET_SV_CLIENT_SECRET='<smart-village-client-secret>'
 export PORTAINER_URL='https://<portainer-host>:9443'
 export PORTAINER_TOKEN='<api-token>'
 export PORTAINER_STACK_ID='<stack-id>'
@@ -26,7 +30,20 @@ curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
 3. Env fuer Deploy bauen:
 
 ```bash
-jq '.Env | map(if .name=="VERSION_WEB" then .value=env.TARGET_WEB_VERSION else . end)' \
+jq '
+  def upsert_env($name; $value):
+    if any(.[]; .name == $name) then
+      map(if .name == $name then .value = $value else . end)
+    else
+      . + [{name: $name, value: $value}]
+    end;
+  .Env
+  | upsert_env("VERSION_WEB"; env.TARGET_WEB_VERSION)
+  | upsert_env("SV_GRAPHQL_URL"; env.TARGET_SV_GRAPHQL_URL)
+  | upsert_env("SV_OAUTH_TOKEN_URL"; env.TARGET_SV_OAUTH_TOKEN_URL)
+  | upsert_env("SV_CLIENT_ID"; env.TARGET_SV_CLIENT_ID)
+  | upsert_env("SV_CLIENT_SECRET"; env.TARGET_SV_CLIENT_SECRET)
+' \
   /tmp/p-stack-now.json > /tmp/p-env.json
 ```
 
@@ -145,12 +162,30 @@ PORTAINER_URL='https://<portainer-host>:9443'
 PORTAINER_TOKEN='<api-token>'
 PORTAINER_STACK_ID='<stack-id>'
 PORTAINER_ENDPOINT_ID='<endpoint-id>'
+TARGET_WEB_VERSION='v0.8.6'
+TARGET_SV_GRAPHQL_URL='https://smart-village.example.com/graphql'
+TARGET_SV_OAUTH_TOKEN_URL='https://smart-village.example.com/oauth/token'
+TARGET_SV_CLIENT_ID='<smart-village-client-id>'
+TARGET_SV_CLIENT_SECRET='<smart-village-client-secret>'
 
 curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
   "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID" > /tmp/p-stack-now.json
 
-# Env anpassen (Beispiel mit jq)
-jq '.Env | map(if .name=="VERSION_WEB" then .value="v0.8.6" else . end)' \
+# Env fuer den Cutover-Stack sicher aktualisieren oder anlegen
+jq '
+  def upsert_env($name; $value):
+    if any(.[]; .name == $name) then
+      map(if .name == $name then .value = $value else . end)
+    else
+      . + [{name: $name, value: $value}]
+    end;
+  .Env
+  | upsert_env("VERSION_WEB"; env.TARGET_WEB_VERSION)
+  | upsert_env("SV_GRAPHQL_URL"; env.TARGET_SV_GRAPHQL_URL)
+  | upsert_env("SV_OAUTH_TOKEN_URL"; env.TARGET_SV_OAUTH_TOKEN_URL)
+  | upsert_env("SV_CLIENT_ID"; env.TARGET_SV_CLIENT_ID)
+  | upsert_env("SV_CLIENT_SECRET"; env.TARGET_SV_CLIENT_SECRET)
+' \
   /tmp/p-stack-now.json > /tmp/p-env.json
 
 jq -n \
