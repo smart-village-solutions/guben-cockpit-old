@@ -81,7 +81,7 @@ const EVENT_RECORD_FIELDS = `
 
 const EVENT_RECORDS_QUERY = `
   query SmartVillageEventRecords {
-    eventRecords {
+    eventRecords(onlyUniqEvents: true) {
       ${EVENT_RECORD_FIELDS}
     }
   }

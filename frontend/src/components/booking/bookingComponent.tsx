@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useBookingStore } from "@/stores/bookingStore";
 import PriceCard from "./priceCard";
 import { useTranslation } from "react-i18next";
 import { DetailPageLayout } from "../ui/DetailPageLayout";
@@ -7,6 +6,7 @@ import { TranslatedHtml } from "@/utilities/translateUtils";
 import { MapPinIcon } from "lucide-react";
 import { BookingErrorState } from "./BookingErrorState";
 import { useBookingDetailHydration } from "./useBookingDetailHydration";
+import { DetailMediaSection } from "../ui/detailMediaSection";
 
 export default function BookingComponent() {
   const { t } = useTranslation("booking");
@@ -35,9 +35,10 @@ export default function BookingComponent() {
     );
   }
 
+  const images = booking.imgUrl ? [{ src: booking.imgUrl, alt: title }] : [];
+
   return (
     <DetailPageLayout
-      heroImage={booking.imgUrl}
       heroAlt={title}
       title={title}
       breadcrumbItems={[
@@ -70,23 +71,16 @@ export default function BookingComponent() {
       backLabel={t("AllBookings")}
     >
       <div className="space-y-8">
-        {/* Description and Image */}
-        <div className="grid grid-cols-3 gap-8">
-          <div className="col-span-2">
-            <h2 className="font-bold text-xl mb-4">{t("bookingComponent.description")}</h2>
+        <DetailMediaSection
+          heading={t("bookingComponent.description")}
+          body={(
             <TranslatedHtml
               className="prose max-w-none"
               text={booking.description}
             />
-          </div>
-          <div className="col-span-1 flex items-center justify-center">
-            <img
-              src={booking.imgUrl}
-              alt={t("imageAlt")}
-              className="w-full h-auto max-h-80 rounded-lg object-contain"
-            />
-          </div>
-        </div>
+          )}
+          images={images}
+        />
 
         {/* Offers Section */}
         <div>

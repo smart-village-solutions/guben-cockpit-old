@@ -23,7 +23,7 @@ const GatewayFooter = () => {
 
   if (!isGatewayPublicContentEnabled) {
     return (
-      <footer className="relative flex min-h-14 items-center justify-center bg-gubenAccent p-4 text-gubenAccent-foreground">
+      <footer className="relative mt-5 flex min-h-14 items-center justify-center bg-gubenAccent p-4 text-gubenAccent-foreground">
         <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"absolute left-2 hidden h-full md:block"}/>
         <p className="text-sm">Oeffentliche Inhalte deaktiviert</p>
       </footer>
@@ -38,7 +38,7 @@ const GatewayFooter = () => {
   ];
 
   return (
-    <footer className="relative bg-gubenAccent px-4 py-3 text-gubenAccent-foreground md:h-14 md:py-4">
+    <footer className="relative mt-5 bg-gubenAccent px-4 py-3 text-gubenAccent-foreground md:h-14 md:py-4">
       <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"absolute left-2 top-1/2 hidden h-full -translate-y-1/2 md:block"}/>
       <div className="flex flex-col items-center gap-3 md:h-full md:justify-center">
         <BaseImgTag src="/images/guben-logo.jpg" alt="logo" className={"h-10 w-auto md:hidden"}/>

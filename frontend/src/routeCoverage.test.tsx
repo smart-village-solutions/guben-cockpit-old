@@ -224,13 +224,18 @@ describe("route coverage", () => {
 
   it("covers home route success path and search validation", async () => {
     const homeModule = await import("@/routes/index");
+    const validateSearch = homeModule.Route.options.validateSearch;
 
     render(<homeModule.HomeComponent />);
 
     expect(screen.getByText("Home Title")).toBeTruthy();
     expect(screen.getByText("Home Description")).toBeTruthy();
     expect(await screen.findByText("DashboardDropdownTabs 1")).toBeTruthy();
-    expect(homeModule.Route.options.validateSearch?.({ selectedTabId: "abc", ignored: 1 })).toEqual({
+    expect(typeof validateSearch).toBe("function");
+    if (typeof validateSearch !== "function") {
+      throw new Error("Expected validateSearch to be a function");
+    }
+    expect(validateSearch({ selectedTabId: "abc", ignored: 1 })).toEqual({
       selectedTabId: "abc",
     });
   });

@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useGatewayProjectsContent } from "@/public-content/hooks";
 import { isGatewayPublicContentEnabled } from "@/public-content/source";
 import { useRouteMetadata } from "@/public-content/useRouteMetadata";
+import { stripHtml } from "@/utilities/html";
 import { PublicContentErrorState } from "./PublicContentErrorState";
 import { PublicContentDisabledState } from "./PublicContentDisabledState";
 import type { ProjectsContent } from "@shared/public-content/contracts";
@@ -44,7 +45,7 @@ export const GatewayProjectsPage = () => {
                 icon: "/images/guben-logo.jpg",
                 iconColor: "66a120",
                 title: project.title,
-                description: project.description,
+                description: stripHtml(project.description),
                 link: `/projects/${project.id}`,
               }))}
             />

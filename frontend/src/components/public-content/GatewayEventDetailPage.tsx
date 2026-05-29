@@ -6,21 +6,18 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import PriceCard from "@/components/booking/priceCard";
 import { MapComponent } from "@/components/home/MapComponent";
 import { DetailPageLayout } from "@/components/ui/DetailPageLayout";
+import { DetailMediaSection } from "@/components/ui/detailMediaSection";
 import { useGatewayEventDetailContent } from "@/public-content/hooks";
 import { isGatewayPublicContentEnabled } from "@/public-content/source";
 import { useRouteMetadata } from "@/public-content/useRouteMetadata";
 import { useEventStore } from "@/stores/eventStore";
+import { formatEventDateRange } from "@/utilities/eventDateRange";
+import { formatEventLocation } from "@/utilities/location";
 import { TranslatedHtml, TranslatedText } from "@/utilities/translateUtils";
 import type { EventDetailContent } from "@shared/public-content/contracts";
 
 import { PublicContentErrorState } from "./PublicContentErrorState";
 import { PublicContentDisabledState } from "./PublicContentDisabledState";
-
-const formatCalendarDate = (value: Date) =>
-  typeof value.formatDate === "function" ? value.formatDate() : value.toISOString().slice(0, 10);
-
-const formatCalendarTime = (value: Date) =>
-  typeof value.formatTime === "function" ? value.formatTime() : value.toISOString().slice(11, 16);
 
 export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
   const { t } = useTranslation("common");
@@ -35,6 +32,14 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
       data
         ? [new Date(data.startDate), new Date(data.endDate)]
         : [undefined, undefined],
+    [data],
+  );
+  const detailImages = useMemo(
+    () =>
+      data?.images.map((image: EventDetailContent["event"]["images"][number]) => ({
+        src: image.originalUrl,
+        alt: data.title,
+      })) ?? [],
     [data],
   );
 
@@ -76,15 +81,7 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
           <ClockIcon className="size-4" /> {t("DateAndTime")}
         </p>
         <p className="flex gap-1 text-neutral-800">
-          {startDate && <span>{startDate.formatDateTime()}</span>}
-          {startDate && endDate && "-"}
-          {endDate && (
-            <span>
-              {startDate && formatCalendarDate(startDate) === formatCalendarDate(endDate)
-                ? formatCalendarTime(endDate)
-                : endDate.formatDateTime()}
-            </span>
-          )}
+          {startDate && endDate && <span>{formatEventDateRange(startDate, endDate)}</span>}
         </p>
       </div>
 
@@ -93,14 +90,13 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
         <p className="flex flex-nowrap items-center gap-2 text-neutral-500">
           <MapPinIcon className="size-4" /> {t("Location")}
         </p>
-        <p className="flex gap-1">{`${data.location.street}, ${data.location.zip} ${data.location.city} (${data.location.name})`}</p>
+        <p className="flex gap-1">{formatEventLocation(data.location)}</p>
       </div>
     </div>
   );
 
   return (
     <DetailPageLayout
-      heroImage={data.images.length > 0 ? data.images[0].originalUrl : "/images/stadt-guben.jpg"}
       heroAlt={data.title}
       title={(data as any)?.isBookingEvent ? <TranslatedText text={data.title} /> : data.title}
       metadata={metadata}
@@ -111,15 +107,17 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
       ]}
     >
       <div className="space-y-8">
-        {/* Description */}
-        <div className="w-full lg:w-1/2 space-y-2">
-          <h2 className="font-bold">{t("EventDetails")}</h2>
-          {(data as any)?.isBookingEvent ? (
-            <TranslatedHtml text={data.description} />
-          ) : (
-            <p className="text-neutral-600">{data.description}</p>
+        <DetailMediaSection
+          heading={t("EventDetails")}
+          body={(
+            (data as any)?.isBookingEvent ? (
+              <TranslatedHtml className="prose max-w-none" text={data.description} />
+            ) : (
+              <p className="text-neutral-600 leading-relaxed">{data.description}</p>
+            )
           )}
-        </div>
+          images={detailImages}
+        />
 
         {/* Price Cards */}
         {tickets.length > 0 && (

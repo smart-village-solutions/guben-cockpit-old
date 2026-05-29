@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import BookingRoom from "./bookingRoom";
@@ -38,6 +39,30 @@ vi.mock("./bookingCard", () => ({
   default: ({ booking }: { booking: { title: string } }) => <div>{`room-card:${booking.title}`}</div>,
 }));
 
+vi.mock("../ui/DetailPageLayout", () => ({
+  DetailPageLayout: ({
+    title,
+    children,
+    onBack,
+    backLabel,
+  }: {
+    title: ReactNode;
+    children: ReactNode;
+    onBack?: () => void;
+    backLabel?: string;
+  }) => (
+    <div>
+      <h1>{title}</h1>
+      <button onClick={onBack}>{backLabel}</button>
+      <div>{children}</div>
+    </div>
+  ),
+}));
+
+vi.mock("@/utilities/translateUtils", () => ({
+  TranslatedHtml: ({ text }: { text: string }) => <div>{text}</div>,
+}));
+
 describe("bookingRoom", () => {
   beforeEach(() => {
     hydrationState.booking = null;
@@ -69,12 +94,15 @@ describe("bookingRoom", () => {
 
   it("renders room cards and supports navigation back to the overview", () => {
     hydrationState.booking = {
+      title: "Rathaus",
+      description: "Raumbeschreibung",
       imgUrl: "/rooms.jpg",
       bookings: [{ title: "Saal 1" }, { title: "Saal 2" }],
     };
 
     render(<BookingRoom />);
 
+    expect(screen.getByText("Raumbeschreibung")).toBeTruthy();
     expect(screen.getByText("our_rooms")).toBeTruthy();
     expect(screen.getByText("room-card:Saal 1")).toBeTruthy();
     expect(screen.getByText("room-card:Saal 2")).toBeTruthy();

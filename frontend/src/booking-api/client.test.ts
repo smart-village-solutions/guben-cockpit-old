@@ -164,7 +164,7 @@ describe("booking api client", () => {
   it("throws a configuration error when the booking api url is missing", async () => {
     import.meta.env.VITE_BOOKING_API_URL = "";
 
-    await expect(loadPublicBookings("tenant-1")).rejects.toMatchObject<Partial<BookingApiError>>({
+    await expect(loadPublicBookings("tenant-1")).rejects.toMatchObject({
       code: "BOOKING_API_CONFIG_ERROR",
       retryable: false,
     });
@@ -176,7 +176,7 @@ describe("booking api client", () => {
       status: 503,
     } as Response);
 
-    await expect(loadPublicBookings("tenant-1")).rejects.toMatchObject<Partial<BookingApiError>>({
+    await expect(loadPublicBookings("tenant-1")).rejects.toMatchObject({
       code: "BOOKING_API_HTTP_ERROR",
       status: 503,
       retryable: true,
@@ -189,7 +189,7 @@ describe("booking api client", () => {
       json: async () => ({ nope: true }),
     } as Response);
 
-    await expect(loadPublicBookings("tenant-1")).rejects.toMatchObject<Partial<BookingApiError>>({
+    await expect(loadPublicBookings("tenant-1")).rejects.toMatchObject({
       code: "BOOKING_API_INVALID_PAYLOAD",
       retryable: false,
     });

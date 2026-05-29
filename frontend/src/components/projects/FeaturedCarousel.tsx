@@ -1,5 +1,6 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import { useTranslation } from "react-i18next";
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -19,6 +20,8 @@ interface FeaturedCarouselProps {
 }
 
 export const FeaturedCarousel = ({ slides }: FeaturedCarouselProps) => {
+  const { t } = useTranslation("common");
+
   if (!slides || slides.length === 0) {
     return null;
   }
@@ -83,13 +86,20 @@ export const FeaturedCarousel = ({ slides }: FeaturedCarouselProps) => {
                         className="hover:underline pointer-events-auto"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <h3 className="font-bold text-sm line-clamp-2 mb-1">
+                        <h3 className="font-bold text-sm line-clamp-2">
                           {slide.title}
                         </h3>
-                        <p className="text-xs line-clamp-2">
-                          {slide.description}
-                        </p>
                       </a>
+                      <a
+                        href={slide.link}
+                        className="mt-1 inline-block text-xs font-semibold text-white hover:underline pointer-events-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {t("ReadMore")} &gt;
+                      </a>
+                      <p className="mt-2 text-xs line-clamp-2">
+                        {slide.description}
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -199,6 +199,7 @@ interface Resources {
     "Marktplatz": "Gubener Marktplatz",
     "Schools": "Schulen",
     "MoreInformation": "Weitere Informationen",
+    "ReadMore": "Mehr erfahren",
     "Name": "Name",
     "No": "Nein",
     "NoItemsFound": "Keine Ergebnisse",

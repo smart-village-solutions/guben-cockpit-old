@@ -61,7 +61,7 @@ export const mapBookableToBooking = (
     type: bookable.type,
     imgUrl: bookable.imgUrl || FALLBACK_IMAGE_URL,
     bookingUrl: defaultTicket.bookingUrl,
-    price: defaultTicket.price,
+    price: defaultTicket.price ?? "Auf Anfrage",
     prices: defaultTicket.prices,
     category: deriveCategory(bookable, options?.privateTenant ?? false),
     flags: [...bookable.flags],
