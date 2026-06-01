@@ -104,7 +104,7 @@ export class PostgrestContentRepository implements PublicContentRepository {
     const homePage = this.mapper.pageFromRow(this.expectSingle(homePages, "Home"), language);
     const projectsPage = this.mapper.pageFromRow(this.expectSingle(projectPages, "Projects"), language);
     const items = rows
-      .filter((row) => row.published && !row.deleted)
+      .filter((row) => row.published && !row.deleted && (row.type === 0 || row.type === 1 || row.type === 2))
       .map((row) => this.mapper.publicProjectFromRow(row, language));
 
     return publicContentBundleSchema.parse({
