@@ -1,12 +1,12 @@
 services:
   web:
-    image: ghcr.io/smart-village-solutions/guben-cockpit-web:${RELEASE_TAG:-v0.8.15}
+    image: ghcr.io/smart-village-solutions/guben-cockpit-web:${RELEASE_TAG:-v0.8.16}
     build: null
 
   web-live:
-    image: ghcr.io/smart-village-solutions/guben-cockpit-web:${RELEASE_TAG:-v0.8.15}
+    image: ghcr.io/smart-village-solutions/guben-cockpit-web:${RELEASE_TAG:-v0.8.16}
     build: null
 
   content-gateway:
-    image: ghcr.io/smart-village-solutions/guben-cockpit-content-gateway:${RELEASE_TAG:-v0.8.15}
+    image: ghcr.io/smart-village-solutions/guben-cockpit-content-gateway:${RELEASE_TAG:-v0.8.16}
     build: null
