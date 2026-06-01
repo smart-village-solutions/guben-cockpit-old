@@ -30,6 +30,8 @@ const additionalBookingTenants = [
   },
 ] as const;
 
+const supportedPublicProjectTypes = new Set([0, 1, 2]);
+
 export class PostgrestContentRepository implements PublicContentRepository {
   private readonly mapper: PostgrestContentMapper;
   private readonly source: PostgrestContentSource;
@@ -104,7 +106,9 @@ export class PostgrestContentRepository implements PublicContentRepository {
     const homePage = this.mapper.pageFromRow(this.expectSingle(homePages, "Home"), language);
     const projectsPage = this.mapper.pageFromRow(this.expectSingle(projectPages, "Projects"), language);
     const items = rows
-      .filter((row) => row.published && !row.deleted && (row.type === 0 || row.type === 1 || row.type === 2))
+      .filter(
+        (row) => row.published && !row.deleted && supportedPublicProjectTypes.has(row.type),
+      )
       .map((row) => this.mapper.publicProjectFromRow(row, language));
 
     return publicContentBundleSchema.parse({
