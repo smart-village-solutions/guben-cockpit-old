@@ -7,6 +7,7 @@ import type {
   HomeContent,
   MapContent,
   ProjectsContent,
+  PublicContentBundle,
 } from "../../../shared/public-content/contracts.js";
 import type { PostgrestContentRepository } from "./postgrest-content-repository.js";
 import type { PublicContentRepository, EventFilters } from "./content-repository.js";
@@ -28,6 +29,10 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
 
   public getProjects(language: string, pageNumber: number, pageSize: number): Promise<ProjectsContent> {
     return this.options.postgrestRepository.getProjects(language, pageNumber, pageSize);
+  }
+
+  public getPublicContent(language: string): Promise<PublicContentBundle> {
+    return this.options.postgrestRepository.getPublicContent(language);
   }
 
   public getEvents(language: string, filters: EventFilters): Promise<EventsContent> {

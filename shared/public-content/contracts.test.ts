@@ -6,6 +6,7 @@ import {
   gatewayErrorSchema,
   homeContentSchema,
   projectsContentSchema,
+  publicContentBundleSchema,
 } from "./contracts.js";
 
 describe("public content contracts", () => {
@@ -163,6 +164,73 @@ describe("public content contracts", () => {
         },
       }).event.id,
     ).toBe("event-1");
+  });
+
+  it("accepts a valid bundled public content payload", () => {
+    const payload = {
+      home: {
+        page: {
+          id: "Home",
+          title: "Startseite",
+          description: "Willkommen",
+          seo: {
+            title: "Startseite",
+            description: "Willkommen",
+            canonical: "https://example.com/",
+            indexable: true,
+          },
+        },
+        dropdowns: [],
+        cards: [
+          {
+            id: "card-1",
+            dropdownId: "dropdown-1",
+            dropdownTitle: "Leben",
+            tabId: "tab-1",
+            tabTitle: "Mobilitaet",
+            sequence: 1,
+            title: "Bus und Bahn",
+            description: "Alles zur Mobilitaet",
+            imageUrl: null,
+            imageAlt: null,
+            button: {
+              title: "Mehr",
+              url: "https://example.com/mobilitaet",
+              openInNewTab: true,
+            },
+          },
+        ],
+      },
+      projects: {
+        page: {
+          id: "Projects",
+          title: "Mein Guben",
+          description: "Alle Inhalte",
+          seo: {
+            title: "Mein Guben",
+            description: "Alle Inhalte",
+            canonical: "https://example.com/projects",
+            indexable: true,
+          },
+        },
+        items: [
+          {
+            id: "project-1",
+            category: "featured",
+            type: 1,
+            title: "Innenstadt beleben",
+            description: "Kurztext",
+            fullText: "Langtext",
+            imageCaption: null,
+            imageUrl: null,
+            imageCredits: null,
+            published: true,
+          },
+        ],
+      },
+    };
+
+    expect(publicContentBundleSchema.parse(payload)).toEqual(payload);
   });
 
   it("keeps the standardized gateway error contract stable for PostgREST and Smart Village upstreams", () => {
