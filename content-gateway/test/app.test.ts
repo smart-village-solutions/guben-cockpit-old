@@ -4,7 +4,7 @@ import { createApp } from "../src/app.js";
 import { GatewayError } from "../src/errors.js";
 import type { PublicContentRepository } from "../src/content/content-repository.js";
 import { loadConfig } from "../src/config.js";
-import { mockDashboardContent, mockEventDetail, mockEventsContent, mockFooterContent, mockHomeContent, mockMapContent, mockProjectsContent } from "../src/content/mock-data.js";
+import { mockDashboardContent, mockEventDetail, mockEventsContent, mockFooterContent, mockHomeContent, mockMapContent, mockProjectsContent, mockPublicContentBundle } from "../src/content/mock-data.js";
 
 const baseConfig = loadConfig({
   PORT: "5100",
@@ -19,6 +19,7 @@ const baseConfig = loadConfig({
 const repositoryStub = (): PublicContentRepository => ({
   getHome: vi.fn(async () => mockHomeContent),
   getProjects: vi.fn(async () => mockProjectsContent),
+  getPublicContent: vi.fn(async () => mockPublicContentBundle),
   getEvents: vi.fn(async () => mockEventsContent),
   getEventById: vi.fn(async () => mockEventDetail),
   getBookingTenants: vi.fn(async () => ({
@@ -124,6 +125,23 @@ describe("content gateway", () => {
     expect(footerResponse.json().items).toHaveLength(3);
   });
 
+  it("serves the bundled public content endpoint", async () => {
+    const app = createTestApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/content/public",
+      headers: {
+        "accept-language": "en-GB,en;q=0.8",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().home.cards).toHaveLength(1);
+    expect(response.json().projects.items).toHaveLength(3);
+    expect(repository.getPublicContent).toHaveBeenCalledWith("en");
+  });
+
   it("routes event list and detail requests through the PublicContentRepository contract", async () => {
     const app = createTestApp();
 
@@ -214,6 +232,37 @@ describe("content gateway", () => {
     const response = await app.inject({
       method: "GET",
       url: "/api/content/projects",
+    });
+
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toEqual({
+      error: expect.objectContaining({
+        code: "UPSTREAM_TIMEOUT",
+        upstream: "postgrest",
+        retryable: true,
+      }),
+    });
+  });
+
+  it("maps bundled public content failures to the standardized outage contract", async () => {
+    const failingRepository: PublicContentRepository = {
+      ...repository,
+      getPublicContent: vi.fn(async () => {
+        throw new GatewayError({
+          code: "UPSTREAM_TIMEOUT",
+          message: "postgrest request timed out",
+          statusCode: 503,
+          upstream: "postgrest",
+          retryable: true,
+        });
+      }),
+    };
+
+    const app = createApp({ config: baseConfig, repository: failingRepository });
+    apps.push(app);
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/content/public",
     });
 
     expect(response.statusCode).toBe(503);

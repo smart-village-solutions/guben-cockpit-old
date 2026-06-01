@@ -121,6 +121,13 @@ export function createApp(options: {
     );
   });
 
+  app.get("/api/content/public", async (request) => {
+    const query = pageQuerySchema.parse(request.query);
+    return options.repository.getPublicContent(
+      resolveLanguage(query.lang, request.headers["accept-language"], options.config),
+    );
+  });
+
   app.get("/api/content/events", async (request) => {
     const query = eventsQuerySchema.parse(request.query);
     return options.repository.getEvents(
