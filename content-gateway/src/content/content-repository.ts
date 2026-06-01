@@ -7,6 +7,7 @@ import {
   HomeContent,
   MapContent,
   ProjectsContent,
+  PublicContentBundle,
   bookingTenantsContentSchema,
   dashboardContentSchema,
   eventDetailContentSchema,
@@ -15,9 +16,10 @@ import {
   homeContentSchema,
   mapContentSchema,
   projectsContentSchema,
+  publicContentBundleSchema,
 } from "../../../shared/public-content/contracts.js";
 import { PostgrestConfig } from "../config.js";
-import { mockDashboardContent, mockEventDetail, mockEventsContent, mockFooterContent, mockHomeContent, mockMapContent, mockProjectsContent } from "./mock-data.js";
+import { mockDashboardContent, mockEventDetail, mockEventsContent, mockFooterContent, mockHomeContent, mockMapContent, mockProjectsContent, mockPublicContentBundle } from "./mock-data.js";
 import { PostgrestContentRepository as PostgrestRepository } from "./postgrest-content-repository.js";
 import { EventFilters } from "./postgrest-content-types.js";
 
@@ -27,6 +29,7 @@ export { SmartVillagePostgrestContentRepository } from "./smart-village-postgres
 export interface PublicContentRepository {
   getHome(language: string): Promise<HomeContent>;
   getProjects(language: string, pageNumber: number, pageSize: number): Promise<ProjectsContent>;
+  getPublicContent(language: string): Promise<PublicContentBundle>;
   getEvents(language: string, filters: EventFilters): Promise<EventsContent>;
   getEventById(language: string, id: string): Promise<EventDetailContent>;
   getDashboard(language: string): Promise<DashboardContent>;
@@ -42,6 +45,10 @@ export class MockContentRepository implements PublicContentRepository {
 
   public async getProjects(): Promise<ProjectsContent> {
     return projectsContentSchema.parse(mockProjectsContent);
+  }
+
+  public async getPublicContent(): Promise<PublicContentBundle> {
+    return publicContentBundleSchema.parse(mockPublicContentBundle);
   }
 
   public async getEvents(): Promise<EventsContent> {

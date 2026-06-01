@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   eventDetailContentSchema,
   eventsContentSchema,
+  publicContentBundleSchema,
 } from "../../shared/public-content/contracts.js";
 
 import {
@@ -17,6 +18,7 @@ import {
   mockFooterContent,
   mockHomeContent,
   mockMapContent,
+  mockPublicContentBundle,
   mockProjectsContent,
 } from "../src/content/mock-data.js";
 import type { PostgrestConfig } from "../src/config.js";
@@ -44,6 +46,7 @@ describe("content repository glue", () => {
 
     await expect(repository.getHome()).resolves.toEqual(mockHomeContent);
     await expect(repository.getProjects()).resolves.toEqual(mockProjectsContent);
+    await expect(repository.getPublicContent()).resolves.toEqual(mockPublicContentBundle);
     await expect(repository.getEvents()).resolves.toEqual(mockEventsContent);
     await expect(repository.getDashboard()).resolves.toEqual(mockDashboardContent);
     await expect(repository.getMap()).resolves.toEqual(mockMapContent);
@@ -78,6 +81,7 @@ describe("content repository glue", () => {
     const postgrestRepository = {
       getHome: vi.fn(async () => mockHomeContent),
       getProjects: vi.fn(async () => mockProjectsContent),
+      getPublicContent: vi.fn(async () => mockPublicContentBundle),
       getDashboard: vi.fn(async () => mockDashboardContent),
       getMap: vi.fn(async () => mockMapContent),
       getFooter: vi.fn(async () => mockFooterContent),
@@ -95,6 +99,7 @@ describe("content repository glue", () => {
     });
     const home = await repository.getHome("de");
     const projects = await repository.getProjects("de", 1, 12);
+    const publicContent = await repository.getPublicContent("de");
     const events = await repository.getEvents("de", filters);
     const eventDetail = await repository.getEventById("de", mockEventDetail.event.id);
     const dashboard = await repository.getDashboard("de");
@@ -104,6 +109,7 @@ describe("content repository glue", () => {
 
     expect(home).toEqual(mockHomeContent);
     expect(projects).toEqual(mockProjectsContent);
+    expect(publicContent).toEqual(publicContentBundleSchema.parse(mockPublicContentBundle));
     expect(events).toEqual(eventsContentSchema.parse(mockEventsContent));
     expect(eventDetail).toEqual(eventDetailContentSchema.parse(mockEventDetail));
     expect(dashboard).toEqual(mockDashboardContent);
@@ -115,6 +121,7 @@ describe("content repository glue", () => {
 
     expect(postgrestRepository.getHome).toHaveBeenCalledWith("de");
     expect(postgrestRepository.getProjects).toHaveBeenCalledWith("de", 1, 12);
+    expect(postgrestRepository.getPublicContent).toHaveBeenCalledWith("de");
     expect(smartVillageEventRepository.getEvents).toHaveBeenCalledWith("de", filters);
     expect(smartVillageEventRepository.getEventById).toHaveBeenCalledWith("de", mockEventDetail.event.id);
     expect(postgrestRepository.getDashboard).toHaveBeenCalledWith("de");
