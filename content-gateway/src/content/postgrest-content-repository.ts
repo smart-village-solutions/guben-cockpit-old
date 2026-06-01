@@ -6,12 +6,14 @@ import {
   FooterContent,
   HomeContent,
   MapContent,
+  PublicContentBundle,
   ProjectsContent,
   bookingTenantsContentSchema,
   footerContentSchema,
   homeContentSchema,
-  projectsContentSchema,
   eventsContentSchema,
+  projectsContentSchema,
+  publicContentBundleSchema,
 } from "../../../shared/public-content/contracts.js";
 import { Config } from "../config.js";
 import { GatewayError } from "../errors.js";
@@ -88,6 +90,33 @@ export class PostgrestContentRepository implements PublicContentRepository {
         results: businessesAll.slice(startIndex, startIndex + pageSize),
       },
       seo: page.seo,
+    });
+  }
+
+  public async getPublicContent(language: string): Promise<PublicContentBundle> {
+    const [homePages, dashboard, projectPages, rows] = await Promise.all([
+      this.source.getPage("Home"),
+      this.getDashboard(language),
+      this.source.getPage("Projects"),
+      this.source.getProjects(),
+    ]);
+
+    const homePage = this.mapper.pageFromRow(this.expectSingle(homePages, "Home"), language);
+    const projectsPage = this.mapper.pageFromRow(this.expectSingle(projectPages, "Projects"), language);
+    const items = rows
+      .filter((row) => row.published && !row.deleted)
+      .map((row) => this.mapper.publicProjectFromRow(row, language));
+
+    return publicContentBundleSchema.parse({
+      home: {
+        page: homePage,
+        dropdowns: dashboard.dropdowns,
+        cards: this.mapper.flattenedHomeCards(dashboard.dropdowns),
+      },
+      projects: {
+        page: projectsPage,
+        items,
+      },
     });
   }
 

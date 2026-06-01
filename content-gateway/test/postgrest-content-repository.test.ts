@@ -50,6 +50,108 @@ const projectRow = (overrides: Partial<ProjectRow>): ProjectRow => ({
 });
 
 describe("PostgrestContentRepository", () => {
+  it("builds a normalized public content bundle from local home and project sources", async () => {
+    const repository = new PostgrestContentRepository(config, {
+      select: async () => [],
+    } as never);
+
+    (repository as any).source = {
+      getPage: async (id: string) => {
+        if (id === "Home") {
+          return [
+            {
+              id: "Home",
+              translations: {
+                de: {
+                  Title: "Willkommen in Guben",
+                  Description: "Startseite",
+                },
+              },
+            },
+          ];
+        }
+
+        return [projectsPage];
+      },
+      getDashboardRows: async () => ({
+        dropdownRows: [
+          {
+            id: "dropdown-1",
+            rank: 1,
+            is_link: false,
+            translations: { de: { Title: "Stadtleben" } },
+          },
+        ],
+        tabRows: [
+          {
+            id: "tab-1",
+            dropdown_id: "dropdown-1",
+            sequence: 1,
+            map_url: "https://masterportal.example.com/map",
+            translations: { de: { Title: "Mobilitaet" } },
+          },
+        ],
+        cardRows: [
+          {
+            id: "card-1",
+            dashboard_tab_id: "tab-1",
+            sequence: 1,
+            image_url: null,
+            translations: {
+              de: {
+                Title: "Bus und Bahn",
+                Description: "Alles zur Mobilitaet",
+                ImageAlt: "Bus icon",
+              },
+            },
+            button_translations: {
+              de: {
+                Title: "Mehr",
+                Url: "https://example.com/mobilitaet",
+              },
+            },
+            button_open_in_new_tab: true,
+          },
+        ],
+        linkRows: [],
+      }),
+      getProjects: async () => [
+        projectRow({ id: "featured-1", type: 1, title: "Featured" }),
+        projectRow({ id: "school-1", type: 2, title: "School" }),
+        projectRow({ id: "business-1", type: 0, title: "Business" }),
+        projectRow({ id: "hidden-1", type: 0, title: "Hidden", published: false }),
+      ],
+    };
+
+    const result = await repository.getPublicContent("de");
+
+    expect(result.home.cards).toEqual([
+      {
+        id: "card-1",
+        dropdownId: "dropdown-1",
+        dropdownTitle: "Stadtleben",
+        tabId: "tab-1",
+        tabTitle: "Mobilitaet",
+        sequence: 1,
+        title: "Bus und Bahn",
+        description: "Alles zur Mobilitaet",
+        imageUrl: null,
+        imageAlt: "Bus icon",
+        button: {
+          title: "Mehr",
+          url: "https://example.com/mobilitaet",
+          openInNewTab: true,
+        },
+      },
+    ]);
+    expect(result.projects.items.map((item) => [item.id, item.category])).toEqual([
+      ["featured-1", "featured"],
+      ["school-1", "school"],
+      ["business-1", "business"],
+    ]);
+    expect(result.projects.page.seo.canonical).toBe("http://localhost:3000/projects");
+  });
+
   it("groups project categories and paginates businesses", async () => {
     const repository = new PostgrestContentRepository(config, {
       select: async () => [],
