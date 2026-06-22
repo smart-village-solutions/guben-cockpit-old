@@ -19,9 +19,10 @@ import { Config } from "../config.js";
 import { GatewayError } from "../errors.js";
 import { PostgrestClient } from "../upstream/postgrest-client.js";
 import type { PublicContentRepository } from "./content-repository-contract.js";
-import { PostgrestContentMapper, distanceInKm } from "./postgrest-content-mapper.js";
+import { dedupeBookingTenants, filterLegacyEvents, groupRowsByEvent, sortLegacyEvents } from "./legacy-postgrest-events.js";
+import { PostgrestContentMapper } from "./postgrest-content-mapper.js";
 import { PostgrestContentSource } from "./postgrest-content-source.js";
-import { EventFilters, EventCategoryRow, EventImageRow, EventUrlRow } from "./postgrest-content-types.js";
+import { EventFilters } from "./postgrest-content-types.js";
 
 const additionalBookingTenants = [
   {
@@ -130,9 +131,9 @@ export class PostgrestContentRepository implements PublicContentRepository {
   public async getEvents(language: string, filters: EventFilters): Promise<EventsContent> {
     const [pages, bundle] = await Promise.all([this.source.getPage("Events"), this.source.getEventsBundle()]);
     const locations = new Map(bundle.locationRows.map((row) => [row.id, row]));
-    const categoriesByEvent = this.groupRowsByEvent(bundle.categoryRows);
-    const urlsByEvent = this.groupRowsByEvent(bundle.urlRows);
-    const imagesByEvent = this.groupRowsByEvent(bundle.imageRows);
+    const categoriesByEvent = groupRowsByEvent(bundle.categoryRows);
+    const urlsByEvent = groupRowsByEvent(bundle.urlRows);
+    const imagesByEvent = groupRowsByEvent(bundle.imageRows);
 
     let results = bundle.eventRows
       .filter((row) => row.published && !row.deleted)
@@ -140,8 +141,8 @@ export class PostgrestContentRepository implements PublicContentRepository {
         this.mapper.eventFromRow(row, language, locations, categoriesByEvent, urlsByEvent, imagesByEvent),
       );
 
-    results = this.filterEvents(results, filters);
-    this.sortEvents(results, filters);
+    results = filterLegacyEvents(results, filters);
+    sortLegacyEvents(results, filters);
 
     const categories = Array.from(
       new Map(results.flatMap((event) => event.categories).map((category) => [category.id, category])).values(),
@@ -186,9 +187,9 @@ export class PostgrestContentRepository implements PublicContentRepository {
       detailBundle.eventRow,
       language,
       locations,
-      this.groupRowsByEvent(detailBundle.categoryRows),
-      this.groupRowsByEvent(detailBundle.urlRows),
-      this.groupRowsByEvent(detailBundle.imageRows),
+      groupRowsByEvent(detailBundle.categoryRows),
+      groupRowsByEvent(detailBundle.urlRows),
+      groupRowsByEvent(detailBundle.imageRows),
     );
 
     return this.mapper.eventDetailFromEvent(id, event);
@@ -219,14 +220,7 @@ export class PostgrestContentRepository implements PublicContentRepository {
     ];
 
     return bookingTenantsContentSchema.parse({
-      tenants: Array.from(
-        tenants.reduce((deduped, tenant) => {
-          if (!deduped.has(tenant.tenantId)) {
-            deduped.set(tenant.tenantId, tenant);
-          }
-          return deduped;
-        }, new Map<string, (typeof tenants)[number]>()),
-      ).map(([, tenant]) => tenant),
+      tenants: dedupeBookingTenants(tenants),
     });
   }
 
@@ -245,67 +239,4 @@ export class PostgrestContentRepository implements PublicContentRepository {
     return row;
   }
 
-  private groupRowsByEvent<T extends EventCategoryRow | EventUrlRow | EventImageRow>(rows: T[]) {
-    const grouped = new Map<string, T[]>();
-    for (const row of rows) {
-      grouped.set(row.event_id, [...(grouped.get(row.event_id) ?? []), row]);
-    }
-    return grouped;
-  }
-
-  private filterEvents(events: EventsContent["events"]["results"], filters: EventFilters) {
-    let results = events;
-
-    if (filters.title) {
-      const needle = filters.title.toLowerCase();
-      results = results.filter((event) => event.title.toLowerCase().includes(needle));
-    }
-
-    if (filters.category) {
-      results = results.filter((event) =>
-        event.categories.some((category) => category.id === filters.category),
-      );
-    }
-
-    const startDate = filters.startDate ? new Date(filters.startDate) : undefined;
-    const endDate = filters.endDate ? new Date(filters.endDate) : undefined;
-    if (startDate || endDate) {
-      results = results.filter((event) => {
-        const eventStart = new Date(event.startDate);
-        const eventEnd = new Date(event.endDate);
-        return (!startDate || eventEnd >= startDate) && (!endDate || eventStart <= endDate);
-      });
-    }
-
-    if (filters.distance && filters.distance > 0) {
-      const maxDistance = filters.distance;
-      results = results.filter((event) => {
-        if (!event.coordinates) {
-          return false;
-        }
-
-        return (
-          distanceInKm(51.95042, 14.7143, event.coordinates.latitude, event.coordinates.longitude) <=
-          maxDistance
-        );
-      });
-    }
-
-    return results;
-  }
-
-  private sortEvents(events: EventsContent["events"]["results"], filters: EventFilters) {
-    if (filters.sortBy === "title") {
-      events.sort(
-        (left, right) => (filters.ordering === "desc" ? -1 : 1) * left.title.localeCompare(right.title),
-      );
-      return;
-    }
-
-    events.sort(
-      (left, right) =>
-        (filters.ordering === "desc" ? -1 : 1) *
-        (new Date(left.startDate).getTime() - new Date(right.startDate).getTime()),
-    );
-  }
 }

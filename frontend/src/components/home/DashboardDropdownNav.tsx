@@ -18,6 +18,34 @@ interface DashboardDropdownTabsProps {
   dropdowns: DashboardDropdown[];
 }
 
+type DashboardDropdownGroupItem = {
+  type: "group";
+  key: string;
+  label: string;
+};
+
+type DashboardDropdownLinkItem = {
+  type: "link";
+  key: string;
+  label: string;
+  groupLabel: string;
+  onSelect: () => void;
+};
+
+type DashboardDropdownTabItem = {
+  type: "tab";
+  key: string;
+  label: string;
+  groupLabel: string;
+  active: boolean;
+  onSelect: () => void;
+};
+
+type DashboardDropdownItem =
+  | DashboardDropdownGroupItem
+  | DashboardDropdownLinkItem
+  | DashboardDropdownTabItem;
+
 export const DashboardDropdownTabs = ({
   dropdowns,
 }: DashboardDropdownTabsProps) => {
@@ -39,16 +67,17 @@ export const DashboardDropdownTabs = ({
     () => allTabs.find((t) => t.id === activeTab) || null,
     [allTabs, activeTab],
   );
-  const items = useMemo(
+  const items = useMemo<DashboardDropdownItem[]>(
     () =>
-      dropdowns.flatMap((dropdown) => {
+      dropdowns.reduce<DashboardDropdownItem[]>((accumulator, dropdown) => {
         const groupLabel = dropdown.title;
 
         if (dropdown.isLink) {
           return [
-            { type: "group" as const, key: `group-${dropdown.id}`, label: groupLabel },
+            ...accumulator,
+            { type: "group", key: `group-${dropdown.id}`, label: groupLabel } satisfies DashboardDropdownGroupItem,
             ...(dropdown.links ?? []).map((link) => ({
-              type: "link" as const,
+              type: "link",
               key: link.id,
               label: link.title,
               groupLabel,
@@ -56,14 +85,15 @@ export const DashboardDropdownTabs = ({
                 window.open(link.link, "_blank", "noopener,noreferrer");
                 setOpen(false);
               },
-            })),
+            }) satisfies DashboardDropdownLinkItem),
           ];
         }
 
         return [
-          { type: "group" as const, key: `group-${dropdown.id}`, label: groupLabel },
+          ...accumulator,
+          { type: "group", key: `group-${dropdown.id}`, label: groupLabel } satisfies DashboardDropdownGroupItem,
           ...(dropdown.tabs ?? []).map((entry) => ({
-            type: "tab" as const,
+            type: "tab",
             key: entry.id,
             label: entry.title,
             groupLabel,
@@ -72,9 +102,9 @@ export const DashboardDropdownTabs = ({
               setActiveTab(entry.id);
               setOpen(false);
             },
-          })),
+          }) satisfies DashboardDropdownTabItem),
         ];
-      }),
+      }, []),
     [activeTab, dropdowns],
   );
   const activeItemLabel = useMemo(

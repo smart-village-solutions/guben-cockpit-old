@@ -3,14 +3,14 @@ import { createLazyFileRoute } from '@tanstack/react-router'
 import { GatewayProjectDetailPage } from '@/components/public-content/GatewayProjectDetailPage'
 
 export const Route = createLazyFileRoute('/projects/$projectId')({
-  component: RouteComponent,
+  component: GatewayProjectDetailRoute,
 })
 
-export function ProjectDetailRoute({ projectId }: { projectId: string }) {
+function ProjectDetailRoute({ projectId }: { projectId: string }) {
   return <GatewayProjectDetailPage projectId={projectId} />
 }
 
-export function RouteComponent() {
+function GatewayProjectDetailRoute() {
   const { projectId } = Route.useParams()
 
   return <ProjectDetailRoute projectId={projectId} />

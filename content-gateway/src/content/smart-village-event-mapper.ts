@@ -59,6 +59,82 @@ const toLocalDateTime = (date: string, time: string | null | undefined): string 
   return `${date}T${normalizedTime}`;
 };
 
+const toUrls = (record: SmartVillageEventRecord) =>
+  (record.urls ?? [])
+    .map((url) => {
+      const link = nonEmptyString(url.url);
+      if (!link) {
+        return null;
+      }
+
+      return {
+        link,
+        description: nonEmptyString(url.description) ?? "",
+      };
+    })
+    .filter((url): url is { link: string; description: string } => url !== null);
+
+const toCategories = (record: SmartVillageEventRecord) =>
+  (record.categories ?? [])
+    .map((category) => {
+      const id = nonEmptyString(category.id) ?? nonEmptyString(category.name);
+      const name = nonEmptyString(category.name) ?? nonEmptyString(category.id);
+
+      if (!id || !name) {
+        return null;
+      }
+
+      return { id, name };
+    })
+    .filter((category): category is { id: string; name: string } => category !== null);
+
+const toImages = (record: SmartVillageEventRecord) =>
+  (record.mediaContents ?? [])
+    .map((mediaContent) => nonEmptyString(mediaContent.sourceUrl?.url))
+    .filter((url): url is string => url !== null)
+    .map((url) => ({
+      thumbnailUrl: url,
+      previewUrl: url,
+      originalUrl: url,
+    }));
+
+const toLocation = (record: SmartVillageEventRecord, eventId: string, title: string) => {
+  const address = record.addresses?.[0];
+
+  return {
+    id: nonEmptyString(record.location?.id) ?? eventId,
+    name: nonEmptyString(record.location?.name) ?? title,
+    city: nonEmptyString(address?.city),
+    street: nonEmptyString(address?.street),
+    telephoneNumber: null,
+    fax: null,
+    email: null,
+    website: null,
+    zip: nonEmptyString(address?.zip),
+  };
+};
+
+const toEventBaseFields = (
+  record: SmartVillageEventRecord,
+  occurrence: SmartVillageEventOccurrence,
+) => {
+  const title = nonEmptyString(record.title);
+  const internalId = nonEmptyString(record.id);
+  const eventId = nonEmptyString(record.externalId) ?? internalId;
+  const dateStart = nonEmptyString(occurrence.dateStart);
+
+  if (!title || !internalId || !eventId || !dateStart) {
+    return null;
+  }
+
+  return {
+    title,
+    internalId,
+    eventId,
+    dateStart,
+  };
+};
+
 export class SmartVillageEventMapper {
   public eventsFromRecord(record: SmartVillageEventRecord): Event[] {
     const occurrences = this.getOccurrences(record);
@@ -80,74 +156,29 @@ export class SmartVillageEventMapper {
     record: SmartVillageEventRecord,
     occurrence: SmartVillageEventOccurrence,
   ): Event | null {
-    const title = nonEmptyString(record.title);
-    const internalId = nonEmptyString(record.id);
-    const eventId = nonEmptyString(record.externalId) ?? internalId;
-    const dateStart = nonEmptyString(occurrence.dateStart);
-
-    if (!title || !internalId || !eventId || !dateStart) {
+    const baseFields = toEventBaseFields(record, occurrence);
+    if (!baseFields) {
       return null;
     }
 
-    const address = record.addresses?.[0];
-    const occurrenceId = this.buildOccurrenceId(internalId, dateStart, occurrence.timeStart);
+    const occurrenceId = this.buildOccurrenceId(baseFields.internalId, baseFields.dateStart, occurrence.timeStart);
     const coordinates =
-      toCoordinates(address?.geoLocation ?? null) ??
+      toCoordinates(record.addresses?.[0]?.geoLocation ?? null) ??
       toCoordinates(record.location?.geoLocation ?? null);
 
     return eventSchema.parse({
       id: occurrenceId,
-      eventId,
+      eventId: baseFields.eventId,
       terminId: occurrenceId,
-      title,
+      title: baseFields.title,
       description: nonEmptyString(record.description) ?? "",
-      startDate: toLocalDateTime(dateStart, occurrence.timeStart),
+      startDate: toLocalDateTime(baseFields.dateStart, occurrence.timeStart),
       endDate: this.toEndDate(occurrence),
-      location: {
-        id: nonEmptyString(record.location?.id) ?? eventId,
-        name: nonEmptyString(record.location?.name) ?? title,
-        city: nonEmptyString(address?.city),
-        street: nonEmptyString(address?.street),
-        telephoneNumber: null,
-        fax: null,
-        email: null,
-        website: null,
-        zip: nonEmptyString(address?.zip),
-      },
+      location: toLocation(record, baseFields.eventId, baseFields.title),
       coordinates,
-      urls: (record.urls ?? [])
-        .map((url) => {
-          const link = nonEmptyString(url.url);
-          if (!link) {
-            return null;
-          }
-
-          return {
-            link,
-            description: nonEmptyString(url.description) ?? "",
-          };
-        })
-        .filter((url): url is { link: string; description: string } => url !== null),
-      categories: (record.categories ?? [])
-        .map((category) => {
-          const id = nonEmptyString(category.id) ?? nonEmptyString(category.name);
-          const name = nonEmptyString(category.name) ?? nonEmptyString(category.id);
-
-          if (!id || !name) {
-            return null;
-          }
-
-          return { id, name };
-        })
-        .filter((category): category is { id: string; name: string } => category !== null),
-      images: (record.mediaContents ?? [])
-        .map((mediaContent) => nonEmptyString(mediaContent.sourceUrl?.url))
-        .filter((url): url is string => url !== null)
-        .map((url) => ({
-          thumbnailUrl: url,
-          previewUrl: url,
-          originalUrl: url,
-        })),
+      urls: toUrls(record),
+      categories: toCategories(record),
+      images: toImages(record),
       published: record.visible === true,
     });
   }

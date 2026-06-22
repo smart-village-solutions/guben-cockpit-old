@@ -225,8 +225,9 @@ describe("route coverage", () => {
   it("covers home route success path and search validation", async () => {
     const homeModule = await import("@/routes/index");
     const validateSearch = homeModule.Route.options.validateSearch;
+    const HomeRouteComponent = homeModule.Route.options.component as () => JSX.Element;
 
-    render(<homeModule.HomeComponent />);
+    render(<HomeRouteComponent />);
 
     expect(screen.getByText("Home Title")).toBeTruthy();
     expect(screen.getByText("Home Description")).toBeTruthy();
@@ -262,18 +263,21 @@ describe("route coverage", () => {
     const eventsIndexModule = await import("@/routes/events/index.lazy");
     const eventDetailModule = await import("@/routes/events/$eventId.lazy");
     const projectDetailModule = await import("@/routes/projects/$projectId.lazy");
+    const EventsIndexComponent = eventsIndexModule.Route.options.component as () => JSX.Element;
+    const EventDetailComponent = eventDetailModule.Route.options.component as () => JSX.Element;
+    const ProjectDetailComponent = projectDetailModule.Route.options.component as () => JSX.Element;
 
     render(
       <div>
-        <eventsIndexModule.RouteComponent />
-        <eventDetailModule.EventDetailRoute eventId="event-42" />
-        <projectDetailModule.ProjectDetailRoute projectId="project-42" />
+        <EventsIndexComponent />
+        <EventDetailComponent />
+        <ProjectDetailComponent />
       </div>,
     );
 
     expect(screen.getByText("GatewayEventsPage")).toBeTruthy();
-    expect(screen.getByText("Event event-42")).toBeTruthy();
-    expect(screen.getByText("Project project-42")).toBeTruthy();
+    expect(screen.getByText("Event event-1")).toBeTruthy();
+    expect(screen.getByText("Project project-1")).toBeTruthy();
   });
 
   it("covers booking routes", async () => {

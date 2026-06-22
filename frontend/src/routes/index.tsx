@@ -14,15 +14,11 @@ const DashboardDropdownTabs = lazy(() =>
 );
 
 export const Route = createFileRoute("/")({
-  component: HomeComponent,
+  component: GatewayHomeRoute,
   validateSearch: (search) => ({
     selectedTabId: typeof search.selectedTabId === "string" ? search.selectedTabId : undefined,
   }),
 });
-
-export function HomeComponent() {
-  return <GatewayHomeRoute />;
-}
 
 export function GatewayHomeRoute() {
   const query = useGatewayHomeContent();
