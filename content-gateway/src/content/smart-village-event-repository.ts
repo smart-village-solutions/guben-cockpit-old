@@ -12,7 +12,7 @@ import type {
 import { GatewayError } from "../errors.js";
 import type { SmartVillageEventRecord } from "../upstream/smart-village-types.js";
 import { TTLCache } from "../upstream/ttl-cache.js";
-import type { EventFilters } from "./content-repository.js";
+import type { EventFilters } from "./content-repository-contract.js";
 import { distanceInKm } from "./postgrest-content-mapper.js";
 import { SmartVillageEventMapper } from "./smart-village-event-mapper.js";
 

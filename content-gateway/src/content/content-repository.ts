@@ -20,23 +20,11 @@ import {
 } from "../../../shared/public-content/contracts.js";
 import { PostgrestConfig } from "../config.js";
 import { mockDashboardContent, mockEventDetail, mockEventsContent, mockFooterContent, mockHomeContent, mockMapContent, mockProjectsContent, mockPublicContentBundle } from "./mock-data.js";
+import { type PublicContentRepository } from "./content-repository-contract.js";
 import { PostgrestContentRepository as PostgrestRepository } from "./postgrest-content-repository.js";
-import { EventFilters } from "./postgrest-content-types.js";
 
-export type { EventFilters } from "./postgrest-content-types.js";
+export type { EventFilters, PublicContentRepository } from "./content-repository-contract.js";
 export { SmartVillagePostgrestContentRepository } from "./smart-village-postgrest-content-repository.js";
-
-export interface PublicContentRepository {
-  getHome(language: string): Promise<HomeContent>;
-  getProjects(language: string, pageNumber: number, pageSize: number): Promise<ProjectsContent>;
-  getPublicContent(language: string): Promise<PublicContentBundle>;
-  getEvents(language: string, filters: EventFilters): Promise<EventsContent>;
-  getEventById(language: string, id: string): Promise<EventDetailContent>;
-  getDashboard(language: string): Promise<DashboardContent>;
-  getMap(language: string): Promise<MapContent>;
-  getFooter(): Promise<FooterContent>;
-  getBookingTenants(): Promise<BookingTenantsContent>;
-}
 
 export class MockContentRepository implements PublicContentRepository {
   public async getHome(): Promise<HomeContent> {

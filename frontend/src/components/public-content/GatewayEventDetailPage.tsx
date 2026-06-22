@@ -2,8 +2,10 @@ import { ClockIcon, MapPinIcon } from "lucide-react";
 import { useMemo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import sanitizeHtml from "sanitize-html";
 
 import PriceCard from "@/components/booking/priceCard";
+import { buildDetailImages, containsHtmlMarkup, isBookingEvent } from "@/components/events/eventPresentation";
 import { MapComponent } from "@/components/home/MapComponent";
 import { DetailPageLayout } from "@/components/ui/DetailPageLayout";
 import { DetailMediaSection } from "@/components/ui/detailMediaSection";
@@ -34,20 +36,13 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
         : [undefined, undefined],
     [data],
   );
-  const detailImages = useMemo(
-    () =>
-      data?.images.map((image: EventDetailContent["event"]["images"][number]) => ({
-        src: image.originalUrl,
-        alt: data.title,
-      })) ?? [],
-    [data],
-  );
+  const detailImages = useMemo(() => (data ? buildDetailImages(data) : []), [data]);
 
   if (!isGatewayPublicContentEnabled) {
     return <PublicContentDisabledState />;
   }
 
-  const tickets = (data as any)?.isBookingEvent
+  const tickets = data && isBookingEvent(data)
     ? useEventStore.getState().getTicketsByBkid(eventId)
     : [];
 
@@ -98,7 +93,7 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
   return (
     <DetailPageLayout
       heroAlt={data.title}
-      title={(data as any)?.isBookingEvent ? <TranslatedText text={data.title} /> : data.title}
+      title={isBookingEvent(data) ? <TranslatedText text={data.title} /> : data.title}
       metadata={metadata}
       breadcrumbItems={[
         { label: 'Startseite', href: '/' },
@@ -110,8 +105,13 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
         <DetailMediaSection
           heading={t("EventDetails")}
           body={(
-            (data as any)?.isBookingEvent ? (
+            isBookingEvent(data) ? (
               <TranslatedHtml className="prose max-w-none" text={data.description} />
+            ) : containsHtmlMarkup(data.description) ? (
+              <div
+                className="prose max-w-none text-neutral-600 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.description) }}
+              />
             ) : (
               <p className="text-neutral-600 leading-relaxed">{data.description}</p>
             )
@@ -137,13 +137,15 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
         )}
 
         {/* Map */}
-        <div className="flex min-h-[70vh] h-full">
-          <MapComponent
-            src={import.meta.env.VITE_MASTERPORTAL_URL}
-            lat={data.coordinates?.latitude}
-            lon={data.coordinates?.longitude}
-          />
-        </div>
+        {data.coordinates ? (
+          <div className="flex min-h-[70vh] h-full">
+            <MapComponent
+              src={import.meta.env.VITE_MASTERPORTAL_URL}
+              lat={data.coordinates.latitude}
+              lon={data.coordinates.longitude}
+            />
+          </div>
+        ) : null}
       </div>
     </DetailPageLayout>
   );

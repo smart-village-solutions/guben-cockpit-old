@@ -18,7 +18,7 @@ import {
 import { Config } from "../config.js";
 import { GatewayError } from "../errors.js";
 import { PostgrestClient } from "../upstream/postgrest-client.js";
-import { PublicContentRepository } from "./content-repository.js";
+import type { PublicContentRepository } from "./content-repository-contract.js";
 import { PostgrestContentMapper, distanceInKm } from "./postgrest-content-mapper.js";
 import { PostgrestContentSource } from "./postgrest-content-source.js";
 import { EventFilters, EventCategoryRow, EventImageRow, EventUrlRow } from "./postgrest-content-types.js";
@@ -29,6 +29,8 @@ const additionalBookingTenants = [
     tenantId: "2b12ce76-c513-40d0-bb56-51a597556f9d",
   },
 ] as const;
+
+const supportedPublicProjectTypes = new Set([0, 1, 2]);
 
 export class PostgrestContentRepository implements PublicContentRepository {
   private readonly mapper: PostgrestContentMapper;
@@ -104,7 +106,9 @@ export class PostgrestContentRepository implements PublicContentRepository {
     const homePage = this.mapper.pageFromRow(this.expectSingle(homePages, "Home"), language);
     const projectsPage = this.mapper.pageFromRow(this.expectSingle(projectPages, "Projects"), language);
     const items = rows
-      .filter((row) => row.published && !row.deleted && (row.type === 0 || row.type === 1 || row.type === 2))
+      .filter(
+        (row) => row.published && !row.deleted && supportedPublicProjectTypes.has(row.type),
+      )
       .map((row) => this.mapper.publicProjectFromRow(row, language));
 
     return publicContentBundleSchema.parse({

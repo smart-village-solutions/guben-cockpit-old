@@ -1,6 +1,7 @@
 import { CircleCheckIcon } from "lucide-react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
+import { BaseImgTag } from "@/components/ui/BaseImgTag";
 import { useTranslation } from "react-i18next";
 import { TranslatedHtml, TranslatedText } from "@/utilities/translateUtils";
 import BookingAvailability from "./BookingAvailability";
@@ -76,12 +77,16 @@ export default function ({
           </div>
 
           <div
-            className="col-span-1 relative h-full font-bold text-gubenAccent-foreground"
-            style={{
-              backgroundImage: imgUrl ? `url(${imgUrl})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}>
+            className="col-span-1 relative h-full overflow-hidden bg-[#808080] font-bold text-gubenAccent-foreground"
+          >
+            {imgUrl ? (
+              <BaseImgTag
+                src={imgUrl}
+                alt={title}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-contain"
+              />
+            ) : null}
             <div className="absolute inset-0 bg-red-600/50" />
             <div className="relative z-10 h-full flex flex-col justify-between items-start p-5">
               {/* Price Information */}
@@ -102,7 +107,7 @@ export default function ({
                   <p>{t("priceCard.place")}: {location}</p>
                 )}
                 { autoCommitNote && (
-                  <TranslatedText text={autoCommitNote}/>
+                  <TranslatedHtml text={autoCommitNote} />
                 )}
                 <BookingAvailability tenantId={tenantId} bookableId={bookableId} />
               </div>

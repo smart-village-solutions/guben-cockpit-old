@@ -36,7 +36,7 @@ export const ProjectsSchoolsPage = () => {
     <main className="w-full h-full flex flex-1 flex-col items-center">
       <Breadcrumb items={[
         { label: 'Startseite', href: '/' },
-        { label: 'Projekte', href: '/projects' },
+        { label: 'Mein Guben', href: '/projects' },
         { label: 'Schulen', href: '/projects/schools' }
       ]} />
       <article className="max-w-7xl mx-auto px-4 w-full pb-5">

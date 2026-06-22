@@ -42,7 +42,7 @@ export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) =
   const getBreadcrumbItems = () => {
     const baseBreadcrumbs = [
       { label: 'Startseite', href: '/' },
-      { label: 'Projekte', href: '/projects' },
+      { label: 'Mein Guben', href: '/projects' },
     ];
 
     if (category === 'schools') {

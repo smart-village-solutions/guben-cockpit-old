@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { GatewayError } from "../src/errors.js";
 import { SmartVillageEventRepository } from "../src/content/smart-village-event-repository.js";
-import type { EventFilters } from "../src/content/content-repository.js";
+import type { EventFilters } from "../src/content/content-repository-contract.js";
 import { TTLCache } from "../src/upstream/ttl-cache.js";
 import type { SmartVillageEventRecord } from "../src/upstream/smart-village-types.js";
 

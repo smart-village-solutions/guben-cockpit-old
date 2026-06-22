@@ -21,7 +21,7 @@ describe("DetailMediaSection", () => {
   });
 
   it("renders a single image without slider controls", () => {
-    render(
+    const { container } = render(
       <DetailMediaSection
         heading="Beschreibung"
         body={<p>Ein Bild</p>}
@@ -30,6 +30,11 @@ describe("DetailMediaSection", () => {
     );
 
     expect(screen.getByRole("img", { name: "Bild 1" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Bild 1" }).className).toContain("object-contain");
+    const viewer = container.querySelector('[aria-label="Bild im Vollbild öffnen"]')?.parentElement;
+    expect(viewer?.className).not.toContain("bg-[#808080]");
+    expect(viewer?.className).not.toContain("rounded-2xl");
+    expect(viewer?.className).not.toContain("border");
     expect(screen.queryByRole("button", { name: "Vorheriges Bild" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Nächstes Bild" })).toBeNull();
     expect(screen.queryByText("1 / 1")).toBeNull();
@@ -62,6 +67,9 @@ describe("DetailMediaSection", () => {
     expect(dialog).toBeTruthy();
     expect(within(dialog).getByRole("img", { name: "Bild 2" })).toBeTruthy();
     expect(within(dialog).getByRole("button", { name: "Close" }).className).toContain("bg-black/70");
+    const fullscreenViewer = within(dialog).getByRole("img", { name: "Bild 2" }).parentElement;
+    expect(fullscreenViewer?.className).not.toContain("border-neutral-700");
+    expect(fullscreenViewer?.className).not.toContain("bg-transparent");
   }, 15_000);
 
   it("clamps the selected image when a rerender provides fewer images", async () => {

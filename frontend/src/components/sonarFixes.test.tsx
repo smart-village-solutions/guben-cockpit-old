@@ -111,6 +111,7 @@ const mockState = vi.hoisted(() => {
   return {
     isGatewayPublicContentEnabled: true,
     routerEvent: undefined as unknown,
+    eventsSearchParams: null as Record<string, string | number | undefined> | null,
     tickets: [] as Array<{ title: string; bookingUrl?: string; prices?: unknown[]; flags?: string[]; location?: string; autoCommitNote?: string }>,
     eventsStore: {
       events: [] as any[],
@@ -333,7 +334,10 @@ vi.mock("@/public-content/hooks", () => ({
   useGatewayProjectsContent: () => mockState.projectsQuery,
   useGatewayProjectDetailContent: () => mockState.projectDetailQuery,
   useGatewayEventDetailContent: () => mockState.eventDetailQuery,
-  useGatewayEventsContent: () => mockState.eventsQuery,
+  useGatewayEventsContent: (searchParams: Record<string, string | number | undefined>) => {
+    mockState.eventsSearchParams = searchParams;
+    return mockState.eventsQuery;
+  },
 }));
 
 import { DeleteIconButton } from "@/components/iconButtons/DeleteIconButton";
@@ -565,6 +569,17 @@ describe("Sonar fix smoke tests", () => {
     expect(marketplaceMarkup).toContain("Marktplatz");
   });
 
+  it("does not apply default event filters in the standard view", () => {
+    renderToStaticMarkup(<GatewayEventsPage />);
+
+    expect(mockState.eventsSearchParams).toMatchObject({
+      pageNumber: 1,
+      pageSize: 10,
+    });
+    expect(mockState.eventsSearchParams).not.toHaveProperty("distance");
+    expect(mockState.eventsSearchParams).not.toHaveProperty("startDate");
+  });
+
   it("renders disabled states for public content pages", () => {
     mockState.isGatewayPublicContentEnabled = false;
 
@@ -632,4 +647,5 @@ describe("Sonar fix smoke tests", () => {
     };
     expect(renderToStaticMarkup(<GatewayEventsPage />)).toContain("Integration");
   });
+
 });

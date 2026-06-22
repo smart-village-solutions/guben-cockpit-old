@@ -152,6 +152,46 @@ describe("PostgrestContentRepository", () => {
     expect(result.projects.page.seo.canonical).toBe("http://localhost:3000/projects");
   });
 
+  it("excludes unknown project types from the public content bundle", async () => {
+    const repository = new PostgrestContentRepository(config, {
+      select: async () => [],
+    } as never);
+
+    (repository as any).source = {
+      getPage: async (id: string) => {
+        if (id === "Home") {
+          return [
+            {
+              id: "Home",
+              translations: {
+                de: {
+                  Title: "Willkommen in Guben",
+                  Description: "Startseite",
+                },
+              },
+            },
+          ];
+        }
+
+        return [projectsPage];
+      },
+      getDashboardRows: async () => ({
+        dropdownRows: [],
+        tabRows: [],
+        cardRows: [],
+        linkRows: [],
+      }),
+      getProjects: async () => [
+        projectRow({ id: "featured-1", type: 1, title: "Featured" }),
+        projectRow({ id: "unknown-1", type: 7, title: "Unknown" }),
+      ],
+    };
+
+    const result = await repository.getPublicContent("de");
+
+    expect(result.projects.items.map((item) => item.id)).toEqual(["featured-1"]);
+  });
+
   it("groups project categories and paginates businesses", async () => {
     const repository = new PostgrestContentRepository(config, {
       select: async () => [],

@@ -9,8 +9,8 @@ import type {
   ProjectsContent,
   PublicContentBundle,
 } from "../../../shared/public-content/contracts.js";
+import type { EventFilters, PublicContentRepository } from "./content-repository-contract.js";
 import type { PostgrestContentRepository } from "./postgrest-content-repository.js";
-import type { PublicContentRepository, EventFilters } from "./content-repository.js";
 import type { SmartVillageEventRepository } from "./smart-village-event-repository.js";
 
 type SmartVillagePostgrestContentRepositoryOptions = {

@@ -76,20 +76,20 @@ describe("DashboardDropdownTabs", () => {
         dropdowns={[
           {
             id: "dropdown-1",
-            title: "Services",
+            title: "Stadtleben",
             rank: 1,
             isLink: false,
             tabs: [
               {
                 id: "tab-1",
-                title: "Tab One",
+                title: "Mobilität",
                 sequence: 1,
                 mapUrl: "https://example.com/map-1",
                 informationCards: [createInfoCard("card-1", "Card One")],
               },
               {
                 id: "tab-2",
-                title: "Tab Two",
+                title: "Freizeit",
                 sequence: 2,
                 mapUrl: "https://example.com/map-2",
                 informationCards: [createInfoCard("card-2", "Card Two")],
@@ -105,11 +105,13 @@ describe("DashboardDropdownTabs", () => {
       expect(screen.getByTestId("map-component").getAttribute("data-src")).toBe("https://example.com/map-1");
     });
 
+    expect(screen.getByText("Wählen Sie Ihre Themenkarte:")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /Mobilität/i })).toHaveLength(2);
     expect(screen.getByText("Card One")).toBeTruthy();
     expect(screen.getByTestId("map-component").className).toContain("min-h-[18rem]");
   }, 15_000);
 
-  it("switches tabs and opens external links from link dropdowns", async () => {
+  it("lists grouped options in one dropdown, switches tabs and opens external links", async () => {
     const { DashboardDropdownTabs } = await import("./DashboardDropdownNav");
 
     render(
@@ -117,20 +119,20 @@ describe("DashboardDropdownTabs", () => {
         dropdowns={[
           {
             id: "dropdown-1",
-            title: "Services",
+            title: "Stadtleben",
             rank: 1,
             isLink: false,
             tabs: [
               {
                 id: "tab-1",
-                title: "Tab One",
+                title: "Mobilität",
                 sequence: 1,
                 mapUrl: "https://example.com/map-1",
                 informationCards: [createInfoCard("card-1", "Card One")],
               },
               {
                 id: "tab-2",
-                title: "Tab Two",
+                title: "Freizeit",
                 sequence: 2,
                 mapUrl: "https://example.com/map-2",
                 informationCards: [createInfoCard("card-2", "Card Two")],
@@ -140,23 +142,29 @@ describe("DashboardDropdownTabs", () => {
           },
           {
             id: "dropdown-2",
-            title: "Links",
+            title: "Service",
             rank: 2,
             isLink: true,
             tabs: [],
-            links: [{ id: "link-1", title: "External Link", link: "https://example.com", sequence: 1 }],
+            links: [{ id: "link-1", title: "Bürgerdienste", link: "https://example.com", sequence: 1 }],
           },
         ]}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Tab Two" }));
+    expect(screen.getByText("Stadtleben")).toBeTruthy();
+    expect(screen.getByText("Service")).toBeTruthy();
+    expect(screen.getAllByText("Mobilität")).toHaveLength(2);
+    expect(screen.getByText("Freizeit")).toBeTruthy();
+    expect(screen.getByText("Bürgerdienste")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Freizeit" }));
 
     await waitFor(() => {
       expect(screen.getByTestId("map-component").getAttribute("data-src")).toBe("https://example.com/map-2");
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "External Link" }));
-    expect(openMock).toHaveBeenCalledWith("https://example.com", "_blank");
+    fireEvent.click(screen.getByRole("button", { name: "Bürgerdienste" }));
+    expect(openMock).toHaveBeenCalledWith("https://example.com", "_blank", "noopener,noreferrer");
   });
 });

@@ -130,12 +130,7 @@ function ImageViewer({
   isFullscreen = false,
 }: ImageViewerProps) {
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100",
-        isFullscreen && "border-neutral-700 bg-transparent",
-      )}
-    >
+    <div className="relative overflow-hidden">
       {onOpenFullscreen ? (
         <button
           type="button"

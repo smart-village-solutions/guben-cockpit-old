@@ -22,6 +22,7 @@ export const DashboardDropdownTabs = ({
   dropdowns,
 }: DashboardDropdownTabsProps) => {
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const allTabs = useMemo(() => {
     const tabs: DashboardDropdown["tabs"][number][] = [];
     dropdowns.forEach((d) => {
@@ -38,6 +39,48 @@ export const DashboardDropdownTabs = ({
     () => allTabs.find((t) => t.id === activeTab) || null,
     [allTabs, activeTab],
   );
+  const items = useMemo(
+    () =>
+      dropdowns.flatMap((dropdown) => {
+        const groupLabel = dropdown.title;
+
+        if (dropdown.isLink) {
+          return [
+            { type: "group" as const, key: `group-${dropdown.id}`, label: groupLabel },
+            ...(dropdown.links ?? []).map((link) => ({
+              type: "link" as const,
+              key: link.id,
+              label: link.title,
+              groupLabel,
+              onSelect: () => {
+                window.open(link.link, "_blank", "noopener,noreferrer");
+                setOpen(false);
+              },
+            })),
+          ];
+        }
+
+        return [
+          { type: "group" as const, key: `group-${dropdown.id}`, label: groupLabel },
+          ...(dropdown.tabs ?? []).map((entry) => ({
+            type: "tab" as const,
+            key: entry.id,
+            label: entry.title,
+            groupLabel,
+            active: entry.id === activeTab,
+            onSelect: () => {
+              setActiveTab(entry.id);
+              setOpen(false);
+            },
+          })),
+        ];
+      }),
+    [activeTab, dropdowns],
+  );
+  const activeItemLabel = useMemo(
+    () => allTabs.find((entry) => entry.id === activeTab)?.title ?? null,
+    [activeTab, allTabs],
+  );
 
   useEffect(() => {
     if (!activeTab && allTabs.length > 0) {
@@ -47,18 +90,57 @@ export const DashboardDropdownTabs = ({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 pl-2 font-bold">
-        {dropdowns.map(({ id, title, tabs, links, isLink }) => (
-          <DashboardDropdownMenu
-            key={id}
-            title={title}
-            activeTab={activeTab}
-            tabs={tabs}
-            links={links}
-            isLink={isLink}
-            onTabClick={(tabId) => setActiveTab(tabId)}
-          />
-        ))}
+      <div className="mb-4 flex flex-col gap-3 rounded-md bg-gubenAccent px-4 py-3 text-white lg:flex-row lg:items-center">
+        <p className="font-semibold">Wählen Sie Ihre Themenkarte:</p>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className={cn(
+                "h-auto min-h-10 w-full justify-between rounded-md border border-white/30 bg-white px-3 py-2 text-left text-sm font-semibold text-black hover:bg-white hover:text-black lg:w-[24rem]",
+                "data-[state=open]:bg-white",
+              )}
+            >
+              <span className="truncate">{activeItemLabel ?? "Bitte auswählen"}</span>
+              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-80" />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            align="start"
+            side="bottom"
+            sideOffset={6}
+            collisionPadding={8}
+            className="w-[24rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+          >
+            <ScrollArea className="max-h-80">
+              <div className="py-1">
+                {items.map((item) =>
+                  item.type === "group" ? (
+                    <div
+                      key={item.key}
+                      className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                      {item.label}
+                    </div>
+                  ) : (
+                    <DropdownMenuItem
+                      key={item.key}
+                      onClick={item.onSelect}
+                      className={cn(
+                        "cursor-pointer rounded-sm pl-6",
+                        "focus:bg-accent focus:text-accent-foreground",
+                        item.type === "tab" && item.active && "font-semibold",
+                      )}
+                    >
+                      <span className="truncate">{item.label}</span>
+                    </DropdownMenuItem>
+                  ),
+                )}
+              </div>
+            </ScrollArea>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {activeTab && tab && (
@@ -79,95 +161,3 @@ export const DashboardDropdownTabs = ({
     </div>
   );
 };
-
-interface DashboardDropdownMenuProps {
-  title: string;
-  activeTab: string | null;
-  isLink: boolean;
-  tabs?: { id: string; title: string }[];
-  links?: DashboardDropdown["links"];
-  onTabClick?: (tabId: string) => void;
-}
-
-function DashboardDropdownMenu({
-  title,
-  tabs,
-  links,
-  isLink,
-  activeTab,
-  onTabClick,
-}: DashboardDropdownMenuProps) {
-  const [open, setOpen] = useState(false);
-
-  const baseButtonClasses = cn(
-    "rounded-md border border-gray-300 bg-gray-200 rounded-b-none",
-    "px-3 py-2 text-sm font-semibold",
-    "hover:bg-white hover:text-accent-foreground",
-    "transition-colors max-w-full",
-  );
-
-  const items = isLink
-    ? (links ?? []).map((l) => ({
-        key: l.id,
-        label: l.title,
-        onSelect: () => {
-          window.open(l.link, "_blank");
-          setOpen(false);
-        },
-        active: false,
-      }))
-    : (tabs ?? []).map((t) => ({
-        key: t.id,
-        label: t.title,
-        onSelect: () => {
-          onTabClick?.(t.id);
-          setOpen(false);
-        },
-        active: t.id === activeTab,
-      }));
-
-  if (!items.length) return null;
-
-  return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={cn(
-            baseButtonClasses,
-            "data-[state=open]:bg-white data-[state=open]:shadow-sm whitespace-normal text-left h-auto justify-between",
-          )}
-        >
-          <span className="break-words">{title}</span>
-          <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
-        align="start"
-        side="bottom"
-        sideOffset={6}
-        collisionPadding={8}
-        className="w-56 p-1 rounded-md border bg-popover text-popover-foreground shadow-md"
-      >
-        <ScrollArea className="max-h-72">
-          <div className="py-1">
-            {items.map((item) => (
-              <DropdownMenuItem
-                key={item.key}
-                onClick={item.onSelect}
-                className={cn(
-                  "cursor-pointer rounded-sm",
-                  "focus:bg-accent focus:text-accent-foreground",
-                  item.active && "font-semibold",
-                )}
-              >
-                <span className="truncate">{item.label}</span>
-              </DropdownMenuItem>
-            ))}
-          </div>
-        </ScrollArea>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
