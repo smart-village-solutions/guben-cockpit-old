@@ -67,6 +67,9 @@ describe("DetailMediaSection", () => {
     expect(dialog).toBeTruthy();
     expect(within(dialog).getByRole("img", { name: "Bild 2" })).toBeTruthy();
     expect(within(dialog).getByRole("button", { name: "Close" }).className).toContain("bg-black/70");
+    const fullscreenViewer = within(dialog).getByRole("img", { name: "Bild 2" }).parentElement;
+    expect(fullscreenViewer?.className).not.toContain("border-neutral-700");
+    expect(fullscreenViewer?.className).not.toContain("bg-transparent");
   }, 15_000);
 
   it("clamps the selected image when a rerender provides fewer images", async () => {

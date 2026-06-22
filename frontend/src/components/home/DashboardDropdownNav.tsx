@@ -53,7 +53,7 @@ export const DashboardDropdownTabs = ({
               label: link.title,
               groupLabel,
               onSelect: () => {
-                window.open(link.link, "_blank");
+                window.open(link.link, "_blank", "noopener,noreferrer");
                 setOpen(false);
               },
             })),

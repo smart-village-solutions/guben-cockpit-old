@@ -11,6 +11,8 @@ import {
   PostgrestContentRepository,
   SmartVillagePostgrestContentRepository,
 } from "../src/content/content-repository.js";
+import { contentRepositoryContractModule } from "../src/content/content-repository-contract.js";
+import type { EventFilters, PublicContentRepository } from "../src/content/content-repository-contract.js";
 import {
   mockDashboardContent,
   mockEventDetail,
@@ -41,6 +43,35 @@ const config: PostgrestConfig = {
 };
 
 describe("content repository glue", () => {
+  it("exposes repository contracts from a dedicated module", () => {
+    const filters: EventFilters = {
+      pageNumber: 1,
+      pageSize: 10,
+      sortBy: "startDate",
+      ordering: "asc",
+    };
+    const repository = {
+      getHome: async () => mockHomeContent,
+      getProjects: async () => mockProjectsContent,
+      getPublicContent: async () => mockPublicContentBundle,
+      getEvents: async () => mockEventsContent,
+      getEventById: async () => mockEventDetail,
+      getDashboard: async () => mockDashboardContent,
+      getMap: async () => mockMapContent,
+      getFooter: async () => mockFooterContent,
+      getBookingTenants: async () => ({
+        tenants: mockEventsContent.events.bookingTenants,
+      }),
+    } satisfies PublicContentRepository;
+
+    expect(filters).toMatchObject({
+      pageNumber: 1,
+      ordering: "asc",
+    });
+    expect(contentRepositoryContractModule).toBe("content-repository-contract");
+    expect(typeof repository.getEvents).toBe("function");
+  });
+
   it("parses the mock repository payloads against the shared schemas", async () => {
     const repository = new MockContentRepository();
 

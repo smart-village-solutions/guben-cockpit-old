@@ -63,6 +63,7 @@ describe("priceCard", () => {
       "https://guben.smart-city-booking.de/admin/checkout?id=box-1",
     );
     expect(screen.getByRole("img", { name: "Fahrradbox" }).className).toContain("object-contain");
+    expect(screen.getByRole("img", { name: "Fahrradbox" }).getAttribute("loading")).toBe("lazy");
     expect(container.querySelector(".bg-\\[\\#808080\\]")).toBeTruthy();
   });
 

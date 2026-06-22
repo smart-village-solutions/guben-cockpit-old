@@ -165,6 +165,6 @@ describe("DashboardDropdownTabs", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Bürgerdienste" }));
-    expect(openMock).toHaveBeenCalledWith("https://example.com", "_blank");
+    expect(openMock).toHaveBeenCalledWith("https://example.com", "_blank", "noopener,noreferrer");
   });
 });

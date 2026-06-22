@@ -83,6 +83,7 @@ export default function ({
               <BaseImgTag
                 src={imgUrl}
                 alt={title}
+                loading="lazy"
                 className="absolute inset-0 h-full w-full object-contain"
               />
             ) : null}

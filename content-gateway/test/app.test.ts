@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createApp } from "../src/app.js";
 import { GatewayError } from "../src/errors.js";
-import type { PublicContentRepository } from "../src/content/content-repository.js";
+import type { PublicContentRepository } from "../src/content/content-repository-contract.js";
 import { loadConfig } from "../src/config.js";
 import { mockDashboardContent, mockEventDetail, mockEventsContent, mockFooterContent, mockHomeContent, mockMapContent, mockProjectsContent, mockPublicContentBundle } from "../src/content/mock-data.js";
 
