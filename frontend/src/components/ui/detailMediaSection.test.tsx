@@ -21,7 +21,7 @@ describe("DetailMediaSection", () => {
   });
 
   it("renders a single image without slider controls", () => {
-    render(
+    const { container } = render(
       <DetailMediaSection
         heading="Beschreibung"
         body={<p>Ein Bild</p>}
@@ -30,6 +30,8 @@ describe("DetailMediaSection", () => {
     );
 
     expect(screen.getByRole("img", { name: "Bild 1" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Bild 1" }).className).toContain("object-contain");
+    expect(container.querySelector(".bg-\\[\\#808080\\]")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Vorheriges Bild" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Nächstes Bild" })).toBeNull();
     expect(screen.queryByText("1 / 1")).toBeNull();

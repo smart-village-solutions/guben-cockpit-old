@@ -132,7 +132,7 @@ function ImageViewer({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100",
+        "relative overflow-hidden rounded-2xl border border-neutral-200 bg-[#808080]",
         isFullscreen && "border-neutral-700 bg-transparent",
       )}
     >

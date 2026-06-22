@@ -26,7 +26,7 @@ vi.mock("swiper/modules", () => ({
 
 describe("FeaturedCarousel", () => {
   it("keeps the headline link and adds a localized CTA link below it", () => {
-    render(
+    const { container } = render(
       <FeaturedCarousel
         slides={[
           {
@@ -45,5 +45,7 @@ describe("FeaturedCarousel", () => {
     expect(screen.getByRole("link", { name: "Projekt 1" }).getAttribute("href")).toBe("/projects/project-1");
     expect(screen.getByRole("link", { name: "Mehr erfahren >" }).getAttribute("href")).toBe("/projects/project-1");
     expect(screen.getByText("Kurzbeschreibung")).toBeTruthy();
+    expect(screen.getAllByRole("img", { name: "Projekt 1" })[0].className).toContain("object-contain");
+    expect(container.querySelector(".bg-\\[\\#808080\\]")).toBeTruthy();
   });
 });

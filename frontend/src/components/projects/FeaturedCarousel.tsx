@@ -52,11 +52,11 @@ export const FeaturedCarousel = ({ slides }: FeaturedCarouselProps) => {
             <SwiperSlide key={slide.id}>
               <div className="relative w-full h-full flex flex-col">
                 {/* Image Section */}
-                <div className="h-96 overflow-hidden">
+                <div className="flex h-96 items-center justify-center overflow-hidden bg-[#808080]">
                   <img
                     src={slide.image}
                     alt={slide.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     loading="lazy"
                   />
                 </div>

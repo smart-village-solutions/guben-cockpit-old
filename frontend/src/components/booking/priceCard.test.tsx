@@ -37,11 +37,12 @@ describe("priceCard", () => {
   });
 
   it("renders price details, availability and checkout link for valid booking urls", () => {
-    render(
+    const { container } = render(
       <PriceCard
         bookingUrl="https://guben.smart-city-booking.de/admin/checkout?id=box-1"
         title="Fahrradbox"
         price="2,35 EUR"
+        imgUrl="/bike-box.jpg"
         prices={[
           { price: "2,35 EUR", interval: "pro Tag", category: "Standard" },
           { price: "40,00 EUR", interval: "pro Monat" },
@@ -61,5 +62,7 @@ describe("priceCard", () => {
     expect((screen.getByRole("link") as HTMLAnchorElement).getAttribute("href")).toBe(
       "https://guben.smart-city-booking.de/admin/checkout?id=box-1",
     );
+    expect(screen.getByRole("img", { name: "Fahrradbox" }).className).toContain("object-contain");
+    expect(container.querySelector(".bg-\\[\\#808080\\]")).toBeTruthy();
   });
 });
