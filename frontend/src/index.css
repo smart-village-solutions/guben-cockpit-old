@@ -99,7 +99,7 @@
     }
 
     .prose a:hover {
-        @apply text-gubenAccent/80;
+        color: rgba(205, 20, 33, 0.8);
     }
 }
 
