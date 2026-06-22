@@ -48,15 +48,18 @@ vi.mock("@/components/ui/DetailPageLayout", () => ({
   DetailPageLayout: ({
     title,
     heroImage,
+    breadcrumbItems,
     metadata,
     children,
   }: {
     title: ReactNode;
     heroImage?: string;
+    breadcrumbItems?: Array<{ label: string }>;
     metadata?: ReactNode;
     children: ReactNode;
   }) => (
     <div>
+      {breadcrumbItems ? <nav>{breadcrumbItems.map((item) => item.label).join(" > ")}</nav> : null}
       <h1>{title}</h1>
       {heroImage ? <img data-testid="detail-header-image" alt="" src={heroImage} /> : null}
       <div>{metadata}</div>
@@ -84,6 +87,7 @@ describe("GatewayProjectDetailPage", () => {
   it("renders the project image beside the description and keeps the full text below", () => {
     render(<GatewayProjectDetailPage projectId="project-1" />);
 
+    expect(screen.getByText("Startseite > Mein Guben > Schulen > Projekt 1")).toBeTruthy();
     expect(screen.getByRole("img", { name: "Projekt 1" })).toBeTruthy();
     expect(screen.getByText("Projektdetails")).toBeTruthy();
     expect(screen.getByText("Langtext")).toBeTruthy();

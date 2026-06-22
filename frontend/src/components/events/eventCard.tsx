@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { ClockIcon, MapPinIcon } from "lucide-react";
 import { useState, useCallback, useMemo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import sanitizeHtml from "sanitize-html";
 import { getEventImage } from "@/lib/DefaultEventImage";
 import { formatEventDateRange } from "@/utilities/eventDateRange";
 import { formatEventLocation } from "@/utilities/location";
@@ -14,6 +15,8 @@ import { BaseImgTag } from "@/components/ui/BaseImgTag";
 interface EventCardProps {
   event: Event;
 }
+
+const containsHtmlMarkup = (value: string) => /<[^>]+>/.test(value);
 
 function EventCard({ event }: EventCardProps) {
   const bookingEvent = event as Event & { isBookingEvent?: boolean };
@@ -87,6 +90,8 @@ function EventCard({ event }: EventCardProps) {
       className="text-sm text-gray-600 line-clamp-3"
       text={event.description}
     />
+  ) : containsHtmlMarkup(event.description) ? (
+    sanitizeHtml(event.description)
   ) : (
     <p className="text-sm text-gray-600 line-clamp-3">{event.description}</p>
   );
@@ -117,6 +122,7 @@ function EventCard({ event }: EventCardProps) {
       title={event.title}
       titleSize="text-lg"
       description={description}
+      descriptionAsHtml={!bookingEvent.isBookingEvent && containsHtmlMarkup(event.description)}
       descriptionLines={3}
       tags={categoryTags}
       extraInfo={extraInfo}

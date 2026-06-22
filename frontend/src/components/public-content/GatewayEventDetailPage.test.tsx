@@ -167,4 +167,21 @@ describe("GatewayEventDetailPage", () => {
 
     expect(screen.getByText("30.05.2026 09:00 - 23:59")).toBeTruthy();
   });
+
+  it("renders HTML event descriptions as markup instead of plain text", () => {
+    queryState.data.event.description = "<p>Ein <strong>grosses</strong> Sommerfest</p>";
+
+    const { container } = render(<GatewayEventDetailPage eventId="event-1" />);
+
+    expect(container.querySelector("strong")?.textContent).toBe("grosses");
+    expect(screen.queryByText("<p>Ein")).toBeNull();
+  });
+
+  it("does not render the map when the event has no coordinates", () => {
+    queryState.data.event.coordinates = null as unknown as typeof queryState.data.event.coordinates;
+
+    render(<GatewayEventDetailPage eventId="event-1" />);
+
+    expect(screen.queryByText("map-component")).toBeNull();
+  });
 });

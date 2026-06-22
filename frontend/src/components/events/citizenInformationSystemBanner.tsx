@@ -8,8 +8,8 @@ export default function CitizenInformationSystemBanner() {
   const {t} = useTranslation("events");
 
   return (
-    <section className="w-full bg-gubenAccent text-gubenAccent-foreground">
-      <div className="mx-auto flex w-full max-w-7xl gap-2 px-4 py-4">
+    <section className="mx-auto w-full max-w-7xl px-4">
+      <div className="flex w-full gap-2 rounded-md bg-gubenAccent px-4 py-4 text-gubenAccent-foreground">
         <MessageSquareWarningIcon className="mt-0.5 shrink-0" />
         <p>{t("CitizenInformationText")}</p>
         <Dialog>

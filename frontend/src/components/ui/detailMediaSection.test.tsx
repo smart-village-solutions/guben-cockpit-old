@@ -31,7 +31,10 @@ describe("DetailMediaSection", () => {
 
     expect(screen.getByRole("img", { name: "Bild 1" })).toBeTruthy();
     expect(screen.getByRole("img", { name: "Bild 1" }).className).toContain("object-contain");
-    expect(container.querySelector(".bg-\\[\\#808080\\]")).toBeTruthy();
+    const viewer = container.querySelector('[aria-label="Bild im Vollbild öffnen"]')?.parentElement;
+    expect(viewer?.className).not.toContain("bg-[#808080]");
+    expect(viewer?.className).not.toContain("rounded-2xl");
+    expect(viewer?.className).not.toContain("border");
     expect(screen.queryByRole("button", { name: "Vorheriges Bild" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Nächstes Bild" })).toBeNull();
     expect(screen.queryByText("1 / 1")).toBeNull();

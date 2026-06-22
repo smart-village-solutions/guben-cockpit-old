@@ -2,6 +2,7 @@ import { ClockIcon, MapPinIcon } from "lucide-react";
 import { useMemo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import sanitizeHtml from "sanitize-html";
 
 import PriceCard from "@/components/booking/priceCard";
 import { MapComponent } from "@/components/home/MapComponent";
@@ -18,6 +19,8 @@ import type { EventDetailContent } from "@shared/public-content/contracts";
 
 import { PublicContentErrorState } from "./PublicContentErrorState";
 import { PublicContentDisabledState } from "./PublicContentDisabledState";
+
+const containsHtmlMarkup = (value: string) => /<[^>]+>/.test(value);
 
 export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
   const { t } = useTranslation("common");
@@ -112,6 +115,11 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
           body={(
             (data as any)?.isBookingEvent ? (
               <TranslatedHtml className="prose max-w-none" text={data.description} />
+            ) : containsHtmlMarkup(data.description) ? (
+              <div
+                className="prose max-w-none text-neutral-600 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.description) }}
+              />
             ) : (
               <p className="text-neutral-600 leading-relaxed">{data.description}</p>
             )
@@ -137,13 +145,15 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
         )}
 
         {/* Map */}
-        <div className="flex min-h-[70vh] h-full">
-          <MapComponent
-            src={import.meta.env.VITE_MASTERPORTAL_URL}
-            lat={data.coordinates?.latitude}
-            lon={data.coordinates?.longitude}
-          />
-        </div>
+        {data.coordinates ? (
+          <div className="flex min-h-[70vh] h-full">
+            <MapComponent
+              src={import.meta.env.VITE_MASTERPORTAL_URL}
+              lat={data.coordinates.latitude}
+              lon={data.coordinates.longitude}
+            />
+          </div>
+        ) : null}
       </div>
     </DetailPageLayout>
   );

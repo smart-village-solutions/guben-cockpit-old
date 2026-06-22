@@ -53,12 +53,7 @@ const GatewayEventsPageContent = () => {
 
   const [currentTenantIndex, setCurrentTenantIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState(
-    filtersSchema.parse({
-      dateRange: { from: new Date() },
-      distance: 10,
-    }),
-  );
+  const [filters, setFilters] = useState(() => filtersSchema.parse({}));
 
   const pagination = usePagination();
   const query = useGatewayEventsContent({

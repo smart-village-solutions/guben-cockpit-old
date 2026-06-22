@@ -11,7 +11,7 @@ function Component() {
     <div className="w-full h-full flex flex-col">
       <Breadcrumb items={[
         { label: 'Startseite', href: '/' },
-        { label: 'Projekte', href: '/projects' }
+        { label: 'Mein Guben', href: '/projects' }
       ]} />
       <article className="max-w-7xl mx-auto px-4 w-full pb-5">
         <div className="flex gap-3 flex-col">
