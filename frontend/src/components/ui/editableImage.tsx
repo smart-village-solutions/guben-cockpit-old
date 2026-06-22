@@ -44,8 +44,8 @@ export const EditableImage = ({imageUrl, imageAlt, onChange, startInEditingState
           </div>
         </div>
       ) : (
-        <div className="relative w-full h-full">
-          <BaseImgTag src={imageUrl} alt={imageAlt} className="w-full h-full object-cover"/>
+        <div className="relative w-full h-full bg-[#808080]">
+          <BaseImgTag src={imageUrl} alt={imageAlt} className="w-full h-full object-contain"/>
 
           <button
             className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-md"

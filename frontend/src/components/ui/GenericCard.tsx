@@ -65,15 +65,15 @@ export const GenericCard = ({
     >
       {/* Image Section */}
       {customImageElement ? (
-        <div className="w-full h-48 bg-neutral-100 overflow-hidden flex-shrink-0 rounded-t-lg">
+        <div className="w-full h-48 bg-[#808080] overflow-hidden flex shrink-0 items-center justify-center rounded-t-lg">
           {customImageElement}
         </div>
       ) : imageUrl ? (
-        <div className="w-full h-48 bg-neutral-100 overflow-hidden flex-shrink-0 rounded-t-lg">
+        <div className="w-full h-48 bg-[#808080] overflow-hidden flex shrink-0 items-center justify-center rounded-t-lg">
           <BaseImgTag
             src={imageUrl}
             alt={imageAlt || title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             loading="lazy"
           />
         </div>

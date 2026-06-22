@@ -30,7 +30,7 @@ function EventCard({ event }: EventCardProps) {
   const ImageCarousel = () => {
     if (event.images.length > 0 && event.images[selectedImage]) {
       return (
-        <div className="text-white relative w-full h-full overflow-hidden group">
+        <div className="text-white relative flex h-full w-full items-center justify-center overflow-hidden bg-[#808080] group">
           {selectedImage > 0 && event.images.length > 1 && (
             <button
               onClick={() => adjustIndex(-1)}
@@ -42,7 +42,7 @@ function EventCard({ event }: EventCardProps) {
           )}
 
           <BaseImgTag
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             src={event.images[selectedImage].previewUrl}
             alt="Event"
           />
@@ -65,9 +65,9 @@ function EventCard({ event }: EventCardProps) {
     const image = getEventImage(firstCategoryName);
 
     return image ? (
-      <div className="w-full h-full flex items-center justify-center bg-neutral-100">
+      <div className="flex h-full w-full items-center justify-center bg-[#808080]">
         <BaseImgTag
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           src={image}
           alt={firstCategoryName || "Event category"}
         />

@@ -66,11 +66,13 @@ export const DetailPageLayout = ({
           <div className="rounded-md bg-white space-y-4 shadow-lg overflow-hidden">
             {/* Image at top - no overlay, no darkening */}
             {heroImage && (
-              <img
-                src={heroImage}
-                alt={heroAlt || fallbackHeroAlt}
-                className="w-full h-64 object-cover"
-              />
+              <div className="flex h-64 items-center justify-center bg-[#808080]">
+                <img
+                  src={heroImage}
+                  alt={heroAlt || fallbackHeroAlt}
+                  className="w-full h-64 object-contain"
+                />
+              </div>
             )}
 
             {/* Content inside card */}

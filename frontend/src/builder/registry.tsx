@@ -67,11 +67,11 @@ function BuilderFeatureCard({
   return (
     <Card className="mx-auto w-full max-w-xl overflow-hidden rounded-3xl border-0 shadow-xl">
       {imageUrl ? (
-        <div className="relative aspect-[16/9] w-full overflow-hidden">
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#808080]">
           <BaseImgTag
             src={imageUrl}
             alt={imageAlt ?? title}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-contain"
           />
         </div>
       ) : null}
