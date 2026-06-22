@@ -9,7 +9,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/utilities/translateUtils", () => ({
-  TranslatedHtml: ({ text }: { text: string }) => <div>{text}</div>,
+  TranslatedHtml: ({ text }: { text: string }) => <div dangerouslySetInnerHTML={{ __html: text }} />,
   TranslatedText: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 
@@ -64,5 +64,22 @@ describe("priceCard", () => {
     );
     expect(screen.getByRole("img", { name: "Fahrradbox" }).className).toContain("object-contain");
     expect(container.querySelector(".bg-\\[\\#808080\\]")).toBeTruthy();
+  });
+
+  it("renders auto commit notes as HTML instead of escaped text", () => {
+    const { container } = render(
+      <PriceCard
+        bookingUrl="https://guben.smart-city-booking.de/admin/checkout?id=box-1"
+        title="Fahrradbox"
+        price="0 EUR"
+        location="Schulstraße 4, 03172 Guben"
+        autoCommitNote="<p><strong>Das Nutzungsentgelt wird laut der aktuellen Satzung berechnet.</strong></p>"
+      />,
+    );
+
+    expect(container.querySelector("strong")?.textContent).toBe(
+      "Das Nutzungsentgelt wird laut der aktuellen Satzung berechnet.",
+    );
+    expect(screen.queryByText(/<p><strong>/)).toBeNull();
   });
 });

@@ -106,7 +106,7 @@ export default function ({
                   <p>{t("priceCard.place")}: {location}</p>
                 )}
                 { autoCommitNote && (
-                  <TranslatedText text={autoCommitNote}/>
+                  <TranslatedHtml text={autoCommitNote} />
                 )}
                 <BookingAvailability tenantId={tenantId} bookableId={bookableId} />
               </div>
