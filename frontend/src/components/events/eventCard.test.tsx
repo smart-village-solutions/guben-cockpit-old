@@ -59,6 +59,10 @@ describe("eventCard", () => {
             street: "Musterstrasse 1",
             zip: "03172",
             city: "Guben",
+            telephoneNumber: null,
+            fax: null,
+            email: null,
+            website: null,
           },
           coordinates: {
             latitude: 51.95,

@@ -21,6 +21,9 @@ describe("ImageCarousel", () => {
 
     const image = container.querySelector("img");
     expect(image).toBeTruthy();
+    if (!image) {
+      throw new Error("Expected carousel image to render");
+    }
     expect(image.className).toContain("object-contain");
     expect(image.className).toContain("bg-[#808080]");
     expect(screen.getByText("1 / 2")).toBeTruthy();
