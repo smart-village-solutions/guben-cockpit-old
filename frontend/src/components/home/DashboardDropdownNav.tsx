@@ -18,6 +18,11 @@ interface DashboardDropdownTabsProps {
   dropdowns: DashboardDropdown[];
 }
 
+type DashboardMenuItem =
+  | { type: "group"; key: string; label: string }
+  | { type: "link"; key: string; label: string; groupLabel: string; onSelect: () => void }
+  | { type: "tab"; key: string; label: string; groupLabel: string; active: boolean; onSelect: () => void };
+
 export const DashboardDropdownTabs = ({
   dropdowns,
 }: DashboardDropdownTabsProps) => {
@@ -39,9 +44,9 @@ export const DashboardDropdownTabs = ({
     () => allTabs.find((t) => t.id === activeTab) || null,
     [allTabs, activeTab],
   );
-  const items = useMemo(
+  const items = useMemo<DashboardMenuItem[]>(
     () =>
-      dropdowns.flatMap((dropdown) => {
+      dropdowns.flatMap<DashboardMenuItem>((dropdown) => {
         const groupLabel = dropdown.title;
 
         if (dropdown.isLink) {
