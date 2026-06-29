@@ -9,9 +9,124 @@ import {
   homeContentSchema,
   mapContentSchema,
   projectsContentSchema,
+  type Project,
+  type ProjectsContent,
 } from "@shared/public-content/contracts";
 import { fetchGatewayJson } from "./client";
 import { isGatewayPublicContentEnabled } from "./source";
+
+type ProjectCategory = "featured" | "schools" | "marketplace";
+type ProjectFetcher = (
+  path: string,
+  schema: typeof projectsContentSchema,
+  searchParams?: Record<string, string | number | undefined>,
+) => Promise<ProjectsContent>;
+
+const localSchoolImageByTitle: Array<[match: (title: string) => boolean, imageUrl: string]> = [
+  [
+    (title) => title.startsWith("Corona-Schröter Grundschule"),
+    "/images/Corona-Schroeter Grundschule Eingang.JPG",
+  ],
+  [
+    (title) => title.startsWith("Europaschule"),
+    "/images/Europaschule.JPG",
+  ],
+  [
+    (title) => title.startsWith("Friedensschule"),
+    "/images/Friedensschule vorne.JPG",
+  ],
+];
+
+const withLocalSchoolImage = (project: Project): Project => {
+  if (project.type !== 2) {
+    return project;
+  }
+
+  const override = localSchoolImageByTitle.find(([matches]) => matches(project.title));
+  if (!override) {
+    return project;
+  }
+
+  return {
+    ...project,
+    imageUrl: override[1],
+  };
+};
+
+const withLocalSchoolImages = (content: ProjectsContent): ProjectsContent => ({
+  ...content,
+  schools: content.schools.map(withLocalSchoolImage),
+});
+
+export type GatewayProjectDetailResult = {
+  results: [Project & { _category: ProjectCategory }];
+  _category: ProjectCategory;
+  seo: ProjectsContent["seo"];
+};
+
+const withCategory = (projects: Project[], category: ProjectCategory) =>
+  projects.map((project) => ({
+    ...project,
+    _category: category,
+  }));
+
+export const loadGatewayProjectDetailContent = async (
+  language: string,
+  id: string,
+  fetcher: ProjectFetcher = fetchGatewayJson,
+): Promise<GatewayProjectDetailResult> => {
+  const firstData = withLocalSchoolImages(
+    await fetcher("/api/content/projects", projectsContentSchema, {
+      lang: language,
+      pageNumber: 1,
+      pageSize: 100,
+    }),
+  );
+
+  const firstPageProjects = [
+    ...withCategory(firstData.featuredProjects, "featured"),
+    ...withCategory(firstData.schools, "schools"),
+    ...withCategory(firstData.businesses.results, "marketplace"),
+  ];
+
+  const firstPageMatch = firstPageProjects.find((entry) => entry.id === id);
+
+  if (firstPageMatch) {
+    return {
+      results: [firstPageMatch],
+      _category: firstPageMatch._category,
+      seo: firstData.seo,
+    };
+  }
+
+  let pageNumber = 2;
+  let pageCount = firstData.businesses.pageCount;
+
+  while (pageNumber <= pageCount) {
+    const data = await fetcher("/api/content/projects", projectsContentSchema, {
+      lang: language,
+      pageNumber,
+      pageSize: 100,
+    });
+
+    const project = withCategory(withLocalSchoolImages(data).businesses.results, "marketplace").find(
+      (entry) => entry.id === id,
+    );
+
+    if (project) {
+      return {
+        results: [project],
+        _category: project._category,
+        seo: firstData.seo,
+      };
+    }
+
+    pageCount = data.businesses.pageCount;
+    pageNumber += 1;
+  }
+
+  throw new Error(`Project with ID ${id} not found`);
+};
 
 const useContentLanguage = () => {
   const { i18n } = useTranslation();
@@ -40,7 +155,16 @@ export const useGatewayProjectsContent = (pageNumber: number, pageSize: number) 
         lang: language,
         pageNumber,
         pageSize,
-      }),
+      }).then(withLocalSchoolImages),
+  });
+};
+
+export const useGatewayProjectDetailContent = (id: string) => {
+  const language = useContentLanguage();
+  return useQuery({
+    queryKey: ["gateway-content", "projects", "detail", language, id],
+    enabled: isGatewayPublicContentEnabled && id.length > 0,
+    queryFn: () => loadGatewayProjectDetailContent(language, id),
   });
 };
 

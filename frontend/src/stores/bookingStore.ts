@@ -1,6 +1,28 @@
 import { create } from "zustand"
 
+export type BookingPrice = {
+  price: string;
+  interval?: string;
+  category?: string;
+};
+
+export type BookingAttachment = {
+  title: string;
+  url: string;
+  type?: string;
+};
+
+export type BookingAvailability = {
+  bookableId: string;
+  title: string;
+  isAvailable: boolean;
+  totalCapacity: number | null;
+  booked: number | null;
+  remaining: number | null;
+};
+
 export type Ticket = {
+  tenantId: string;
   title: string;
   description: string;
   location: string;
@@ -8,17 +30,14 @@ export type Ticket = {
   flags?: string[];
   autoCommitNote?: string;
   price?: string;
-    prices: {
-    price: string;
-    interval?: string;
-    category?: string;
-  }[];
+  prices: BookingPrice[];
   bookingUrl: string;
   bkid: string;
   imgUrl: string;
 };
 
 export type Booking = {
+  tenantId: string;
   title: string;
   description: string;
   location: string;
@@ -26,17 +45,16 @@ export type Booking = {
   imgUrl: string;
   bookingUrl: string;
   price: string;
-  prices: {
-    price: string;
-    interval?: string;
-    category?: string;
-  }[];
+  prices: BookingPrice[];
   category: string;
   flags?: string[];
   bkid?: string;
   autoCommitNote?: string;
   tickets?: Ticket[];
   bookings?: Booking[];
+  requiresLogin?: boolean;
+  isBookable?: boolean;
+  attachments?: BookingAttachment[];
 };
 
 type BookingStore = {
@@ -45,6 +63,7 @@ type BookingStore = {
   setBookings: (bookings: Booking[]) => void;
   addBookings: (bookings: Booking[]) => void;
   markProcessedTenants: (tenantId: string) => void;
+  reset: () => void;
 }
 
 export const useBookingStore = create<BookingStore>((set) => ({
@@ -65,4 +84,9 @@ export const useBookingStore = create<BookingStore>((set) => ({
 
       return { bookings: unique };
     }),
+  reset: () =>
+    set(() => ({
+      bookings: [],
+      processedTenants: new Set<string>(),
+    })),
 }));

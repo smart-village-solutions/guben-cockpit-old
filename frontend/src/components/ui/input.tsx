@@ -5,6 +5,36 @@ import { cn } from "@/lib/utils";
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
+export const isValidFloatInput = (value: string) => {
+  let index = 0;
+  let seenDecimalPoint = false;
+
+  if (value[0] === "-") {
+    if (value.length === 1) {
+      return true;
+    }
+    index = 1;
+  }
+
+  for (; index < value.length; index += 1) {
+    const char = value[index];
+
+    if (char === ".") {
+      if (seenDecimalPoint) {
+        return false;
+      }
+      seenDecimalPoint = true;
+      continue;
+    }
+
+    if (char < "0" || char > "9") {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
     return (
@@ -38,7 +68,7 @@ const FloatInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"inpu
         }
 
         // Validate input: Allow only numbers and a single decimal point
-        if (/^-?\d*\.?\d*$/.test(value)) {
+        if (isValidFloatInput(value)) {
           onChange(value as any); // Pass string to allow incomplete numbers like "10."
         }
       }

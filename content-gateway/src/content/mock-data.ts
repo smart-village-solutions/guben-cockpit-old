@@ -5,6 +5,7 @@ import type {
   HomeContent,
   MapContent,
   ProjectsContent,
+  PublicContentBundle,
   SeoMetadata,
 } from "../../../shared/public-content/contracts.js";
 
@@ -175,6 +176,49 @@ export const mockHomeContent: HomeContent = {
     dropdowns: sharedDropdowns,
   },
   seo: createSeo("/", "Willkommen in Guben", "Öffentliche Inhalte werden serverseitig über das Content Gateway ausgeliefert."),
+};
+
+export const mockPublicContentBundle: PublicContentBundle = {
+  home: {
+    page: mockHomeContent.page,
+    dropdowns: sharedDropdowns,
+    cards: [
+      {
+        id: "c7fd6f6c-8975-4eac-b69e-6ef89f8ea5f6",
+        dropdownId: "1d4d8ba8-82a9-4b93-a8ff-ec8b6da08a8e",
+        dropdownTitle: "Stadtleben",
+        tabId: "60bbd0df-2cf4-4ed7-a128-9e6c26f095f9",
+        tabTitle: "Mobilität",
+        sequence: 1,
+        title: "Bus und Bahn",
+        description: "Verbindungen, Haltestellen und barrierearme Zugänge.",
+        imageUrl: null,
+        imageAlt: null,
+        button: {
+          title: "Fahrplan öffnen",
+          url: "https://www.guben.de/fahrplan",
+          openInNewTab: true,
+        },
+      },
+    ],
+  },
+  projects: {
+    page: mockProjectsContent.page,
+    items: [
+      {
+        ...mockProjectsContent.featuredProjects[0]!,
+        category: "featured",
+      },
+      {
+        ...mockProjectsContent.schools[0]!,
+        category: "school",
+      },
+      {
+        ...mockProjectsContent.businesses.results[0]!,
+        category: "business",
+      },
+    ],
+  },
 };
 
 export const mockEventsContent = {

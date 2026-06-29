@@ -1,17 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 import tailwindcssAnimate from "tailwindcss-animate";
-import tailwindlineclamp from "@tailwindcss/line-clamp";
 import type { Config } from 'tailwindcss'
 
 export default {
   plugins: [
-    tailwindcssAnimate,
-    tailwindlineclamp
+    tailwindcssAnimate
   ],
   darkMode: ['class'],
   content: [
-    './src/pages/**/*.{html,js,jsx,ts,tsx}',
-    './src/components/**/*.{html,js,jsx,ts,tsx}'
+    './src/**/*.{html,js,jsx,ts,tsx}'
   ],
   theme: {
     extend: {

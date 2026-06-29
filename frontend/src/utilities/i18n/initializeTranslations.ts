@@ -5,21 +5,36 @@ import { Language } from './Languages';
 import i18next from 'i18next';
 import { FetchInterceptor } from "@/utilities/fetchApiExtensions";
 
+const localeModules = import.meta.glob<{ default: Record<string, unknown> }>("../../assets/locales/*/*.json");
+
+const loadLocaleModule = async (language: string, namespace: string) => {
+  const loader = localeModules[`../../assets/locales/${language}/${namespace}.json`];
+
+  if (!loader) {
+    throw new Error(`Missing locale module for ${language}/${namespace}`);
+  }
+
+  const module = await loader();
+  return module.default;
+};
+
 i18next
   .use(initReactI18next)
   .use(LanguageDetector)
-  .use(resourcesToBackend((language: string, namespace: string) => import(`../../assets/locales/${language}/${namespace}.json`)))
+  .use(resourcesToBackend(loadLocaleModule))
   .init({
     load: "languageOnly",
+    ns: ["common"],
     defaultNS: "common",
+    fallbackNS: "common",
     supportedLngs: Object.keys(Language),
     fallbackLng: Language.de,
-    debug: true,
+    debug: import.meta.env.DEV,
 
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
-    saveMissing: true,
+    saveMissing: import.meta.env.DEV,
     missingKeyHandler: (lngs, ns, key) =>
       console.error(`Translation for key '${ns}/${key}' in languages: ${lngs} is missing`)
   });

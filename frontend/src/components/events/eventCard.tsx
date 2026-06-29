@@ -1,185 +1,154 @@
+import { BaseImgTag } from "@/components/ui/BaseImgTag";
+import { GenericCard } from "@/components/ui/GenericCard";
 import type { Event } from "@shared/public-content/contracts";
 import { CaretLeftIcon, CaretRightIcon } from "@radix-ui/react-icons";
 import { Link } from "@tanstack/react-router";
-import { ArrowRightIcon, ClockIcon, MapPinIcon } from "lucide-react";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { ClockIcon, MapPinIcon } from "lucide-react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getEventImage } from "@/lib/DefaultEventImage";
-import DOMPurify from "dompurify";
+import sanitizeHtml from "sanitize-html";
+import { formatEventDateRange } from "@/utilities/eventDateRange";
+import { formatEventLocation } from "@/utilities/location";
 import { TranslatedHtml, TranslatedText } from "@/utilities/translateUtils";
+import { getEventImage } from "@/lib/DefaultEventImage";
 
-type TEventCardContext = { event: Event }
-const EventCardContext = createContext<TEventCardContext | undefined>(undefined);
+import { containsHtmlMarkup, isBookingEvent } from "./eventPresentation";
 
-const useEventCard = () => {
-  const context = useContext(EventCardContext);
-  if (!context) throw new Error("Component must be used within an EventCard");
-  return context;
+interface EventCardProps {
+  event: Event;
 }
 
-function EventCard({event}: { event: Event }) {
-  return (
-    <EventCardContext.Provider value={{event}}>
-      <div className="flex justify-between gap-8 p-8 w-full rounded-2xl h-80 space-y-4 shadow-md bg-white">
-        <div className="flex-1 content-center">
-          {event.images.length > 0 ? (
-            <EventCard.ImageBox/>
-          ) : (
-            <EventCard.DefaultCategoryImage/>
-          )}
-        </div>
+type EventImageCarouselProps = {
+  event: Event;
+  selectedImage: number;
+  onSelectImage: (nextIndex: number) => void;
+};
 
-        <div className="flex-1 space-y-2">
-          <EventCard.CategoryTags/>
-          <EventCard.Title/>
-          <EventCard.Description/>
-          <EventCard.MoreInfoButton/>
-        </div>
+const EventImageCarousel = ({ event, selectedImage, onSelectImage }: EventImageCarouselProps) => {
+  if (event.images.length > 0 && event.images[selectedImage]) {
+    return (
+      <div className="text-white relative flex h-full w-full items-center justify-center overflow-hidden bg-[#808080] group">
+        {selectedImage > 0 && event.images.length > 1 && (
+          <button
+            onClick={() => onSelectImage(selectedImage - 1)}
+            className="absolute left-0 top-0 z-10 opacity-0 flex items-center h-full px-2 bg-black bg-opacity-25 hover:cursor-pointer group-hover:opacity-100 transition-opacity"
+            aria-label="Previous image"
+          >
+            <CaretLeftIcon className="size-8" />
+          </button>
+        )}
 
-        <div className="flex-1 space-y-2">
-          <EventCard.Location/>
-          <EventCard.Dates/>
-        </div>
+        <BaseImgTag
+          className="w-full h-full object-contain"
+          src={event.images[selectedImage].previewUrl}
+          alt="Event"
+        />
+
+        {selectedImage < event.images.length - 1 && event.images.length > 1 && (
+          <button
+            onClick={() => onSelectImage(selectedImage + 1)}
+            className="absolute right-0 top-0 z-10 opacity-0 flex items-center h-full px-2 bg-black bg-opacity-25 hover:cursor-pointer group-hover:opacity-100 transition-opacity"
+            aria-label="Next image"
+          >
+            <CaretRightIcon className="size-8" />
+          </button>
+        )}
       </div>
-    </EventCardContext.Provider>
-  )
-}
-
-EventCard.Title = () => {
-  const {event} = useEventCard();
-  if ((event as any).isBookingEvent) {
-    return (
-      <h2>
-        <TranslatedText text={event.title}/>
-      </h2>
-    )
-  }
-
-  return (
-    <h2>{event.title}</h2>
-  )
-}
-
-EventCard.Description = () => {
-  const {event} = useEventCard();
-  if ((event as any).isBookingEvent) {
-    return (
-      <TranslatedHtml
-        className={"text-muted-foreground line-clamp-2"}
-        text={event.description}
-      />
     );
   }
-
-  return (
-    <p className="text-muted-foreground line-clamp-2">{event.description}</p>
-  );
-}
-
-EventCard.ImageBox = () => {
-  const {event} = useEventCard();
-  const [selectedImage, setSelectedImage] = useState(0);
-
-  const adjustIndex = useCallback((toAdd: number) => setSelectedImage(
-    curr => Math.max(event.images.length - 1, Math.min(0, curr + toAdd))
-  ), []);
-
-  return event.images[selectedImage] && (
-    <div className="text-white relative max-h-full rounded-lg overflow-hidden group">
-      {(selectedImage > 0 && event.images.length > 1) && (
-        <span
-          onClick={() => adjustIndex(-1)}
-          className="absolute left-0 top-0 opacity-0 flex items-center h-full px-1 animate-in duration-150 bg-black bg-opacity-25 hover:cursor-pointer group-hover:opacity-100 transition-opacity"
-        >
-          <CaretLeftIcon className="size-10"/>
-        </span>
-      )}
-
-      <img
-        className="h-full object-center object-cover m-auto rounded-lg"
-        src={event.images[selectedImage].previewUrl}
-      />
-      {(event.images.length > 1 && selectedImage < event.images.length - 1) && (
-        <span
-          onClick={() => adjustIndex(1)}
-          className="absolute right-0 top-0 opacity-0 flex items-center h-full px-1 animate-in duration-150 bg-black bg-opacity-25 hover:cursor-pointer group-hover:opacity-100 transition-opacity"
-        >
-          <CaretRightIcon className="size-10"/>
-        </span>
-      )}
-    </div>
-  )
-}
-
-EventCard.DefaultCategoryImage = () => {
-  const {event} = useEventCard();
 
   const firstCategoryName = event.categories?.[0]?.name ?? null;
   const image = getEventImage(firstCategoryName);
 
-  return image != null ? (
-    <div className="rounded-lg h-full flex items-center justify-center overflow-hidden">
-      <img
-        className="max-h-full max-w-full object-contain"
+  return image ? (
+    <div className="flex h-full w-full items-center justify-center bg-[#808080]">
+      <BaseImgTag
+        className="w-full h-full object-contain"
         src={image}
+        alt={firstCategoryName || "Event category"}
       />
     </div>
   ) : null;
-}
+};
 
-EventCard.CategoryTags = () => {
-  const {event} = useEventCard();
+function EventCard({ event }: EventCardProps) {
+  const bookingEvent = isBookingEvent(event);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const { t } = useTranslation("common");
 
-  return (
-    <div className="flex flex-wrap gap-2">
-      {event.categories.map(c => (
-        <span key={c.id} className="border text-sm text-muted-foreground rounded-full py-1 px-2">{c.name}</span>
-      ))}
+  const categoryTags = event.categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+  }));
+
+  const description = bookingEvent ? (
+    <TranslatedHtml
+      className="text-sm text-gray-600 line-clamp-3"
+      text={event.description}
+    />
+  ) : containsHtmlMarkup(event.description) ? (
+    sanitizeHtml(event.description)
+  ) : (
+    <p className="text-sm text-gray-600 line-clamp-3">{event.description}</p>
+  );
+
+  const [startDate, endDate] = useMemo(
+    () => [new Date(event.startDate), new Date(event.endDate)],
+    [event]
+  );
+
+  const extraInfo: ReactNode = (
+    <div className="space-y-2 flex flex-col">
+      <div className="flex items-start gap-2 text-sm">
+        <MapPinIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <p className="line-clamp-2">{formatEventLocation(event.location)}</p>
+      </div>
+      <div className="flex items-start gap-2 text-sm">
+        <ClockIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <p className="line-clamp-2">{formatEventDateRange(startDate, endDate)}</p>
+      </div>
     </div>
-  )
-}
+  );
 
-EventCard.Dates = () => {
-  const {event} = useEventCard();
+  const card = (
+    <GenericCard
+      customImageElement={
+        <EventImageCarousel
+          event={event}
+          selectedImage={selectedImage}
+          onSelectImage={(nextIndex) => setSelectedImage(nextIndex)}
+        />
+      }
+      title={event.title}
+      titleSize="text-lg"
+      description={description}
+      descriptionAsHtml={!bookingEvent && containsHtmlMarkup(event.description)}
+      descriptionLines={3}
+      tags={categoryTags}
+      extraInfo={extraInfo}
+      buttonLabel="Mehr erfahren"
+      className="relative overflow-hidden"
+    />
+  );
 
-  const [startDate, endDate] = useMemo(() => [
-    new Date(event.startDate),
-    new Date(event.endDate)
-  ], [event]);
-
-  return (
-    <div className="flex items-center gap-2 text-muted-foreground">
-      <ClockIcon className={"size-4"}/>
-      <p className="">{startDate.formatDateTime()} - {endDate.formatDateTime()}</p>
-    </div>
-  )
-}
-
-EventCard.Location = () => {
-  const {event} = useEventCard();
-
-  return (
-    <div className="flex gap-2 items-center text-muted-foreground">
-      <MapPinIcon className="size-4"/>
-      <p className="">{event.location.street}, {event.location.zip} {event.location.city}</p>
-    </div>
-  )
-}
-
-EventCard.MoreInfoButton = () => {
-  const {event} = useEventCard();
-  const {t} = useTranslation("common");
-
-  const linkProps = (event as any).isBookingEvent
-    ? { to: "/events/" + event.id, state: { event } }
-    : { to: "/events/" + event.id };
+  if (bookingEvent) {
+    return (
+      <Link
+        to="/events/$eventId"
+        params={{ eventId: event.id }}
+        state={(prev) => ({ ...(prev ?? {}), event })}
+        className="h-full w-full"
+      >
+        {card}
+      </Link>
+    );
+  }
 
   return (
-    <Link {...linkProps} className={"flex flex-nowrap gap-2 items-center border w-min rounded-md px-2 py-1 text-muted-foreground hover:text-red-500 hover:bg-red-50"}>
-      <p className="text-nowrap">{t("MoreInformation")}</p>
-      <ArrowRightIcon className="size-4"/>
+    <Link to="/events/$eventId" params={{ eventId: event.id }} className="h-full w-full">
+      {card}
     </Link>
-  )
+  );
 }
 
 export default EventCard;

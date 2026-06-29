@@ -3,9 +3,9 @@ import cors from "@fastify/cors";
 import { z } from "zod";
 
 import { Config } from "./config.js";
+import type { PublicContentRepository } from "./content/content-repository-contract.js";
 import { GatewayError, isGatewayError } from "./errors.js";
 import { MetricsRegistry } from "./metrics.js";
-import { PublicContentRepository } from "./content/content-repository.js";
 
 const pageQuerySchema = z.object({
   lang: z.string().optional(),
@@ -118,6 +118,13 @@ export function createApp(options: {
       resolveLanguage(query.lang, request.headers["accept-language"], options.config),
       query.pageNumber,
       query.pageSize,
+    );
+  });
+
+  app.get("/api/content/public", async (request) => {
+    const query = pageQuerySchema.parse(request.query);
+    return options.repository.getPublicContent(
+      resolveLanguage(query.lang, request.headers["accept-language"], options.config),
     );
   });
 

@@ -6,6 +6,8 @@ import {
   MapContent,
   PageHero,
   Project,
+  PublicContentHomeCard,
+  PublicContentProjectItem,
   dashboardContentSchema,
   dashboardDropdownSchema,
   eventDetailContentSchema,
@@ -183,6 +185,31 @@ export class PostgrestContentMapper {
       imageCredits: row.image_credits,
       published: row.published,
     });
+  }
+
+  public publicProjectFromRow(row: ProjectRow, language: string): PublicContentProjectItem {
+    const project = this.projectFromRow(row, language);
+    const categoryByType: Record<number, PublicContentProjectItem["category"]> = {
+      0: "business",
+      1: "featured",
+      2: "school",
+    };
+    const category = categoryByType[row.type];
+
+    if (!category) {
+      throw new GatewayError({
+        code: "INVALID_UPSTREAM_PAYLOAD",
+        message: `Unsupported project type: ${row.type}`,
+        statusCode: 502,
+        upstream: "postgrest",
+        retryable: false,
+      });
+    }
+
+    return {
+      ...project,
+      category,
+    };
   }
 
   public eventFromRow(
@@ -413,5 +440,25 @@ export class PostgrestContentMapper {
       event,
       seo: createSeo(this.config, `/events/${id}`, event.title, event.description),
     });
+  }
+
+  public flattenedHomeCards(dropdowns: DashboardContent["dropdowns"]): PublicContentHomeCard[] {
+    return dropdowns.flatMap((dropdown) =>
+      dropdown.tabs.flatMap((tab) =>
+        tab.informationCards.map((card, cardIndex) => ({
+          id: card.id,
+          dropdownId: dropdown.id,
+          dropdownTitle: dropdown.title,
+          tabId: tab.id,
+          tabTitle: tab.title,
+          sequence: cardIndex + 1,
+          title: card.title,
+          description: card.description,
+          imageUrl: card.imageUrl,
+          imageAlt: card.imageAlt,
+          button: card.button,
+        })),
+      ),
+    );
   }
 }

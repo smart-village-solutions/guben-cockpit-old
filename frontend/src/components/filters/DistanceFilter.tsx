@@ -9,7 +9,7 @@ interface Props {
   className?: string;
 }
 
-export const DistanceFilter = ({ value = "10", onChange, className }: Props) => {
+export const DistanceFilter = ({ value, onChange, className }: Props) => {
   const { t } = useTranslation("common");
 
   const options = [

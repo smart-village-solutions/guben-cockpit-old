@@ -15,34 +15,38 @@ export const GatewayHomePage = () => {
     return <PublicContentDisabledState />;
   }
 
-  if (query.isPending) {
-    return (
-      <main className="w-full h-full flex flex-1 pl-20 pt-5 pr-20 pb-4 flex-col items-center">
-        <article className="max-w-[1600px] w-full pb-5 space-y-3">
-          <Skeleton className="h-10 w-80" />
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-2/3" />
-        </article>
-      </main>
-    );
-  }
-
-  if (query.error || !query.data) {
+  // Show error only if query failed, not just loading
+  if (query.error && !query.data) {
     return <PublicContentErrorState error={query.error} onRetry={() => void query.refetch()} />;
   }
 
+  // Progressive loading: show content immediately if available, skeleton only while loading
+  const data = query.data;
+
   return (
     <main className="w-full h-full flex flex-1 pl-20 pt-5 pr-20 pb-4 flex-col items-center">
-      <article className="max-w-[1600px] w-full pb-5">
-        <div className="flex gap-3 flex-col">
-          <h1 className="text-gubenAccent font-poppins text-h1 font-bold">
-            {query.data.page.title}
-          </h1>
-          <Markdown>{query.data.page.description}</Markdown>
-        </div>
+      <article className="max-w-[1600px] w-full pb-5 space-y-3">
+        {data ? (
+          <>
+            <h1 className="text-gubenAccent font-poppins text-h1 font-bold">
+              {data.page.title}
+            </h1>
+            <Markdown>{data.page.description}</Markdown>
+          </>
+        ) : (
+          <>
+            <Skeleton className="h-10 w-80" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-2/3" />
+          </>
+        )}
       </article>
       <section className="max-w-[1600px] w-full">
-        <DashboardDropdownTabs dropdowns={query.data.dashboard.dropdowns} />
+        {data ? (
+          <DashboardDropdownTabs dropdowns={data.dashboard.dropdowns} />
+        ) : (
+          <Skeleton className="h-96 w-full" />
+        )}
       </section>
     </main>
   );
