@@ -13,14 +13,10 @@ import { GatewayError } from "../errors.js";
 import type { SmartVillageEventRecord } from "../upstream/smart-village-types.js";
 import { TTLCache } from "../upstream/ttl-cache.js";
 import type { EventFilters } from "./content-repository-contract.js";
-import { distanceInKm } from "./postgrest-content-mapper.js";
+import { filterEvents } from "./event-filters.js";
 import { SmartVillageEventMapper } from "./smart-village-event-mapper.js";
 
 const DEFAULT_CACHE_TTL_MS = 60_000;
-const GUBEN_COORDINATES = {
-  latitude: 51.95042,
-  longitude: 14.7143,
-} as const;
 
 const EVENT_RECORD_FIELDS = `
   id
@@ -210,7 +206,7 @@ export class SmartVillageEventRepository {
       .flatMap((record) => this.mapRecordWithDiagnostics(record, "eventRecords"))
       .filter((event) => event.published);
 
-    results = this.filterEvents(results, filters);
+    results = filterEvents(results, filters);
     this.sortEvents(results, filters);
 
     const categories = Array.from(
@@ -339,51 +335,6 @@ export class SmartVillageEventRepository {
     }
 
     return record.date ? 1 : 0;
-  }
-
-  private filterEvents(events: Event[], filters: EventFilters) {
-    let results = events;
-
-    if (filters.title) {
-      const needle = filters.title.toLowerCase();
-      results = results.filter((event) => event.title.toLowerCase().includes(needle));
-    }
-
-    if (filters.category) {
-      results = results.filter((event) =>
-        event.categories.some((category) => category.id === filters.category),
-      );
-    }
-
-    const startDate = filters.startDate ? new Date(filters.startDate) : undefined;
-    const endDate = filters.endDate ? new Date(filters.endDate) : undefined;
-    if (startDate || endDate) {
-      results = results.filter((event) => {
-        const eventStart = new Date(event.startDate);
-        const eventEnd = new Date(event.endDate);
-        return (!startDate || eventEnd >= startDate) && (!endDate || eventStart <= endDate);
-      });
-    }
-
-    const maxDistance = filters.distance;
-    if (maxDistance && maxDistance > 0) {
-      results = results.filter((event) => {
-        if (!event.coordinates) {
-          return false;
-        }
-
-        return (
-          distanceInKm(
-            GUBEN_COORDINATES.latitude,
-            GUBEN_COORDINATES.longitude,
-            event.coordinates.latitude,
-            event.coordinates.longitude,
-          ) <= maxDistance
-        );
-      });
-    }
-
-    return results;
   }
 
   private sortEvents(events: Event[], filters: EventFilters) {
