@@ -1,0 +1,98 @@
+name: sonar
+
+on:
+  pull_request:
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install shared dependencies
+        run: npm ci --prefix shared
+
+      - name: Install content-gateway dependencies
+        run: npm ci --prefix content-gateway
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Generate coverage reports
+        run: CI_SONAR=true npm run test:coverage
+
+      - name: Normalize LCOV paths for monorepo Sonar scan
+        run: |
+          sed -i 's#^SF:public-content/#SF:shared/public-content/#' shared/coverage/lcov.info
+          sed -i 's#^SF:src/#SF:content-gateway/src/#' content-gateway/coverage/lcov.info
+          sed -i 's#^SF:src/#SF:frontend/src/#' frontend/coverage/lcov.info
+
+      - name: Validate Sonar configuration
+        run: |
+          test -n "$SONAR_TOKEN"
+          if [ -z "$SONAR_HOST_URL" ] && [ -z "$SONAR_ORGANIZATION" ]; then
+            echo "Set either SONAR_HOST_URL for SonarQube or SONAR_ORGANIZATION for SonarCloud."
+            exit 1
+          fi
+          test -f shared/coverage/lcov.info
+          test -f content-gateway/coverage/lcov.info
+          test -f frontend/coverage/lcov.info
+          grep -q '^SF:shared/public-content/' shared/coverage/lcov.info
+          grep -q '^SF:content-gateway/src/' content-gateway/coverage/lcov.info
+          grep -q '^SF:frontend/src/' frontend/coverage/lcov.info
+
+      - name: Build Sonar scanner args
+        id: sonar_args
+        run: |
+          args=""
+          sonar_host_url="$SONAR_HOST_URL"
+
+          if [ -z "$sonar_host_url" ] && [ -n "$SONAR_ORGANIZATION" ]; then
+            sonar_host_url="https://sonarcloud.io"
+          fi
+
+          if [ -n "$SONAR_PROJECT_KEY" ]; then
+            args="$args -Dsonar.projectKey=$SONAR_PROJECT_KEY"
+          fi
+          if [ -n "$SONAR_ORGANIZATION" ]; then
+            args="$args -Dsonar.organization=$SONAR_ORGANIZATION"
+          fi
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+          echo "host_url=$sonar_host_url" >> "$GITHUB_OUTPUT"
+
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ steps.sonar_args.outputs.host_url }}
+        with:
+          args: ${{ steps.sonar_args.outputs.args }}
+
+      - name: SonarQube quality gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 10
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ steps.sonar_args.outputs.host_url }}

@@ -11,6 +11,7 @@ interface IProps {
   project: Project;
   children: React.ReactNode;
   className?: string;
+  school?: boolean;
 }
 
 export default function ProjectDialog({ project, children, className }: IProps) {
@@ -69,9 +70,7 @@ export default function ProjectDialog({ project, children, className }: IProps) 
           </DialogHeader>
 
           {!isNullOrUndefinedOrWhiteSpace(project.description) &&
-            <DialogDescription>
-              <div className="text-neutral-800" dangerouslySetInnerHTML={{ __html: sanitizeHtml(project.description!) }} />
-            </DialogDescription>
+            <div className="text-neutral-800 text-base" dangerouslySetInnerHTML={{ __html: sanitizeHtml(project.description!) }} />
           }
 
           {!isNullOrUndefinedOrWhiteSpace(project.fullText) &&

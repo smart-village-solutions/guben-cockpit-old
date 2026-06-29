@@ -5,8 +5,8 @@ export function getEnumKeyByEnumValue<T extends { [index: string]: string }>(myE
   return keys.length > 0 ? keys[0] : null;
 }
 
-export function tryGetEnumValue<T extends HashMap<unknown>>(value: Option<string>, enumObject: T, defaultValue?: Option<string>): T[keyof T] {
-  if (value !== null) { // if a value has been passed, check whether it is a valid enum value as either string or number
+export function tryGetEnumValue<T extends HashMap<unknown>>(value: Option<string> | undefined, enumObject: T, defaultValue?: Option<string>): T[keyof T] {
+  if (value !== null && value !== undefined) { // if a value has been passed, check whether it is a valid enum value as either string or number
     if (isNaN(+value)) {
       if (Object.values(enumObject).includes(value)) {
         return value as T[keyof T]

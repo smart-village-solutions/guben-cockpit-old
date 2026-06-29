@@ -158,6 +158,38 @@ export const dashboardContentSchema = z.object({
   seo: seoMetadataSchema,
 });
 
+export const publicContentHomeCardSchema = z.object({
+  id: z.string(),
+  dropdownId: z.string(),
+  dropdownTitle: z.string(),
+  tabId: z.string(),
+  tabTitle: z.string(),
+  sequence: z.number().int(),
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  imageAlt: z.string().nullable(),
+  button: buttonSchema.nullable(),
+});
+
+export const publicContentProjectCategorySchema = z.enum(["featured", "school", "business"]);
+
+export const publicContentProjectItemSchema = projectSchema.extend({
+  category: publicContentProjectCategorySchema,
+});
+
+export const publicContentBundleSchema = z.object({
+  home: z.object({
+    page: pageHeroSchema,
+    dropdowns: z.array(dashboardDropdownSchema),
+    cards: z.array(publicContentHomeCardSchema),
+  }),
+  projects: z.object({
+    page: pageHeroSchema,
+    items: z.array(publicContentProjectItemSchema),
+  }),
+});
+
 export const projectsContentSchema = z.object({
   page: pageHeroSchema,
   featuredProjects: z.array(projectSchema),
@@ -208,7 +240,7 @@ export const gatewayErrorSchema = z.object({
       "INTERNAL_ERROR",
     ]),
     message: z.string(),
-    upstream: z.enum(["cms", "postgrest", "gateway"]),
+    upstream: z.enum(["postgrest", "smartvillage", "gateway"]),
     retryable: z.boolean(),
     requestId: z.string(),
   }),
@@ -232,4 +264,8 @@ export type MapContent = z.infer<typeof mapContentSchema>;
 export type PageHero = z.infer<typeof pageHeroSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type ProjectsContent = z.infer<typeof projectsContentSchema>;
+export type PublicContentBundle = z.infer<typeof publicContentBundleSchema>;
+export type PublicContentHomeCard = z.infer<typeof publicContentHomeCardSchema>;
+export type PublicContentProjectCategory = z.infer<typeof publicContentProjectCategorySchema>;
+export type PublicContentProjectItem = z.infer<typeof publicContentProjectItemSchema>;
 export type SeoMetadata = z.infer<typeof seoMetadataSchema>;

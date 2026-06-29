@@ -1,0 +1,17 @@
+{
+  "name": "guben-cockpit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo for Guben Cockpit",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "typecheck": "cd frontend && npm run typecheck",
+    "test": "npm --prefix shared test && npm --prefix content-gateway test && npm --prefix frontend test && npm --prefix postgrest test",
+    "test:ci": "npm --prefix shared run test:coverage && npm --prefix content-gateway run test:coverage && npm --prefix frontend run test:coverage && npm --prefix postgrest test",
+    "test:coverage": "npm run test:ci"
+  }
+}

@@ -1,7 +1,8 @@
 import { CustomTooltip } from "@/components/general/Tooltip";
 import { DialogTrigger } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { Trash2Icon } from "lucide-react";
+
+import { IconButtonBase } from "./IconButtonBase";
 
 interface DeleteIconButtonProps {
   tooltip: string;
@@ -11,27 +12,29 @@ interface DeleteIconButtonProps {
   onClick?: () => void;
 }
 
-const IconButton = (props: { disabled?: boolean, onClick?: () => void }) => (
-  <div
-    onClick={props.disabled !== undefined && props.disabled ? undefined : props.onClick}
-    className={cn("rounded-full p-1.5 border size-8", props.disabled
+const IconButton = (props: { disabled?: boolean; onClick?: () => void; label: string }) => (
+  <IconButtonBase
+    disabled={props.disabled}
+    icon={Trash2Icon}
+    onClick={props.onClick}
+    label={props.label}
+    className={props.disabled
       ? "bg-gray-200 text-gray-400"
-      : "text-red-500 bg-white hover:cursor-pointer hover:bg-gray-200"
-    )}
-  >
-    <Trash2Icon className="size-full" />
-  </div>
-)
+      : "text-red-500 bg-white hover:cursor-pointer hover:bg-gray-200"}
+  />
+);
 
-export const DeleteIconButton = ({tooltip, dialogTrigger, disabled, disabledTooltip, onClick}: DeleteIconButtonProps) => {
+export const DeleteIconButton = ({ tooltip, dialogTrigger, disabled, disabledTooltip, onClick }: DeleteIconButtonProps) => {
+  const label = disabled ? disabledTooltip ?? tooltip : tooltip;
+
   return (
     <CustomTooltip text={disabled ? disabledTooltip ?? "" : tooltip}>
       {dialogTrigger
         ? (
           <DialogTrigger asChild>
-            <IconButton {...{ disabled }} />
+            <IconButton {...{ disabled, label }} />
           </DialogTrigger>
-        ) : <IconButton {...{ onclick, disabled }} />
+        ) : <IconButton {...{ onClick, disabled, label }} />
       }
     </CustomTooltip>
   );

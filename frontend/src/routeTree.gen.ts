@@ -15,9 +15,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as MapImport } from './routes/map'
 import { Route as EventsImport } from './routes/events'
+import { Route as BuilderPreviewImport } from './routes/builder-preview'
 import { Route as IndexImport } from './routes/index'
 import { Route as EventsIndexImport } from './routes/events/index'
 import { Route as BookingIndexImport } from './routes/booking/index'
+import { Route as ProjectsProjectIdImport } from './routes/projects/$projectId'
 import { Route as EventsEventIdImport } from './routes/events/$eventId'
 import { Route as BookingTitleImport } from './routes/booking/$title'
 import { Route as BookingRoomTitleImport } from './routes/booking/room/$title'
@@ -25,6 +27,9 @@ import { Route as BookingRoomTitleImport } from './routes/booking/room/$title'
 // Create Virtual Routes
 
 const ProjectsLazyImport = createFileRoute('/projects')()
+const ProjectsIndexLazyImport = createFileRoute('/projects/')()
+const ProjectsSchoolsLazyImport = createFileRoute('/projects/schools')()
+const ProjectsMarketplaceLazyImport = createFileRoute('/projects/marketplace')()
 
 // Create/Update Routes
 
@@ -36,10 +41,15 @@ const ProjectsLazyRoute = ProjectsLazyImport.update({
 const MapRoute = MapImport.update({
   path: '/map',
   getParentRoute: () => rootRoute,
-} as any)
+} as any).lazy(() => import('./routes/map.lazy').then((d) => d.Route))
 
 const EventsRoute = EventsImport.update({
   path: '/events',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BuilderPreviewRoute = BuilderPreviewImport.update({
+  path: '/builder-preview',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -48,30 +58,64 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const ProjectsIndexLazyRoute = ProjectsIndexLazyImport.update({
+  path: '/',
+  getParentRoute: () => ProjectsLazyRoute,
+} as any).lazy(() =>
+  import('./routes/projects/index.lazy').then((d) => d.Route),
+)
+
 const EventsIndexRoute = EventsIndexImport.update({
   path: '/',
   getParentRoute: () => EventsRoute,
-} as any)
+} as any).lazy(() => import('./routes/events/index.lazy').then((d) => d.Route))
 
 const BookingIndexRoute = BookingIndexImport.update({
   path: '/booking/',
   getParentRoute: () => rootRoute,
-} as any)
+} as any).lazy(() => import('./routes/booking/index.lazy').then((d) => d.Route))
+
+const ProjectsSchoolsLazyRoute = ProjectsSchoolsLazyImport.update({
+  path: '/schools',
+  getParentRoute: () => ProjectsLazyRoute,
+} as any).lazy(() =>
+  import('./routes/projects/schools.lazy').then((d) => d.Route),
+)
+
+const ProjectsMarketplaceLazyRoute = ProjectsMarketplaceLazyImport.update({
+  path: '/marketplace',
+  getParentRoute: () => ProjectsLazyRoute,
+} as any).lazy(() =>
+  import('./routes/projects/marketplace.lazy').then((d) => d.Route),
+)
+
+const ProjectsProjectIdRoute = ProjectsProjectIdImport.update({
+  path: '/$projectId',
+  getParentRoute: () => ProjectsLazyRoute,
+} as any).lazy(() =>
+  import('./routes/projects/$projectId.lazy').then((d) => d.Route),
+)
 
 const EventsEventIdRoute = EventsEventIdImport.update({
   path: '/$eventId',
   getParentRoute: () => EventsRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/events/$eventId.lazy').then((d) => d.Route),
+)
 
 const BookingTitleRoute = BookingTitleImport.update({
   path: '/booking/$title',
   getParentRoute: () => rootRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/booking/$title.lazy').then((d) => d.Route),
+)
 
 const BookingRoomTitleRoute = BookingRoomTitleImport.update({
   path: '/booking/room/$title',
   getParentRoute: () => rootRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/booking/room/$title.lazy').then((d) => d.Route),
+)
 
 // Populate the FileRoutesByPath interface
 
@@ -82,6 +126,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/builder-preview': {
+      id: '/builder-preview'
+      path: '/builder-preview'
+      fullPath: '/builder-preview'
+      preLoaderRoute: typeof BuilderPreviewImport
       parentRoute: typeof rootRoute
     }
     '/events': {
@@ -119,6 +170,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdImport
       parentRoute: typeof EventsImport
     }
+    '/projects/$projectId': {
+      id: '/projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof ProjectsProjectIdImport
+      parentRoute: typeof ProjectsLazyImport
+    }
+    '/projects/marketplace': {
+      id: '/projects/marketplace'
+      path: '/marketplace'
+      fullPath: '/projects/marketplace'
+      preLoaderRoute: typeof ProjectsMarketplaceLazyImport
+      parentRoute: typeof ProjectsLazyImport
+    }
+    '/projects/schools': {
+      id: '/projects/schools'
+      path: '/schools'
+      fullPath: '/projects/schools'
+      preLoaderRoute: typeof ProjectsSchoolsLazyImport
+      parentRoute: typeof ProjectsLazyImport
+    }
     '/booking/': {
       id: '/booking/'
       path: '/booking'
@@ -132,6 +204,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/events/'
       preLoaderRoute: typeof EventsIndexImport
       parentRoute: typeof EventsImport
+    }
+    '/projects/': {
+      id: '/projects/'
+      path: '/'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof ProjectsIndexLazyImport
+      parentRoute: typeof ProjectsLazyImport
     }
     '/booking/room/$title': {
       id: '/booking/room/$title'
@@ -158,39 +237,71 @@ const EventsRouteChildren: EventsRouteChildren = {
 const EventsRouteWithChildren =
   EventsRoute._addFileChildren(EventsRouteChildren)
 
+interface ProjectsLazyRouteChildren {
+  ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
+  ProjectsMarketplaceLazyRoute: typeof ProjectsMarketplaceLazyRoute
+  ProjectsSchoolsLazyRoute: typeof ProjectsSchoolsLazyRoute
+  ProjectsIndexLazyRoute: typeof ProjectsIndexLazyRoute
+}
+
+const ProjectsLazyRouteChildren: ProjectsLazyRouteChildren = {
+  ProjectsProjectIdRoute: ProjectsProjectIdRoute,
+  ProjectsMarketplaceLazyRoute: ProjectsMarketplaceLazyRoute,
+  ProjectsSchoolsLazyRoute: ProjectsSchoolsLazyRoute,
+  ProjectsIndexLazyRoute: ProjectsIndexLazyRoute,
+}
+
+const ProjectsLazyRouteWithChildren = ProjectsLazyRoute._addFileChildren(
+  ProjectsLazyRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/builder-preview': typeof BuilderPreviewRoute
   '/events': typeof EventsRouteWithChildren
   '/map': typeof MapRoute
-  '/projects': typeof ProjectsLazyRoute
+  '/projects': typeof ProjectsLazyRouteWithChildren
   '/booking/$title': typeof BookingTitleRoute
   '/events/$eventId': typeof EventsEventIdRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
+  '/projects/marketplace': typeof ProjectsMarketplaceLazyRoute
+  '/projects/schools': typeof ProjectsSchoolsLazyRoute
   '/booking': typeof BookingIndexRoute
   '/events/': typeof EventsIndexRoute
+  '/projects/': typeof ProjectsIndexLazyRoute
   '/booking/room/$title': typeof BookingRoomTitleRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/builder-preview': typeof BuilderPreviewRoute
   '/map': typeof MapRoute
-  '/projects': typeof ProjectsLazyRoute
   '/booking/$title': typeof BookingTitleRoute
   '/events/$eventId': typeof EventsEventIdRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
+  '/projects/marketplace': typeof ProjectsMarketplaceLazyRoute
+  '/projects/schools': typeof ProjectsSchoolsLazyRoute
   '/booking': typeof BookingIndexRoute
   '/events': typeof EventsIndexRoute
+  '/projects': typeof ProjectsIndexLazyRoute
   '/booking/room/$title': typeof BookingRoomTitleRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/builder-preview': typeof BuilderPreviewRoute
   '/events': typeof EventsRouteWithChildren
   '/map': typeof MapRoute
-  '/projects': typeof ProjectsLazyRoute
+  '/projects': typeof ProjectsLazyRouteWithChildren
   '/booking/$title': typeof BookingTitleRoute
   '/events/$eventId': typeof EventsEventIdRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
+  '/projects/marketplace': typeof ProjectsMarketplaceLazyRoute
+  '/projects/schools': typeof ProjectsSchoolsLazyRoute
   '/booking/': typeof BookingIndexRoute
   '/events/': typeof EventsIndexRoute
+  '/projects/': typeof ProjectsIndexLazyRoute
   '/booking/room/$title': typeof BookingRoomTitleRoute
 }
 
@@ -198,43 +309,58 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/builder-preview'
     | '/events'
     | '/map'
     | '/projects'
     | '/booking/$title'
     | '/events/$eventId'
+    | '/projects/$projectId'
+    | '/projects/marketplace'
+    | '/projects/schools'
     | '/booking'
     | '/events/'
+    | '/projects/'
     | '/booking/room/$title'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/builder-preview'
     | '/map'
-    | '/projects'
     | '/booking/$title'
     | '/events/$eventId'
+    | '/projects/$projectId'
+    | '/projects/marketplace'
+    | '/projects/schools'
     | '/booking'
     | '/events'
+    | '/projects'
     | '/booking/room/$title'
   id:
     | '__root__'
     | '/'
+    | '/builder-preview'
     | '/events'
     | '/map'
     | '/projects'
     | '/booking/$title'
     | '/events/$eventId'
+    | '/projects/$projectId'
+    | '/projects/marketplace'
+    | '/projects/schools'
     | '/booking/'
     | '/events/'
+    | '/projects/'
     | '/booking/room/$title'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BuilderPreviewRoute: typeof BuilderPreviewRoute
   EventsRoute: typeof EventsRouteWithChildren
   MapRoute: typeof MapRoute
-  ProjectsLazyRoute: typeof ProjectsLazyRoute
+  ProjectsLazyRoute: typeof ProjectsLazyRouteWithChildren
   BookingTitleRoute: typeof BookingTitleRoute
   BookingIndexRoute: typeof BookingIndexRoute
   BookingRoomTitleRoute: typeof BookingRoomTitleRoute
@@ -242,9 +368,10 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BuilderPreviewRoute: BuilderPreviewRoute,
   EventsRoute: EventsRouteWithChildren,
   MapRoute: MapRoute,
-  ProjectsLazyRoute: ProjectsLazyRoute,
+  ProjectsLazyRoute: ProjectsLazyRouteWithChildren,
   BookingTitleRoute: BookingTitleRoute,
   BookingIndexRoute: BookingIndexRoute,
   BookingRoomTitleRoute: BookingRoomTitleRoute,
@@ -263,6 +390,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/builder-preview",
         "/events",
         "/map",
         "/projects",
@@ -273,6 +401,9 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/builder-preview": {
+      "filePath": "builder-preview.tsx"
     },
     "/events": {
       "filePath": "events.tsx",
@@ -285,7 +416,13 @@ export const routeTree = rootRoute
       "filePath": "map.tsx"
     },
     "/projects": {
-      "filePath": "projects.lazy.tsx"
+      "filePath": "projects.lazy.tsx",
+      "children": [
+        "/projects/$projectId",
+        "/projects/marketplace",
+        "/projects/schools",
+        "/projects/"
+      ]
     },
     "/booking/$title": {
       "filePath": "booking/$title.tsx"
@@ -294,12 +431,28 @@ export const routeTree = rootRoute
       "filePath": "events/$eventId.tsx",
       "parent": "/events"
     },
+    "/projects/$projectId": {
+      "filePath": "projects/$projectId.tsx",
+      "parent": "/projects"
+    },
+    "/projects/marketplace": {
+      "filePath": "projects/marketplace.lazy.tsx",
+      "parent": "/projects"
+    },
+    "/projects/schools": {
+      "filePath": "projects/schools.lazy.tsx",
+      "parent": "/projects"
+    },
     "/booking/": {
       "filePath": "booking/index.tsx"
     },
     "/events/": {
       "filePath": "events/index.tsx",
       "parent": "/events"
+    },
+    "/projects/": {
+      "filePath": "projects/index.lazy.tsx",
+      "parent": "/projects"
     },
     "/booking/room/$title": {
       "filePath": "booking/room/$title.tsx"

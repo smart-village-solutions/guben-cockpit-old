@@ -34,7 +34,7 @@ export function ImageCarousel({ images }: IProps) {
         <img
           src={imageSource}
           alt=""
-          className="max-h-[28rem] w-full object-contain bg-neutral-100"
+          className="max-h-[28rem] w-full object-contain bg-[#808080]"
         />
       </a>
 

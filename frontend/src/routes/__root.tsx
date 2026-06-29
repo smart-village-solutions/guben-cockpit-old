@@ -1,29 +1,32 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { Suspense, lazy } from "react";
 import "./index.css";
-import { Footer } from "@/components/layout/Footer";
-import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from '@/components/Navbar';
-import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
-import {TanStackRouterDevtools} from "@tanstack/router-devtools";
+
+const Footer = lazy(() =>
+  import("@/components/layout/Footer").then((module) => ({ default: module.Footer })),
+);
+const Toaster = lazy(() =>
+  import("@/components/ui/sonner").then((module) => ({ default: module.Toaster })),
+);
+
 export const Route = createRootRoute({
   component: RootComponent,
 })
 
-function RootComponent() {
+export function RootComponent() {
   return (
-    <div className={"min-h-screen h-screen flex flex-col bg-background"}>
+    <div className={"min-h-screen flex flex-col bg-background"}>
       <Navbar />
-      <div className={"w-full h-max flex-grow bg-neutral-100"}>
+      <div className={"flex w-full flex-1 flex-col bg-neutral-100 pt-5"}>
         <Outlet/>
       </div>
-      <Footer/>
-      <Toaster/>
-      {/*{import.meta.env.DEV && (*/}
-      {/*  <>*/}
-      {/*    <ReactQueryDevtools initialIsOpen={false} position={"bottom"} />*/}
-      {/*    <TanStackRouterDevtools position="bottom-left" />*/}
-      {/*  </>*/}
-      {/*)}*/}
+      <Suspense fallback={<div className="bg-gubenAccent h-14" />}>
+        <Footer />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Toaster />
+      </Suspense>
     </div>
   )
 }

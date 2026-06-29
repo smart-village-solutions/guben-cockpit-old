@@ -1,8 +1,9 @@
 import { PencilIcon } from "lucide-react";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { CustomTooltip } from "@/components/general/Tooltip";
-import { cn } from "@/lib/utils";
 import { WithClassName } from "@/types/WithClassName";
+
+import { IconButtonBase } from "./IconButtonBase";
 
 interface EditIconButtonProps extends WithClassName {
   tooltip: string;
@@ -12,27 +13,29 @@ interface EditIconButtonProps extends WithClassName {
   onClick?: () => void;
 }
 
-const IconButton = (props: { disabled?: boolean, onClick?: () => void }) => (
-  <div
-    onClick={props.disabled !== undefined && props.disabled ? undefined : props.onClick}
-    className={cn("rounded-full p-1.5 border size-8", props.disabled
+const IconButton = (props: { disabled?: boolean; onClick?: () => void; label: string }) => (
+  <IconButtonBase
+    disabled={props.disabled}
+    icon={PencilIcon}
+    onClick={props.onClick}
+    label={props.label}
+    className={props.disabled
       ? "bg-gray-200 text-gray-400"
-      : "bg-white hover:cursor-pointer hover:bg-gray-200"
-    )}
-  >
-    <PencilIcon className="size-full" />
-  </div>
-)
+      : "bg-white hover:cursor-pointer hover:bg-gray-200"}
+  />
+);
 
 export const EditIconButton = ({ tooltip, disabledTooltip, onClick, className, dialogTrigger = false, disabled = false }: EditIconButtonProps) => {
+  const label = disabled ? disabledTooltip ?? tooltip : tooltip;
+
   return (
     <CustomTooltip text={disabled ? disabledTooltip ?? "" : tooltip} className={className}>
       {dialogTrigger
         ? (
           <DialogTrigger asChild>
-            <IconButton {...{ disabled }} />
+            <IconButton {...{ disabled, label }} />
           </DialogTrigger>
-        ) : <IconButton {...{ onclick, disabled }} />
+        ) : <IconButton {...{ onClick, disabled, label }} />
       }
     </CustomTooltip>
   );

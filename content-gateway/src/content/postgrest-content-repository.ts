@@ -6,20 +6,31 @@ import {
   FooterContent,
   HomeContent,
   MapContent,
+  PublicContentBundle,
   ProjectsContent,
   bookingTenantsContentSchema,
   footerContentSchema,
   homeContentSchema,
-  projectsContentSchema,
   eventsContentSchema,
+  projectsContentSchema,
+  publicContentBundleSchema,
 } from "../../../shared/public-content/contracts.js";
 import { Config } from "../config.js";
 import { GatewayError } from "../errors.js";
 import { PostgrestClient } from "../upstream/postgrest-client.js";
-import { PublicContentRepository } from "./content-repository.js";
+import type { PublicContentRepository } from "./content-repository-contract.js";
 import { PostgrestContentMapper, distanceInKm } from "./postgrest-content-mapper.js";
 import { PostgrestContentSource } from "./postgrest-content-source.js";
 import { EventFilters, EventCategoryRow, EventImageRow, EventUrlRow } from "./postgrest-content-types.js";
+
+const additionalBookingTenants = [
+  {
+    id: "smart-city-booking-bike-boxes",
+    tenantId: "2b12ce76-c513-40d0-bb56-51a597556f9d",
+  },
+] as const;
+
+const supportedPublicProjectTypes = new Set([0, 1, 2]);
 
 export class PostgrestContentRepository implements PublicContentRepository {
   private readonly mapper: PostgrestContentMapper;
@@ -84,6 +95,38 @@ export class PostgrestContentRepository implements PublicContentRepository {
     });
   }
 
+  public async getPublicContent(language: string): Promise<PublicContentBundle> {
+    const [homePages, dashboard, projectPages, rows] = await Promise.all([
+      this.source.getPage("Home"),
+      this.getDashboard(language),
+      this.source.getPage("Projects"),
+      this.source.getProjects(),
+    ]);
+
+    const homePage = this.mapper.pageFromRow(this.expectSingle(homePages, "Home"), language);
+    const projectsPage = this.mapper.pageFromRow(this.expectSingle(projectPages, "Projects"), language);
+    const items = rows
+      .filter(
+        (row) => row.published && !row.deleted && supportedPublicProjectTypes.has(row.type),
+      )
+      .map((row) => this.mapper.publicProjectFromRow(row, language));
+
+    return publicContentBundleSchema.parse({
+      home: {
+        page: homePage,
+        dropdowns: dashboard.dropdowns,
+        cards: this.mapper.flattenedHomeCards(dashboard.dropdowns),
+      },
+      projects: {
+        page: projectsPage,
+        items,
+      },
+    });
+  }
+
+  // Legacy-only PostgREST event path. Production /api/content/events* traffic is
+  // composed through SmartVillagePostgrestContentRepository so the remaining
+  // PostgREST event assumptions stay isolated here for maintenance and fallback use.
   public async getEvents(language: string, filters: EventFilters): Promise<EventsContent> {
     const [pages, bundle] = await Promise.all([this.source.getPage("Events"), this.source.getEventsBundle()]);
     const locations = new Map(bundle.locationRows.map((row) => [row.id, row]));
@@ -167,11 +210,23 @@ export class PostgrestContentRepository implements PublicContentRepository {
   }
 
   public async getBookingTenants(): Promise<BookingTenantsContent> {
-    return bookingTenantsContentSchema.parse({
-      tenants: (await this.source.getBookingTenantRows()).map((row) => ({
+    const tenants = [
+      ...(await this.source.getBookingTenantRows()).map((row) => ({
         id: row.id,
         tenantId: row.tenant_id,
       })),
+      ...additionalBookingTenants,
+    ];
+
+    return bookingTenantsContentSchema.parse({
+      tenants: Array.from(
+        tenants.reduce((deduped, tenant) => {
+          if (!deduped.has(tenant.tenantId)) {
+            deduped.set(tenant.tenantId, tenant);
+          }
+          return deduped;
+        }, new Map<string, (typeof tenants)[number]>()),
+      ).map(([, tenant]) => tenant),
     });
   }
 

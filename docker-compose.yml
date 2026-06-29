@@ -76,15 +76,13 @@ services:
       LOG_LEVEL: info
       PUBLIC_BASE_URL: http://localhost:3000
       MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
+      SV_GRAPHQL_URL: ${SV_GRAPHQL_URL:-}
+      SV_OAUTH_TOKEN_URL: ${SV_OAUTH_TOKEN_URL:-}
+      SV_CLIENT_ID: ${SV_CLIENT_ID:-}
+      SV_CLIENT_SECRET: ${SV_CLIENT_SECRET:-}
       CONTENT_SOURCE_MODE: postgrest
       DEFAULT_LANGUAGE: de
       FALLBACK_LANGUAGE: de
-      CMS_GRAPHQL_URL: ${CMS_GRAPHQL_URL:-https://cms.example.com/graphql}
-      CMS_API_KEY: ${CMS_API_KEY:-replace-me}
-      CMS_API_KEY_HEADER: ${CMS_API_KEY_HEADER:-x-api-key}
-      CMS_TIMEOUT_MS: ${CMS_TIMEOUT_MS:-2500}
-      CMS_RETRY_ATTEMPTS: ${CMS_RETRY_ATTEMPTS:-2}
-      CMS_RETRY_BACKOFF_MS: ${CMS_RETRY_BACKOFF_MS:-200}
       POSTGREST_URL: http://postgrest:3000
       POSTGREST_TIMEOUT_MS: ${POSTGREST_TIMEOUT_MS:-10000}
       POSTGREST_SCHEMA: public_content
