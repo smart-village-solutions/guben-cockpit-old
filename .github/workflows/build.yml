@@ -40,6 +40,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
 
+      - name: Test frontend startup scripts
+        run: node frontend/docker/start-frontend.test.mjs
+
       - name: Start mock content-gateway
         run: |
           PORT=5100 \
