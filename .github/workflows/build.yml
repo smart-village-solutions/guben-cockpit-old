@@ -46,6 +46,9 @@ jobs:
       - name: Test frontend hydration entrypoint
         run: node frontend/src/main-hydration.test.mjs
 
+      - name: Test frontend web proxy
+        run: node frontend/docker/serve-dist.test.mjs
+
       - name: Start mock content-gateway
         run: |
           PORT=5100 \
