@@ -41,16 +41,16 @@ jobs:
         run: npm ci --prefix frontend
 
       - name: Test frontend startup scripts
-        run: node frontend/docker/start-frontend.test.mjs
+        run: node frontend/docker/start-frontend.check.mjs
 
       - name: Test frontend prerender scripts
-        run: node frontend/scripts/prerender-public-routes.test.mjs
+        run: node frontend/scripts/prerender-public-routes.check.mjs
 
       - name: Test frontend hydration entrypoint
-        run: node frontend/src/main-hydration.test.mjs
+        run: node frontend/src/main-hydration.check.mjs
 
       - name: Test frontend web proxy
-        run: node frontend/docker/serve-dist.test.mjs
+        run: node frontend/docker/serve-dist.check.mjs
 
       - name: Start mock content-gateway
         run: |
