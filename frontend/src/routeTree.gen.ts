@@ -15,6 +15,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as MapImport } from './routes/map'
 import { Route as EventsImport } from './routes/events'
+import { Route as BuildplaceIframeTestImport } from './routes/buildplace-iframe-test'
 import { Route as BuilderPreviewImport } from './routes/builder-preview'
 import { Route as IndexImport } from './routes/index'
 import { Route as EventsIndexImport } from './routes/events/index'
@@ -45,6 +46,11 @@ const MapRoute = MapImport.update({
 
 const EventsRoute = EventsImport.update({
   path: '/events',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BuildplaceIframeTestRoute = BuildplaceIframeTestImport.update({
+  path: '/buildplace-iframe-test',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -133,6 +139,13 @@ declare module '@tanstack/react-router' {
       path: '/builder-preview'
       fullPath: '/builder-preview'
       preLoaderRoute: typeof BuilderPreviewImport
+      parentRoute: typeof rootRoute
+    }
+    '/buildplace-iframe-test': {
+      id: '/buildplace-iframe-test'
+      path: '/buildplace-iframe-test'
+      fullPath: '/buildplace-iframe-test'
+      preLoaderRoute: typeof BuildplaceIframeTestImport
       parentRoute: typeof rootRoute
     }
     '/events': {
@@ -258,6 +271,7 @@ const ProjectsLazyRouteWithChildren = ProjectsLazyRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/builder-preview': typeof BuilderPreviewRoute
+  '/buildplace-iframe-test': typeof BuildplaceIframeTestRoute
   '/events': typeof EventsRouteWithChildren
   '/map': typeof MapRoute
   '/projects': typeof ProjectsLazyRouteWithChildren
@@ -275,6 +289,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/builder-preview': typeof BuilderPreviewRoute
+  '/buildplace-iframe-test': typeof BuildplaceIframeTestRoute
   '/map': typeof MapRoute
   '/booking/$title': typeof BookingTitleRoute
   '/events/$eventId': typeof EventsEventIdRoute
@@ -291,6 +306,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/builder-preview': typeof BuilderPreviewRoute
+  '/buildplace-iframe-test': typeof BuildplaceIframeTestRoute
   '/events': typeof EventsRouteWithChildren
   '/map': typeof MapRoute
   '/projects': typeof ProjectsLazyRouteWithChildren
@@ -310,6 +326,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/builder-preview'
+    | '/buildplace-iframe-test'
     | '/events'
     | '/map'
     | '/projects'
@@ -326,6 +343,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/builder-preview'
+    | '/buildplace-iframe-test'
     | '/map'
     | '/booking/$title'
     | '/events/$eventId'
@@ -340,6 +358,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/builder-preview'
+    | '/buildplace-iframe-test'
     | '/events'
     | '/map'
     | '/projects'
@@ -358,6 +377,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BuilderPreviewRoute: typeof BuilderPreviewRoute
+  BuildplaceIframeTestRoute: typeof BuildplaceIframeTestRoute
   EventsRoute: typeof EventsRouteWithChildren
   MapRoute: typeof MapRoute
   ProjectsLazyRoute: typeof ProjectsLazyRouteWithChildren
@@ -369,6 +389,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuilderPreviewRoute: BuilderPreviewRoute,
+  BuildplaceIframeTestRoute: BuildplaceIframeTestRoute,
   EventsRoute: EventsRouteWithChildren,
   MapRoute: MapRoute,
   ProjectsLazyRoute: ProjectsLazyRouteWithChildren,
@@ -391,6 +412,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/builder-preview",
+        "/buildplace-iframe-test",
         "/events",
         "/map",
         "/projects",
@@ -404,6 +426,9 @@ export const routeTree = rootRoute
     },
     "/builder-preview": {
       "filePath": "builder-preview.tsx"
+    },
+    "/buildplace-iframe-test": {
+      "filePath": "buildplace-iframe-test.tsx"
     },
     "/events": {
       "filePath": "events.tsx",
