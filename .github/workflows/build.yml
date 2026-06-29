@@ -40,6 +40,9 @@ jobs:
       - name: Test frontend startup scripts
         run: node frontend/docker/start-frontend.test.mjs
 
+      - name: Test frontend prerender scripts
+        run: node frontend/scripts/prerender-public-routes.test.mjs
+
       - name: Start mock content-gateway
         run: |
           PORT=5100 \
