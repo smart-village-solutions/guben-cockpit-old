@@ -8,9 +8,7 @@ import type {
   PublicContentBundle,
   SeoMetadata,
 } from "../../../shared/public-content/contracts.js";
-
-const buildplaceMapOverviewUrl =
-  "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=Q0eIRLhq8q7PXzRujP7sv&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location";
+import { buildplaceMapOverviewUrl } from "./buildplace-map-urls.js";
 
 const createSeo = (path: string, title: string, description: string): SeoMetadata => ({
   title,

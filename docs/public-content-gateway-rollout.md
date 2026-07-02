@@ -6,7 +6,6 @@ Frontend build:
 
 - `VITE_CONTENT_GATEWAY_URL`
 - `VITE_PUBLIC_CONTENT_SOURCE`
-- `VITE_MASTERPORTAL_URL`
 
 Content gateway runtime:
 
@@ -14,7 +13,6 @@ Content gateway runtime:
 - `POSTGREST_TIMEOUT_MS`
 - `POSTGREST_SCHEMA`
 - `PUBLIC_BASE_URL`
-- `MASTERPORTAL_URL`
 
 PostgREST runtime:
 

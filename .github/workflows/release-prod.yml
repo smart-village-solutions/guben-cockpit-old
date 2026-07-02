@@ -24,7 +24,6 @@ jobs:
       VITE_TRANSLATE_URL: ${{ vars.VITE_TRANSLATE_URL }}
       VITE_TRANSLATE_API_KEY: ${{ vars.VITE_TRANSLATE_API_KEY }}
       VITE_MATOMO_JS: ${{ vars.VITE_MATOMO_JS }}
-      VITE_MASTERPORTAL_URL: ${{ vars.VITE_MASTERPORTAL_URL }}
 
     steps:
       - name: Checkout repository
@@ -59,7 +58,6 @@ jobs:
             VITE_TRANSLATE_URL=${{ vars.VITE_TRANSLATE_URL }}
             VITE_TRANSLATE_API_KEY=${{ vars.VITE_TRANSLATE_API_KEY }}
             VITE_MATOMO_JS=${{ vars.VITE_MATOMO_JS }}
-            VITE_MASTERPORTAL_URL=${{ vars.VITE_MASTERPORTAL_URL }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta-gateway

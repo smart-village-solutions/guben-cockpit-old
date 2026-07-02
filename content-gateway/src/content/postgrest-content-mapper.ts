@@ -19,6 +19,10 @@ import {
 import { Config } from "../config.js";
 import { GatewayError } from "../errors.js";
 import {
+  buildplaceMapOverviewUrl,
+  resolveBuildplaceMapUrl,
+} from "./buildplace-map-urls.js";
+import {
   CardRow,
   DropdownRow,
   EventCategoryRow,
@@ -99,29 +103,6 @@ const createSeo = (config: Config, path: string, title: string, description: str
   canonical: new URL(path, config.PUBLIC_BASE_URL).toString(),
   indexable: true,
 });
-
-const buildplaceMapOverviewUrl =
-  "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=Q0eIRLhq8q7PXzRujP7sv&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location";
-
-const buildplaceMapUrlByTabTitle: Record<string, string> = {
-  stadtentwicklung:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=XB8lHHMfITxvf_0QGDrve&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  energie:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=YL787UBfwoBD0jsepOyTu&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  kinder:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=wlFzNKnN44qombPDU0YKc&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  senioren:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=xhph1SnqNaFnyzojaapSx&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  tourismus:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=DJ3cImoMtX1h-RP9nvc6v&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  umwelt:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=urVhNhQ6SlWLjS-G-jbs6&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-};
-
-const normalizeMapTitle = (title: string) => title.trim().toLowerCase();
-
-const resolveDashboardMapUrl = (title: string, fallbackUrl: string) =>
-  buildplaceMapUrlByTabTitle[normalizeMapTitle(title)] ?? fallbackUrl;
 
 export const distanceInKm = (
   latitudeA: number,
@@ -335,6 +316,15 @@ export class PostgrestContentMapper {
         localizedField(tabRow.translations, language, this.config.FALLBACK_LANGUAGE, "Title"),
         `dashboard_tab.${tabRow.id}.title`,
       );
+      const canonicalTitle = requiredString(
+        localizedField(
+          tabRow.translations,
+          this.config.DEFAULT_LANGUAGE,
+          this.config.FALLBACK_LANGUAGE,
+          "Title",
+        ),
+        `dashboard_tab.${tabRow.id}.canonical_title`,
+      );
 
       const mappedCards = (cardsByTab.get(tabRow.id) ?? [])
         .sort((left, right) => left.sequence - right.sequence)
@@ -398,7 +388,7 @@ export class PostgrestContentMapper {
           id: tabRow.id,
           title: localizedTitle,
           sequence: tabRow.sequence,
-          mapUrl: resolveDashboardMapUrl(localizedTitle, tabRow.map_url),
+          mapUrl: resolveBuildplaceMapUrl(canonicalTitle, tabRow.map_url),
           informationCards: mappedCards,
         }),
       );
