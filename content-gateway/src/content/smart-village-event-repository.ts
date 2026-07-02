@@ -253,14 +253,32 @@ export class SmartVillageEventRepository {
     }
 
     if (response.eventRecord === null) {
+      this.options.warn?.(
+        "Requested Smart Village event detail lookup returned null record",
+        {
+          requestedId: id,
+          internalId: parsedOccurrenceId.internalId,
+          canonicalId: parsedOccurrenceId.canonicalId,
+        },
+      );
       throw notFoundError();
     }
 
-    const event = this.mapRecordWithDiagnostics(response.eventRecord, "eventRecord").find(
+    const mappedEvents = this.mapRecordWithDiagnostics(response.eventRecord, "eventRecord");
+    const event = mappedEvents.find(
       (candidate) => candidate.id === parsedOccurrenceId.canonicalId && candidate.published,
     );
 
     if (!event) {
+      this.options.warn?.(
+        "Requested synthetic Smart Village occurrence was missing from detail record",
+        {
+          requestedId: id,
+          internalId: parsedOccurrenceId.internalId,
+          canonicalId: parsedOccurrenceId.canonicalId,
+          availableOccurrenceIds: mappedEvents.map((candidate) => candidate.id),
+        },
+      );
       throw notFoundError();
     }
 

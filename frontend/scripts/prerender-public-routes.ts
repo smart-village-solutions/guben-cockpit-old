@@ -15,6 +15,7 @@ const baseUrl =
   process.env.VITE_CONTENT_GATEWAY_URL?.trim() ||
   "http://localhost:5100";
 const distDir = path.resolve(process.cwd(), "dist");
+type WarnLogger = (message: string, context: Record<string, unknown>) => void;
 
 const fetchJson = async <T>(pathName: string, schema: { parse(input: unknown): T }) => {
   const response = await fetch(`${baseUrl}${pathName}`);
@@ -139,8 +140,32 @@ const renderEvents = async (template: string) => {
   };
 };
 
-const renderEventDetail = async (template: string, eventId: string) => {
-  const event = await fetchJson(`/api/content/events/${eventId}`, eventDetailContentSchema);
+export const renderEventDetail = async (
+  template: string,
+  eventId: string,
+  warn: WarnLogger = (message, context) => {
+    console.warn(message, context);
+  },
+) => {
+  let event;
+  try {
+    event = await fetchJson(`/api/content/events/${eventId}`, eventDetailContentSchema);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const statusMatch = message.match(/status (\d+)/);
+    const statusCode = statusMatch ? Number(statusMatch[1]) : null;
+
+    if (statusCode === 404) {
+      warn("Skipping prerender for missing event detail", {
+        eventId,
+        statusCode,
+      });
+      return null;
+    }
+
+    throw error;
+  }
+
   const markup = pageShell(
     event.event.title,
     event.event.description,
@@ -181,12 +206,18 @@ const main = async () => {
 
   for (const eventId of eventsRender.eventIds) {
     const filePath = path.join(distDir, "events", eventId, "index.html");
+    const detailHtml = await renderEventDetail(template, eventId);
+    if (!detailHtml) {
+      continue;
+    }
     await ensureDirectory(filePath);
-    await writeFile(filePath, await renderEventDetail(template, eventId), "utf8");
+    await writeFile(filePath, detailHtml, "utf8");
   }
 
   await ensureDirectory(path.join(distDir, "map/index.html"));
   await writeFile(path.join(distDir, "map/index.html"), await renderMap(template), "utf8");
 };
 
-void main();
+if (!process.env.VITEST) {
+  void main();
+}

@@ -482,12 +482,13 @@ describe("SmartVillageEventRepository", () => {
   });
 
   it("returns a 404 when the requested occurrence cannot be resolved", async () => {
+    const warn = vi.fn<WarnHook>();
     const client = {
       request: vi.fn(async () => ({
         eventRecord: makeRecord(),
       })),
     };
-    const repository = createRepository(client);
+    const repository = createRepository(client, 60_000, warn);
 
     await expect(
       repository.getEventById("de", "1937530:2026-06-14:10%3A00"),
@@ -500,5 +501,39 @@ describe("SmartVillageEventRepository", () => {
       upstream: "gateway",
       retryable: false,
     });
+    expect(warn).toHaveBeenCalledWith(
+      "Requested synthetic Smart Village occurrence was missing from detail record",
+      expect.objectContaining({
+        requestedId: "1937530:2026-06-14:10%3A00",
+        internalId: "1937530",
+        availableOccurrenceIds: ["1937530:2026-06-13:15%3A00"],
+      }),
+    );
+  });
+
+  it("logs when Smart Village detail lookup returns a null record", async () => {
+    const warn = vi.fn<WarnHook>();
+    const client = {
+      request: vi.fn(async () => ({
+        eventRecord: null,
+      })),
+    };
+    const repository = createRepository(client, 60_000, warn);
+
+    await expect(
+      repository.getEventById("de", "1937530:2026-06-14:10%3A00"),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      statusCode: 404,
+      upstream: "gateway",
+      retryable: false,
+    });
+    expect(warn).toHaveBeenCalledWith(
+      "Requested Smart Village event detail lookup returned null record",
+      expect.objectContaining({
+        requestedId: "1937530:2026-06-14:10%3A00",
+        internalId: "1937530",
+      }),
+    );
   });
 });
