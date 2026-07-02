@@ -100,6 +100,29 @@ const createSeo = (config: Config, path: string, title: string, description: str
   indexable: true,
 });
 
+const buildplaceMapOverviewUrl =
+  "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=Q0eIRLhq8q7PXzRujP7sv&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location";
+
+const buildplaceMapUrlByTabTitle: Record<string, string> = {
+  stadtentwicklung:
+    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=XB8lHHMfITxvf_0QGDrve&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+  energie:
+    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=YL787UBfwoBD0jsepOyTu&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+  kinder:
+    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=wlFzNKnN44qombPDU0YKc&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+  senioren:
+    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=xhph1SnqNaFnyzojaapSx&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+  tourismus:
+    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=DJ3cImoMtX1h-RP9nvc6v&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+  umwelt:
+    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=urVhNhQ6SlWLjS-G-jbs6&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+};
+
+const normalizeMapTitle = (title: string) => title.trim().toLowerCase();
+
+const resolveDashboardMapUrl = (title: string, fallbackUrl: string) =>
+  buildplaceMapUrlByTabTitle[normalizeMapTitle(title)] ?? fallbackUrl;
+
 export const distanceInKm = (
   latitudeA: number,
   longitudeA: number,
@@ -375,7 +398,7 @@ export class PostgrestContentMapper {
           id: tabRow.id,
           title: localizedTitle,
           sequence: tabRow.sequence,
-          mapUrl: tabRow.map_url,
+          mapUrl: resolveDashboardMapUrl(localizedTitle, tabRow.map_url),
           informationCards: mappedCards,
         }),
       );
@@ -429,7 +452,7 @@ export class PostgrestContentMapper {
     return mapContentSchema.parse({
       page,
       map: {
-        embedUrl: this.config.MASTERPORTAL_URL,
+        embedUrl: buildplaceMapOverviewUrl,
       },
       seo: page.seo,
     });

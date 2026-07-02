@@ -138,7 +138,7 @@ describe("GatewayEventDetailPage", () => {
     expect(screen.getByText("EventDetails")).toBeTruthy();
     expect(screen.getByRole("img", { name: "Sommerfest" })).toBeTruthy();
     expect(screen.getByText("1 / 2")).toBeTruthy();
-    expect(screen.getByText("map-component")).toBeTruthy();
+    expect(screen.queryByText("map-component")).toBeNull();
     expect(screen.getByText("Musterstrasse 1, 03172 Guben (Altstadt)")).toBeTruthy();
     expect(screen.getByText("01.06.2026 10:00 - 12:00")).toBeTruthy();
     expect(screen.queryByTestId("detail-header-image")).toBeNull();
@@ -175,6 +175,17 @@ describe("GatewayEventDetailPage", () => {
 
     expect(container.querySelector("strong")?.textContent).toBe("grosses");
     expect(screen.queryByText("<p>Ein")).toBeNull();
+  });
+
+  it("does not render the map even when the event has coordinates", () => {
+    queryState.data.event.coordinates = {
+      latitude: 51.949,
+      longitude: 14.715,
+    };
+
+    render(<GatewayEventDetailPage eventId="event-1" />);
+
+    expect(screen.queryByText("map-component")).toBeNull();
   });
 
   it("does not render the map when the event has no coordinates", () => {

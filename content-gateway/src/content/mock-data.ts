@@ -9,6 +9,9 @@ import type {
   SeoMetadata,
 } from "../../../shared/public-content/contracts.js";
 
+const buildplaceMapOverviewUrl =
+  "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=Q0eIRLhq8q7PXzRujP7sv&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location";
+
 const createSeo = (path: string, title: string, description: string): SeoMetadata => ({
   title,
   description,
@@ -28,7 +31,7 @@ const sharedDropdowns: DashboardDropdown[] = [
         id: "60bbd0df-2cf4-4ed7-a128-9e6c26f095f9",
         title: "Mobilität",
         sequence: 1,
-        mapUrl: "https://masterportal.example.com/map?topic=mobilitaet",
+        mapUrl: buildplaceMapOverviewUrl,
         informationCards: [
           {
             id: "c7fd6f6c-8975-4eac-b69e-6ef89f8ea5f6",
@@ -258,7 +261,7 @@ export const mockMapContent: MapContent = {
     seo: createSeo("/map", "Stadtkarte", "Die öffentliche Karte mit Themen und Standorten."),
   },
   map: {
-    embedUrl: "https://masterportal.example.com",
+    embedUrl: buildplaceMapOverviewUrl,
   },
   seo: createSeo("/map", "Stadtkarte", "Die öffentliche Karte mit Themen und Standorten."),
 };

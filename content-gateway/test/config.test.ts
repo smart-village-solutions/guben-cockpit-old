@@ -9,7 +9,6 @@ describe("loadConfig", () => {
     const config = loadConfig({
       CONTENT_SOURCE_MODE: "mock",
       PUBLIC_BASE_URL: "http://localhost:3000",
-      MASTERPORTAL_URL: "http://masterportal",
     });
 
     expect(config.CONTENT_SOURCE_MODE).toBe("mock");
@@ -19,7 +18,6 @@ describe("loadConfig", () => {
     const config = loadConfig({
       CONTENT_SOURCE_MODE: "mock",
       PUBLIC_BASE_URL: "http://localhost:3000",
-      MASTERPORTAL_URL: "http://masterportal",
       SV_GRAPHQL_URL: "not-a-url",
       SV_OAUTH_TOKEN_URL: "still-not-a-url",
       SV_CLIENT_ID: "",
@@ -34,7 +32,6 @@ describe("loadConfig", () => {
       loadConfig({
         CONTENT_SOURCE_MODE: "postgrest",
         PUBLIC_BASE_URL: "http://localhost:3000",
-        MASTERPORTAL_URL: "http://masterportal",
       }),
     ).toThrow();
   });
@@ -44,7 +41,6 @@ describe("loadConfig", () => {
       loadConfig({
         CONTENT_SOURCE_MODE: "postgrest",
         PUBLIC_BASE_URL: "http://localhost:3000",
-        MASTERPORTAL_URL: "http://masterportal",
         POSTGREST_URL: "http://localhost:3001",
       }),
     ).toThrow(/SV_GRAPHQL_URL, SV_OAUTH_TOKEN_URL, SV_CLIENT_ID, SV_CLIENT_SECRET/);
@@ -54,7 +50,6 @@ describe("loadConfig", () => {
     const config = loadConfig({
       CONTENT_SOURCE_MODE: "postgrest",
       PUBLIC_BASE_URL: "http://localhost:3000",
-      MASTERPORTAL_URL: "http://masterportal",
       POSTGREST_URL: "http://localhost:3001",
       POSTGREST_TIMEOUT_MS: "100",
       POSTGREST_SCHEMA: "public_content",
@@ -75,7 +70,6 @@ describe("loadConfig", () => {
     const config = loadConfig({
       CONTENT_SOURCE_MODE: "postgrest",
       PUBLIC_BASE_URL: "http://localhost:3000",
-      MASTERPORTAL_URL: "http://masterportal",
       POSTGREST_URL: "http://localhost:3001",
       SV_GRAPHQL_URL: "https://bb-guben.server.smart-village.app/graphql",
       SV_OAUTH_TOKEN_URL: "https://bb-guben.server.smart-village.app/oauth/token",
@@ -102,7 +96,6 @@ describe("loadConfig", () => {
       loadConfig({
         CONTENT_SOURCE_MODE: "postgrest",
         PUBLIC_BASE_URL: "http://localhost:3000",
-        MASTERPORTAL_URL: "http://masterportal",
         POSTGREST_URL: "http://localhost:3001",
         SV_GRAPHQL_URL: "https://bb-guben.server.smart-village.app/graphql",
       }),
@@ -114,19 +107,8 @@ describe("loadConfig", () => {
       loadConfig({
         CONTENT_SOURCE_MODE: "mock",
         PUBLIC_BASE_URL: "http://example.com",
-        MASTERPORTAL_URL: "http://masterportal",
       }),
     ).toThrow(/PUBLIC_BASE_URL/);
-  });
-
-  it("rejects non-internal MASTERPORTAL_URL over plain http", () => {
-    expect(() =>
-      loadConfig({
-        CONTENT_SOURCE_MODE: "mock",
-        PUBLIC_BASE_URL: "http://localhost:3000",
-        MASTERPORTAL_URL: "http://example.com",
-      }),
-    ).toThrow(/MASTERPORTAL_URL/);
   });
 
   it("rejects malformed PUBLIC_BASE_URL via validation instead of crashing URL parsing", () => {
@@ -134,7 +116,6 @@ describe("loadConfig", () => {
       loadConfig({
         CONTENT_SOURCE_MODE: "mock",
         PUBLIC_BASE_URL: "not-a-url",
-        MASTERPORTAL_URL: "http://masterportal",
       }),
     ).toThrow();
   });

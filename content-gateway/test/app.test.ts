@@ -10,7 +10,6 @@ const baseConfig = loadConfig({
   PORT: "5100",
   LOG_LEVEL: "silent",
   PUBLIC_BASE_URL: "http://localhost:3000",
-  MASTERPORTAL_URL: "http://masterportal",
   CONTENT_SOURCE_MODE: "mock",
   DEFAULT_LANGUAGE: "de",
   FALLBACK_LANGUAGE: "de",
@@ -115,7 +114,7 @@ describe("content gateway", () => {
       url: "/api/content/map",
     });
     expect(mapResponse.statusCode).toBe(200);
-    expect(mapResponse.json().map.embedUrl).toBe("https://masterportal.example.com");
+    expect(mapResponse.json().map.embedUrl).toContain("public.buildplace.io");
 
     const footerResponse = await app.inject({
       method: "GET",
