@@ -18,6 +18,31 @@ interface DashboardDropdownTabsProps {
   dropdowns: DashboardDropdown[];
 }
 
+type DropdownGroupItem = {
+  type: "group";
+  key: string;
+  label: string;
+};
+
+type DropdownLinkItem = {
+  type: "link";
+  key: string;
+  label: string;
+  groupLabel: string;
+  onSelect: () => void;
+};
+
+type DropdownTabItem = {
+  type: "tab";
+  key: string;
+  label: string;
+  groupLabel: string;
+  active: boolean;
+  onSelect: () => void;
+};
+
+type DropdownMenuItemModel = DropdownGroupItem | DropdownLinkItem | DropdownTabItem;
+
 export const DashboardDropdownTabs = ({
   dropdowns,
 }: DashboardDropdownTabsProps) => {
@@ -40,12 +65,13 @@ export const DashboardDropdownTabs = ({
     [allTabs, activeTab],
   );
   const items = useMemo(
-    () =>
-      dropdowns.flatMap((dropdown) => {
+    (): DropdownMenuItemModel[] =>
+      dropdowns.reduce<DropdownMenuItemModel[]>((result, dropdown) => {
         const groupLabel = dropdown.title;
 
         if (dropdown.isLink) {
           return [
+            ...result,
             { type: "group" as const, key: `group-${dropdown.id}`, label: groupLabel },
             ...(dropdown.links ?? []).map((link) => ({
               type: "link" as const,
@@ -61,6 +87,7 @@ export const DashboardDropdownTabs = ({
         }
 
         return [
+          ...result,
           { type: "group" as const, key: `group-${dropdown.id}`, label: groupLabel },
           ...(dropdown.tabs ?? []).map((entry) => ({
             type: "tab" as const,
@@ -74,7 +101,7 @@ export const DashboardDropdownTabs = ({
             },
           })),
         ];
-      }),
+      }, []),
     [activeTab, dropdowns],
   );
   const activeItemLabel = useMemo(

@@ -6,7 +6,6 @@ const mockConfig: Config = {
   PORT: 5100,
   LOG_LEVEL: "silent",
   PUBLIC_BASE_URL: "http://localhost:3000",
-  MASTERPORTAL_URL: "http://masterportal",
   CONTENT_SOURCE_MODE: "mock",
   DEFAULT_LANGUAGE: "de",
   FALLBACK_LANGUAGE: "de",

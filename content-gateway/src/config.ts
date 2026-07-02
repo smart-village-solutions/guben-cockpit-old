@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const localHttpHosts = new Set(["localhost", "127.0.0.1", "::1"]);
-const internalHttpHosts = new Set(["masterportal"]);
 const localDevelopmentPort = "3000";
 
 const createHttpUrl = (hostname: string, port?: string) => {
@@ -17,7 +16,6 @@ const createHttpUrl = (hostname: string, port?: string) => {
 };
 
 const localPublicBaseUrlDefault = createHttpUrl("localhost", localDevelopmentPort);
-const masterportalUrlDefault = createHttpUrl("masterportal");
 const smartVillageFields = [
   "SV_GRAPHQL_URL",
   "SV_OAUTH_TOKEN_URL",
@@ -55,10 +53,6 @@ const baseConfigSchema = z.object({
     "PUBLIC_BASE_URL must use https unless it targets a local development host.",
     localHttpHosts,
   ).default(localPublicBaseUrlDefault),
-  MASTERPORTAL_URL: createSecureUrlSchema(
-    "MASTERPORTAL_URL must use https unless it targets an explicitly allowed internal host.",
-    new Set([...localHttpHosts, ...internalHttpHosts]),
-  ).default(masterportalUrlDefault),
   CONTENT_SOURCE_MODE: z.enum(["mock", "postgrest"]),
   DEFAULT_LANGUAGE: z.string().min(2).default("de"),
   FALLBACK_LANGUAGE: z.string().min(2).default("de"),

@@ -8,6 +8,7 @@ import type {
   PublicContentBundle,
   SeoMetadata,
 } from "../../../shared/public-content/contracts.js";
+import { buildplaceMapOverviewUrl } from "./buildplace-map-urls.js";
 
 const createSeo = (path: string, title: string, description: string): SeoMetadata => ({
   title,
@@ -28,7 +29,7 @@ const sharedDropdowns: DashboardDropdown[] = [
         id: "60bbd0df-2cf4-4ed7-a128-9e6c26f095f9",
         title: "Mobilität",
         sequence: 1,
-        mapUrl: "https://masterportal.example.com/map?topic=mobilitaet",
+        mapUrl: buildplaceMapOverviewUrl,
         informationCards: [
           {
             id: "c7fd6f6c-8975-4eac-b69e-6ef89f8ea5f6",
@@ -258,7 +259,7 @@ export const mockMapContent: MapContent = {
     seo: createSeo("/map", "Stadtkarte", "Die öffentliche Karte mit Themen und Standorten."),
   },
   map: {
-    embedUrl: "https://masterportal.example.com",
+    embedUrl: buildplaceMapOverviewUrl,
   },
   seo: createSeo("/map", "Stadtkarte", "Die öffentliche Karte mit Themen und Standorten."),
 };

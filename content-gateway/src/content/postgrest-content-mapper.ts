@@ -19,6 +19,10 @@ import {
 import { Config } from "../config.js";
 import { GatewayError } from "../errors.js";
 import {
+  buildplaceMapOverviewUrl,
+  resolveBuildplaceMapUrl,
+} from "./buildplace-map-urls.js";
+import {
   CardRow,
   DropdownRow,
   EventCategoryRow,
@@ -312,6 +316,15 @@ export class PostgrestContentMapper {
         localizedField(tabRow.translations, language, this.config.FALLBACK_LANGUAGE, "Title"),
         `dashboard_tab.${tabRow.id}.title`,
       );
+      const canonicalTitle = requiredString(
+        localizedField(
+          tabRow.translations,
+          this.config.DEFAULT_LANGUAGE,
+          this.config.FALLBACK_LANGUAGE,
+          "Title",
+        ),
+        `dashboard_tab.${tabRow.id}.canonical_title`,
+      );
 
       const mappedCards = (cardsByTab.get(tabRow.id) ?? [])
         .sort((left, right) => left.sequence - right.sequence)
@@ -375,7 +388,7 @@ export class PostgrestContentMapper {
           id: tabRow.id,
           title: localizedTitle,
           sequence: tabRow.sequence,
-          mapUrl: tabRow.map_url,
+          mapUrl: resolveBuildplaceMapUrl(canonicalTitle, tabRow.map_url),
           informationCards: mappedCards,
         }),
       );
@@ -429,7 +442,7 @@ export class PostgrestContentMapper {
     return mapContentSchema.parse({
       page,
       map: {
-        embedUrl: this.config.MASTERPORTAL_URL,
+        embedUrl: buildplaceMapOverviewUrl,
       },
       seo: page.seo,
     });

@@ -35,10 +35,6 @@ export default defineConfig(({ command }) => ({
             return "carousels";
           }
 
-          if (id.includes("proj4")) {
-            return "mapping";
-          }
-
           if (id.includes("react-hook-form") || id.includes("@hookform/resolvers") || id.includes("zod")) {
             return "forms";
           }

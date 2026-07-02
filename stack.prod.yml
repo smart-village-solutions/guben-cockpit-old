@@ -84,7 +84,6 @@ services:
       CONTENT_SOURCE_MODE: postgrest
       POSTGREST_URL: http://guben-postgrest-prod:3000
       PUBLIC_BASE_URL: ${FRONTEND_BASEURI}
-      MASTERPORTAL_URL: ${MASTERPORTAL_URL}
       SV_GRAPHQL_URL: ${SV_GRAPHQL_URL:-}
       SV_OAUTH_TOKEN_URL: ${SV_OAUTH_TOKEN_URL:-}
       SV_CLIENT_ID: ${SV_CLIENT_ID:-}

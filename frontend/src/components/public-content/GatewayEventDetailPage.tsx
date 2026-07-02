@@ -6,7 +6,6 @@ import sanitizeHtml from "sanitize-html";
 
 import PriceCard from "@/components/booking/priceCard";
 import { buildDetailImages, containsHtmlMarkup, isBookingEvent } from "@/components/events/eventPresentation";
-import { MapComponent } from "@/components/home/MapComponent";
 import { DetailPageLayout } from "@/components/ui/DetailPageLayout";
 import { DetailMediaSection } from "@/components/ui/detailMediaSection";
 import { useGatewayEventDetailContent } from "@/public-content/hooks";
@@ -135,17 +134,6 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
             ))}
           </div>
         )}
-
-        {/* Map */}
-        {data.coordinates ? (
-          <div className="flex min-h-[70vh] h-full">
-            <MapComponent
-              src={import.meta.env.VITE_MASTERPORTAL_URL}
-              lat={data.coordinates.latitude}
-              lon={data.coordinates.longitude}
-            />
-          </div>
-        ) : null}
       </div>
     </DetailPageLayout>
   );

@@ -7,7 +7,6 @@ const config: Config = {
   PORT: 5100,
   LOG_LEVEL: "silent",
   PUBLIC_BASE_URL: "http://localhost:3000",
-  MASTERPORTAL_URL: "http://masterportal",
   CONTENT_SOURCE_MODE: "mock",
   DEFAULT_LANGUAGE: "de",
   FALLBACK_LANGUAGE: "de",
@@ -129,14 +128,21 @@ describe("PostgrestContentMapper", () => {
           dropdown_id: "dropdown-1",
           sequence: 2,
           map_url: "https://maps.example.com/b",
-          translations: { de: { Title: "Tab B" } },
+          translations: { de: { Title: "Stadtentwicklung" } },
         },
         {
           id: "tab-0",
           dropdown_id: "dropdown-1",
           sequence: 1,
           map_url: "https://maps.example.com/a",
-          translations: { de: { Title: "Tab A" } },
+          translations: { de: { Title: "Energie" } },
+        },
+        {
+          id: "tab-2",
+          dropdown_id: "dropdown-1",
+          sequence: 3,
+          map_url: "https://maps.example.com/c",
+          translations: { de: { Title: "Unverändert" } },
         },
         {
           id: "orphan",
@@ -200,14 +206,25 @@ describe("PostgrestContentMapper", () => {
     expect(page.seo.canonical).toBe("http://localhost:3000/projects");
     expect(dashboard.dropdowns.map((item) => item.id)).toEqual(["dropdown-0", "dropdown-1"]);
     expect(dashboard.dropdowns[0].links.map((item) => item.title)).toEqual(["Link A", "Link B"]);
-    expect(dashboard.dropdowns[1].tabs.map((item) => item.title)).toEqual(["Tab A", "Tab B"]);
+    expect(dashboard.dropdowns[1].tabs.map((item) => item.title)).toEqual([
+      "Energie",
+      "Stadtentwicklung",
+      "Unverändert",
+    ]);
+    expect(dashboard.dropdowns[1].tabs.map((item) => item.mapUrl)).toEqual([
+      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=YL787UBfwoBD0jsepOyTu&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=XB8lHHMfITxvf_0QGDrve&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+      "https://maps.example.com/c",
+    ]);
     expect(dashboard.dropdowns[1].tabs[0].informationCards[0].button).toEqual({
       title: "Mehr",
       url: "https://example.com/more",
       openInNewTab: true,
     });
     expect(map.page.title).toBe("Map");
-    expect(map.map.embedUrl).toBe("http://masterportal");
+    expect(map.map.embedUrl).toBe(
+      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=Q0eIRLhq8q7PXzRujP7sv&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+    );
   });
 
   it("builds event detail SEO metadata", () => {

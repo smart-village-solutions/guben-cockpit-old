@@ -11,7 +11,6 @@ services:
         VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
         VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
         VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
-        VITE_MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
     container_name: web-dev
     restart: unless-stopped
     depends_on:
@@ -38,7 +37,6 @@ services:
         VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
         VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
         VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
-        VITE_MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
     container_name: web-live-dev
     restart: unless-stopped
     depends_on:
@@ -56,7 +54,6 @@ services:
       VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
       VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
       VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
-      VITE_MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
       INTERNAL_CONTENT_GATEWAY_URL: http://content-gateway:5100
     command: ["start-frontend-live"]
     networks:
@@ -75,7 +72,6 @@ services:
       PORT: 5100
       LOG_LEVEL: info
       PUBLIC_BASE_URL: http://localhost:3000
-      MASTERPORTAL_URL: ${VITE_MASTERPORTAL_URL:-https://masterportal.guben.de/}
       SV_GRAPHQL_URL: ${SV_GRAPHQL_URL:-}
       SV_OAUTH_TOKEN_URL: ${SV_OAUTH_TOKEN_URL:-}
       SV_CLIENT_ID: ${SV_CLIENT_ID:-}
