@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { buildplaceMapOverviewUrl, buildplaceMapUrl } from "../src/content/buildplace-map-urls.js";
 import { PostgrestContentMapper } from "../src/content/postgrest-content-mapper.js";
 import type { Config } from "../src/config.js";
 
@@ -252,24 +253,22 @@ describe("PostgrestContentMapper", () => {
       "Unverändert",
     ]);
     expect(dashboard.dropdowns[1].tabs.map((item) => item.mapUrl)).toEqual([
-      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=OgBlQ3t5LyqT3jiOe9n0t&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=ZM98Cpw2zk1V_ubb8N7Ex&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=YL787UBfwoBD0jsepOyTu&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=XB8lHHMfITxvf_0QGDrve&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=urVhNhQ6SlWLjS-G-jbs6&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=wlFzNKnN44qombPDU0YKc&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=DJ3cImoMtX1h-RP9nvc6v&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+      buildplaceMapUrl("OgBlQ3t5LyqT3jiOe9n0t"),
+      buildplaceMapUrl("ZM98Cpw2zk1V_ubb8N7Ex"),
+      buildplaceMapUrl("YL787UBfwoBD0jsepOyTu"),
+      buildplaceMapUrl("XB8lHHMfITxvf_0QGDrve"),
+      buildplaceMapUrl("urVhNhQ6SlWLjS-G-jbs6"),
+      buildplaceMapUrl("wlFzNKnN44qombPDU0YKc"),
+      buildplaceMapUrl("DJ3cImoMtX1h-RP9nvc6v"),
       "https://maps.example.com/c",
     ]);
-    expect(dashboard.dropdowns[1].tabs[2].informationCards[0].button).toEqual({
+    expect(dashboard.dropdowns[1].tabs.find((tab) => tab.id === "tab-0")?.informationCards[0].button).toEqual({
       title: "Mehr",
       url: "https://example.com/more",
       openInNewTab: true,
     });
     expect(map.page.title).toBe("Map");
-    expect(map.map.embedUrl).toBe(
-      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=Q0eIRLhq8q7PXzRujP7sv&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-    );
+    expect(map.map.embedUrl).toBe(buildplaceMapOverviewUrl);
   });
 
   it("builds event detail SEO metadata", () => {

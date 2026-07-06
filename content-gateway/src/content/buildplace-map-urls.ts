@@ -1,33 +1,22 @@
-export const buildplaceMapOverviewUrl =
-  "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=Q0eIRLhq8q7PXzRujP7sv&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location";
+export const buildplaceMapUrl = (geodataview: string) =>
+  `https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=${geodataview}&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location`;
+
+export const buildplaceMapOverviewUrl = buildplaceMapUrl("Q0eIRLhq8q7PXzRujP7sv");
 
 export const buildplaceMapUrlByCanonicalTitle: Record<string, string> = {
-  euroregion:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=OgBlQ3t5LyqT3jiOe9n0t&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  "guben-gubin":
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=ZM98Cpw2zk1V_ubb8N7Ex&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  stadtentwicklung:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=XB8lHHMfITxvf_0QGDrve&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  "stadtentwicklung & teilhabe":
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=XB8lHHMfITxvf_0QGDrve&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  energie:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=YL787UBfwoBD0jsepOyTu&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  "energie & wirtschaft":
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=YL787UBfwoBD0jsepOyTu&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  kinder:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=wlFzNKnN44qombPDU0YKc&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  "kinder & jugend":
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=wlFzNKnN44qombPDU0YKc&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  senioren:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=xhph1SnqNaFnyzojaapSx&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  tourismus:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=DJ3cImoMtX1h-RP9nvc6v&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  "tourismus & mobilität":
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=DJ3cImoMtX1h-RP9nvc6v&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  umwelt:
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=urVhNhQ6SlWLjS-G-jbs6&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
-  "gefahrenabwehr & umwelt":
-    "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=urVhNhQ6SlWLjS-G-jbs6&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+  euroregion: buildplaceMapUrl("OgBlQ3t5LyqT3jiOe9n0t"),
+  "guben-gubin": buildplaceMapUrl("ZM98Cpw2zk1V_ubb8N7Ex"),
+  stadtentwicklung: buildplaceMapUrl("XB8lHHMfITxvf_0QGDrve"),
+  "stadtentwicklung & teilhabe": buildplaceMapUrl("XB8lHHMfITxvf_0QGDrve"),
+  energie: buildplaceMapUrl("YL787UBfwoBD0jsepOyTu"),
+  "energie & wirtschaft": buildplaceMapUrl("YL787UBfwoBD0jsepOyTu"),
+  kinder: buildplaceMapUrl("wlFzNKnN44qombPDU0YKc"),
+  "kinder & jugend": buildplaceMapUrl("wlFzNKnN44qombPDU0YKc"),
+  senioren: buildplaceMapUrl("xhph1SnqNaFnyzojaapSx"),
+  tourismus: buildplaceMapUrl("DJ3cImoMtX1h-RP9nvc6v"),
+  "tourismus & mobilität": buildplaceMapUrl("DJ3cImoMtX1h-RP9nvc6v"),
+  umwelt: buildplaceMapUrl("urVhNhQ6SlWLjS-G-jbs6"),
+  "gefahrenabwehr & umwelt": buildplaceMapUrl("urVhNhQ6SlWLjS-G-jbs6"),
 };
 
 const normalizeCanonicalTitle = (title: string) => title.trim().toLowerCase();
