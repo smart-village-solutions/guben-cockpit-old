@@ -124,23 +124,58 @@ describe("PostgrestContentMapper", () => {
       ],
       tabRows: [
         {
+          id: "tab-euroregion",
+          dropdown_id: "dropdown-1",
+          sequence: 0,
+          map_url: "https://maps.example.com/euroregion",
+          translations: { de: { Title: "Euroregion" } },
+        },
+        {
+          id: "tab-guben-gubin",
+          dropdown_id: "dropdown-1",
+          sequence: 1,
+          map_url: "https://maps.example.com/guben-gubin",
+          translations: { de: { Title: "Guben-Gubin" } },
+        },
+        {
           id: "tab-1",
           dropdown_id: "dropdown-1",
-          sequence: 2,
+          sequence: 4,
           map_url: "https://maps.example.com/b",
-          translations: { de: { Title: "Stadtentwicklung" } },
+          translations: { de: { Title: "Stadtentwicklung & Teilhabe" } },
         },
         {
           id: "tab-0",
           dropdown_id: "dropdown-1",
-          sequence: 1,
+          sequence: 3,
           map_url: "https://maps.example.com/a",
-          translations: { de: { Title: "Energie" } },
+          translations: { de: { Title: "Energie & Wirtschaft" } },
+        },
+        {
+          id: "tab-umwelt",
+          dropdown_id: "dropdown-1",
+          sequence: 5,
+          map_url: "https://maps.example.com/umwelt",
+          translations: { de: { Title: "Gefahrenabwehr & Umwelt" } },
+        },
+        {
+          id: "tab-kinder",
+          dropdown_id: "dropdown-1",
+          sequence: 6,
+          map_url: "https://maps.example.com/kinder",
+          translations: { de: { Title: "Kinder & Jugend" } },
+        },
+        {
+          id: "tab-tourismus",
+          dropdown_id: "dropdown-1",
+          sequence: 7,
+          map_url: "https://maps.example.com/tourismus",
+          translations: { de: { Title: "Tourismus & Mobilität" } },
         },
         {
           id: "tab-2",
           dropdown_id: "dropdown-1",
-          sequence: 3,
+          sequence: 8,
           map_url: "https://maps.example.com/c",
           translations: { de: { Title: "Unverändert" } },
         },
@@ -207,16 +242,26 @@ describe("PostgrestContentMapper", () => {
     expect(dashboard.dropdowns.map((item) => item.id)).toEqual(["dropdown-0", "dropdown-1"]);
     expect(dashboard.dropdowns[0].links.map((item) => item.title)).toEqual(["Link A", "Link B"]);
     expect(dashboard.dropdowns[1].tabs.map((item) => item.title)).toEqual([
-      "Energie",
-      "Stadtentwicklung",
+      "Euroregion",
+      "Guben-Gubin",
+      "Energie & Wirtschaft",
+      "Stadtentwicklung & Teilhabe",
+      "Gefahrenabwehr & Umwelt",
+      "Kinder & Jugend",
+      "Tourismus & Mobilität",
       "Unverändert",
     ]);
     expect(dashboard.dropdowns[1].tabs.map((item) => item.mapUrl)).toEqual([
+      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=OgBlQ3t5LyqT3jiOe9n0t&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=ZM98Cpw2zk1V_ubb8N7Ex&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
       "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=YL787UBfwoBD0jsepOyTu&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
       "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=XB8lHHMfITxvf_0QGDrve&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=urVhNhQ6SlWLjS-G-jbs6&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=wlFzNKnN44qombPDU0YKc&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
+      "https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=DJ3cImoMtX1h-RP9nvc6v&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location",
       "https://maps.example.com/c",
     ]);
-    expect(dashboard.dropdowns[1].tabs[0].informationCards[0].button).toEqual({
+    expect(dashboard.dropdowns[1].tabs[2].informationCards[0].button).toEqual({
       title: "Mehr",
       url: "https://example.com/more",
       openInNewTab: true,
