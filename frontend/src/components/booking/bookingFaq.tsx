@@ -20,7 +20,19 @@ export default function BookingFaq() {
             return false
           }
 
-          return answer.scrollHeight > answer.clientHeight
+          const hadClampClass = answer.classList.contains("line-clamp-2")
+
+          if (!hadClampClass) {
+            answer.classList.add("line-clamp-2")
+          }
+
+          const isOverflowing = answer.scrollHeight > answer.clientHeight
+
+          if (!hadClampClass) {
+            answer.classList.remove("line-clamp-2")
+          }
+
+          return isOverflowing
         }),
       )
     }

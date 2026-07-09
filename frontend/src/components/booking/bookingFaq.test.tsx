@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const translationState = vi.hoisted(() => ({
@@ -71,6 +71,42 @@ describe("BookingFaq", () => {
 
     expect(screen.getByText("Frage 1")).toBeTruthy();
     expect(screen.getByText("Frage 2")).toBeTruthy();
+
+    heightSpy.mockRestore();
+    clientHeightSpy.mockRestore();
+  });
+
+  it("keeps the collapse toggle available after resize while an overflowing answer is expanded", async () => {
+    const heightSpy = vi
+      .spyOn(HTMLElement.prototype, "scrollHeight", "get")
+      .mockImplementation(function getScrollHeight(this: HTMLElement) {
+        return this.textContent === "Lange Antwort" ? 80 : 20;
+      });
+
+    const clientHeightSpy = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockImplementation(function getClientHeight(this: HTMLElement) {
+        if (this.textContent !== "Lange Antwort") {
+          return 20;
+        }
+
+        return this.className.includes("line-clamp-2") ? 40 : 80;
+      });
+
+    render(<BookingFaq />);
+
+    const expandButton = await screen.findByRole("button", { name: "Mehr anzeigen" });
+    fireEvent.click(expandButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Weniger anzeigen" })).toBeTruthy();
+    });
+
+    fireEvent(window, new Event("resize"));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Weniger anzeigen" })).toBeTruthy();
+    });
 
     heightSpy.mockRestore();
     clientHeightSpy.mockRestore();
