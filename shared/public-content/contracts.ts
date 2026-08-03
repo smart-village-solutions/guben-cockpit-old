@@ -230,6 +230,18 @@ export const bookingTenantsContentSchema = z.object({
   ),
 });
 
+export const bookingFaqItemSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  answer: z.string(),
+  languageCode: z.string().regex(/^[a-z]{2}$/),
+  sortWeight: z.number(),
+});
+
+export const bookingFaqsContentSchema = z.object({
+  items: z.array(bookingFaqItemSchema),
+});
+
 export const gatewayErrorSchema = z.object({
   error: z.object({
     code: z.enum([
@@ -252,6 +264,8 @@ export type Event = z.infer<typeof eventSchema>;
 export type EventDetailContent = z.infer<typeof eventDetailContentSchema>;
 export type EventsContent = z.infer<typeof eventsContentSchema>;
 export type BookingTenantsContent = z.infer<typeof bookingTenantsContentSchema>;
+export type BookingFaqItem = z.infer<typeof bookingFaqItemSchema>;
+export type BookingFaqsContent = z.infer<typeof bookingFaqsContentSchema>;
 export type Coordinates = z.infer<typeof coordinatesSchema>;
 export type Category = z.infer<typeof categorySchema>;
 export type EventImage = z.infer<typeof eventImageSchema>;

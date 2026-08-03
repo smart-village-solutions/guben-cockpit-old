@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  bookingFaqsContentSchema,
   eventDetailContentSchema,
   eventsContentSchema,
   gatewayErrorSchema,
@@ -10,6 +11,16 @@ import {
 } from "./contracts.js";
 
 describe("public content contracts", () => {
+  it("accepts normalized Booking FAQs and rejects invalid fields", () => {
+    const payload = {
+      items: [{ id: "faq-1", question: "Frage", answer: "Antwort", languageCode: "de", sortWeight: 2 }],
+    };
+
+    expect(bookingFaqsContentSchema.parse(payload)).toEqual(payload);
+    expect(() => bookingFaqsContentSchema.parse({ items: [{ ...payload.items[0], id: undefined }] })).toThrowError();
+    expect(() => bookingFaqsContentSchema.parse({ items: [{ ...payload.items[0], sortWeight: "2" }] })).toThrowError();
+  });
+
   it("accepts valid home content payloads", () => {
     const payload = {
       page: {

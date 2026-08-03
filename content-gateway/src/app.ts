@@ -154,6 +154,13 @@ export function createApp(options: {
 
   app.get("/api/content/booking-tenants", async () => options.repository.getBookingTenants());
 
+  app.get("/api/content/booking/faqs", async (request) => {
+    const query = pageQuerySchema.parse(request.query);
+    return options.repository.getBookingFaqs(
+      resolveLanguage(query.lang, request.headers["accept-language"], options.config),
+    );
+  });
+
   app.setErrorHandler((error, request, reply) => {
     const gatewayError = normalizeError(error);
     if (gatewayError.upstream !== "gateway") {

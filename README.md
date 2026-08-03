@@ -15,7 +15,7 @@ The former `.NET` CMS/admin stack has been removed from this branch.
 Runtime flow:
 
 1. `frontend` fetches public content from `content-gateway`
-2. `content-gateway` reads `/api/content/events` and `/api/content/events/:id` from Smart Village, while the remaining public content stays on PostgREST
+2. `content-gateway` reads `/api/content/events`, `/api/content/events/:id`, and the language-specific `/api/content/booking/faqs` from Smart Village, while the remaining public content stays on PostgREST
 3. `postgrest` exposes the `public_content` schema from PostgreSQL for the non-event gateway content
 
 External services still used by the public frontend:

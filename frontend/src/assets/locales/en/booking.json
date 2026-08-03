@@ -12,16 +12,68 @@
     "showLess": "Show less",
     "items": [
       {
-        "question": "Question 1",
-        "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+        "question": "1. What can I book through the booking portal?",
+        "answer": "You can use the platform to book various rooms, equipment and resources provided by the City of Guben, such as event spaces, technical equipment or municipal facilities."
       },
       {
-        "question": "Question 2",
-        "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+        "question": "2. Who can use the booking portal?",
+        "answer": "The service is intended for residents, clubs, schools and other organizations connected with the City of Guben."
       },
       {
-        "question": "Question 3",
-        "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+        "question": "3. Do I have to register to make a booking?",
+        "answer": "You can make a booking as a guest without registering. However, registration is recommended if you book frequently."
+      },
+      {
+        "question": "4. How can I make a booking?",
+        "answer": "Select the item you want on the booking page, enter the date, time and any other required details, and confirm the booking. You will receive a confirmation email once the process is complete."
+      },
+      {
+        "question": "5. What information is required for a booking?",
+        "answer": "Depending on the service, we require your name, email address, telephone number, period of use and, where applicable, the purpose of use."
+      },
+      {
+        "question": "6. How do I know that my booking was successful?",
+        "answer": "The responsible staff member will process your request and send you a confirmation email once the booking has been successfully completed."
+      },
+      {
+        "question": "7. Are bookings free of charge?",
+        "answer": "Some services are free of charge, while others are subject to a fee. The costs are displayed directly in the relevant booking offer."
+      },
+      {
+        "question": "8. How does online payment work?",
+        "answer": "If a fee applies to the service, you can conveniently pay it online by SEPA direct debit, credit card or other digital payment methods."
+      },
+      {
+        "question": "9. Will I receive an invoice or receipt?",
+        "answer": "Yes, once the payment has been completed, we will send you a payment confirmation by email."
+      },
+      {
+        "question": "10. Can I change or cancel my booking afterwards?",
+        "answer": "Yes. Your booking confirmation includes an option to cancel the booking."
+      },
+      {
+        "question": "11. Are there any cancellation fees?",
+        "answer": "No."
+      },
+      {
+        "question": "12. What happens if I do not attend my appointment?",
+        "answer": "If you do not cancel, a fee may be charged or the booking may remain unavailable to others. Please cancel appointments in good time."
+      },
+      {
+        "question": "13. What do I need to bring to the booked appointment?",
+        "answer": "Please bring your booking confirmation, either digitally or printed, and proof of identity if required."
+      },
+      {
+        "question": "14. When may I use the rooms or equipment I have booked?",
+        "answer": "Use is permitted only during the specified period. Please keep to the agreed times to avoid overlaps."
+      },
+      {
+        "question": "15. Who can I contact if I need assistance on site?",
+        "answer": "The responsible contact person is named in the booking confirmation. For general questions, you can contact the Smart City team at smartcity@guben.de."
+      },
+      {
+        "question": "16. I am experiencing technical problems while booking. What can I do?",
+        "answer": "If the booking does not work or an error message appears, first try using a different browser. If the problem persists, contact us by email at smartcity@guben.de."
       }
     ]
   },

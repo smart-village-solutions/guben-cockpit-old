@@ -6,6 +6,7 @@ import {
 } from "./content/content-repository.js";
 import { SmartVillagePostgrestContentRepository } from "./content/smart-village-postgrest-content-repository.js";
 import { SmartVillageEventRepository } from "./content/smart-village-event-repository.js";
+import { SmartVillageBookingFaqRepository } from "./content/smart-village-booking-faq-repository.js";
 import { PostgrestClient } from "./upstream/postgrest-client.js";
 import { SmartVillageGraphQLClient } from "./upstream/smart-village-graphql-client.js";
 import { SmartVillageOAuthClient } from "./upstream/smart-village-oauth-client.js";
@@ -44,11 +45,16 @@ const createPostgrestMode = (postgrestConfig: PostgrestConfig) => {
     publicBaseUrl: postgrestConfig.PUBLIC_BASE_URL,
     warn: createSmartVillageWarnHook(),
   });
+  const smartVillageBookingFaqRepository = new SmartVillageBookingFaqRepository({
+    client: smartVillageGraphQLClient,
+    warn: createSmartVillageWarnHook(),
+  });
 
   return {
     repository: new SmartVillagePostgrestContentRepository({
       postgrestRepository,
       smartVillageEventRepository,
+      smartVillageBookingFaqRepository,
     }),
     readinessProbe: async () => {
       const postgrestReady = await postgrestClient.checkReadiness();

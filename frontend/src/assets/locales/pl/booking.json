@@ -12,16 +12,68 @@
     "showLess": "Pokaż mniej",
     "items": [
       {
-        "question": "Pytanie 1",
-        "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+        "question": "1. Co mogę zarezerwować za pośrednictwem portalu rezerwacyjnego?",
+        "answer": "Za pośrednictwem platformy można rezerwować różne pomieszczenia, urządzenia i zasoby miasta Guben, np. sale eventowe, sprzęt techniczny lub obiekty komunalne."
       },
       {
-        "question": "Pytanie 2",
-        "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+        "question": "2. Kto może korzystać z portalu rezerwacyjnego?",
+        "answer": "Oferta jest skierowana do mieszkańców, stowarzyszeń, szkół oraz innych organizacji związanych z miastem Guben."
       },
       {
-        "question": "Pytanie 3",
-        "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et hendrerit nisl. Suspendisse viverra velit quis augue rhoncus aliquam. Aliquam ante risus, venenatis a tempor sit amet, imperdiet ut leo. Cras varius libero vitae scelerisque hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."
+        "question": "3. Czy muszę się zarejestrować, aby dokonać rezerwacji?",
+        "answer": "Rezerwacji można dokonać jako gość bez rejestracji. W przypadku częstych rezerwacji zalecamy jednak założenie konta."
+      },
+      {
+        "question": "4. Jak mogę dokonać rezerwacji?",
+        "answer": "Na stronie rezerwacji wybierz odpowiedni obiekt, podaj datę, godzinę i pozostałe wymagane informacje, a następnie potwierdź rezerwację. Po zakończeniu procesu otrzymasz wiadomość e-mail z potwierdzeniem."
+      },
+      {
+        "question": "5. Jakie dane są potrzebne do dokonania rezerwacji?",
+        "answer": "W zależności od oferty potrzebujemy imienia i nazwiska, adresu e-mail, numeru telefonu, okresu użytkowania oraz ewentualnie celu użytkowania."
+      },
+      {
+        "question": "6. Skąd mam wiedzieć, że moja rezerwacja została dokonana pomyślnie?",
+        "answer": "Odpowiedni pracownik rozpatrzy Twoje zgłoszenie i po pomyślnym dokonaniu rezerwacji prześle Ci wiadomość e-mail z potwierdzeniem."
+      },
+      {
+        "question": "7. Czy rezerwacje są bezpłatne?",
+        "answer": "Niektóre oferty są bezpłatne, a inne płatne. Koszty są podane bezpośrednio przy danej ofercie rezerwacyjnej."
+      },
+      {
+        "question": "8. Jak działa płatność online?",
+        "answer": "Jeśli oferta jest odpłatna, można wygodnie zapłacić online za pomocą polecenia zapłaty SEPA, karty kredytowej lub innych cyfrowych metod płatności."
+      },
+      {
+        "question": "9. Czy otrzymam fakturę lub pokwitowanie?",
+        "answer": "Tak, po dokonaniu płatności prześlemy Ci potwierdzenie płatności pocztą elektroniczną."
+      },
+      {
+        "question": "10. Czy mogę później zmienić lub anulować rezerwację?",
+        "answer": "Tak. W potwierdzeniu rezerwacji znajduje się opcja jej anulowania."
+      },
+      {
+        "question": "11. Czy za anulowanie rezerwacji są pobierane opłaty?",
+        "answer": "Nie."
+      },
+      {
+        "question": "12. Co się stanie, jeśli nie pojawię się w zarezerwowanym terminie?",
+        "answer": "Jeśli rezerwacja nie zostanie anulowana, może zostać naliczona opłata lub termin może pozostać zablokowany dla innych osób. Prosimy o odpowiednio wczesne odwoływanie terminów."
+      },
+      {
+        "question": "13. Co muszę zabrać ze sobą na zarezerwowany termin?",
+        "answer": "Prosimy zabrać ze sobą potwierdzenie rezerwacji w formie cyfrowej lub wydrukowanej oraz, w razie potrzeby, dokument tożsamości."
+      },
+      {
+        "question": "14. Kiedy mogę korzystać z zarezerwowanych pomieszczeń lub urządzeń?",
+        "answer": "Korzystanie jest dozwolone wyłącznie w podanym okresie. Prosimy przestrzegać uzgodnionych godzin, aby uniknąć nakładania się rezerwacji."
+      },
+      {
+        "question": "15. Z kim mogę się skontaktować, jeśli potrzebuję pomocy na miejscu?",
+        "answer": "Dane właściwej osoby kontaktowej znajdują się w potwierdzeniu rezerwacji. W przypadku pytań ogólnych można skontaktować się z zespołem Smart City pod adresem smartcity@guben.de."
+      },
+      {
+        "question": "16. Mam problemy techniczne podczas dokonywania rezerwacji – co mogę zrobić?",
+        "answer": "Jeśli rezerwacja nie działa lub pojawia się komunikat o błędzie, najpierw spróbuj użyć innej przeglądarki. Jeśli problem nadal występuje, skontaktuj się z nami pocztą elektroniczną pod adresem smartcity@guben.de."
       }
     ]
   },
