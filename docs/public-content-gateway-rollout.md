@@ -81,3 +81,17 @@ Important:
 1. Redeploy the previously known-good frontend and gateway images.
 2. Leave `content-gateway` and PostgREST running for diagnosis unless they are the incident source.
 3. If the gateway itself is the issue, disable gateway-backed public content with `VITE_PUBLIC_CONTENT_SOURCE=disabled` or remove traffic from the service, and restore only after `/health/ready`, `/metrics`, and the contract checks are green again.
+
+## Smart Village Cockpit Card verification
+
+After deploying a gateway version that loads `COCKPIT_CARD` Generic Items:
+
+1. Request `/api/content/dashboard?lang=de`, `?lang=en`, and `?lang=pl`.
+2. Confirm that the local dropdown and tab structure is unchanged.
+3. Confirm that card counts and titles match the language-specific Mainserver items for every known `categories.name` value.
+4. Confirm ascending `payload.sortWeight` order within every tab and exercise one internal and one new-tab link.
+5. Confirm that missing descriptions, images, and web URLs render without breaking the remaining cards.
+6. Watch gateway logs for malformed items, unknown categories, and local-backup activation.
+7. Test backup behavior in a controlled environment by making the Smart Village card request unavailable and confirming that the local PostgREST cards remain visible.
+
+New cards in an existing category require no local data change. A new category remains hidden until the local dashboard structure contains a localized tab title matching `categories.name` after trimming surrounding whitespace and ignoring case.

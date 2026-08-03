@@ -79,4 +79,7 @@ export type SmartVillageGenericItem = {
   genericType?: string | null;
   payload?: unknown;
   contentBlocks?: Array<{ body?: string | null }> | null;
+  mediaContents?: SmartVillageMediaContent[] | null;
+  webUrls?: SmartVillageUrl[] | null;
+  categories?: SmartVillageCategory[] | null;
 };

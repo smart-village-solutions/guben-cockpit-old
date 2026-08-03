@@ -128,10 +128,14 @@ describe("content repository glue", () => {
     const smartVillageBookingFaqRepository = {
       getBookingFaqs: vi.fn(async () => ({ items: [] })),
     };
+    const smartVillageCockpitCardRepository = {
+      getCockpitCards: vi.fn(async () => []),
+    };
     const repository = new SmartVillagePostgrestContentRepository({
       postgrestRepository: postgrestRepository as never,
       smartVillageEventRepository: smartVillageEventRepository as never,
       smartVillageBookingFaqRepository: smartVillageBookingFaqRepository as never,
+      smartVillageCockpitCardRepository: smartVillageCockpitCardRepository as never,
     });
     const home = await repository.getHome("de");
     const projects = await repository.getProjects("de", 1, 12);
@@ -164,6 +168,7 @@ describe("content repository glue", () => {
     expect(postgrestRepository.getMap).toHaveBeenCalledWith("de");
     expect(postgrestRepository.getFooter).toHaveBeenCalledWith();
     expect(postgrestRepository.getBookingTenants).toHaveBeenCalledWith();
+    expect(smartVillageCockpitCardRepository.getCockpitCards).toHaveBeenCalledTimes(3);
     expect(events).toMatchObject({
       events: {
         results: [
@@ -175,5 +180,75 @@ describe("content repository glue", () => {
         ],
       },
     });
+  });
+
+  it("uses matching Smart Village cards consistently for home, dashboard, and public content", async () => {
+    const tab = mockDashboardContent.dropdowns[0]!.tabs[0]!;
+    const apiCard = {
+      categoryName: ` ${tab.title.toUpperCase()} `,
+      languageCode: "de",
+      sortWeight: 0,
+      card: {
+        id: "api-card",
+        title: "API-Kachel",
+        description: null,
+        imageUrl: null,
+        imageAlt: null,
+        button: null,
+      },
+    };
+    const postgrestRepository = {
+      getHome: vi.fn(async () => structuredClone(mockHomeContent)),
+      getProjects: vi.fn(async () => mockProjectsContent),
+      getPublicContent: vi.fn(async () => structuredClone(mockPublicContentBundle)),
+      getDashboard: vi.fn(async () => structuredClone(mockDashboardContent)),
+      getMap: vi.fn(async () => mockMapContent),
+      getFooter: vi.fn(async () => mockFooterContent),
+      getBookingTenants: vi.fn(async () => ({ tenants: [] })),
+    };
+    const repository = new SmartVillagePostgrestContentRepository({
+      postgrestRepository: postgrestRepository as never,
+      smartVillageEventRepository: {} as never,
+      smartVillageBookingFaqRepository: {} as never,
+      smartVillageCockpitCardRepository: {
+        getCockpitCards: vi.fn(async () => [apiCard]),
+      } as never,
+    });
+
+    const [home, dashboard, publicContent] = await Promise.all([
+      repository.getHome("de"),
+      repository.getDashboard("de"),
+      repository.getPublicContent("de"),
+    ]);
+
+    expect(home.dashboard.dropdowns[0]!.tabs[0]!.informationCards).toEqual([apiCard.card]);
+    expect(dashboard.dropdowns[0]!.tabs[0]!.informationCards).toEqual([apiCard.card]);
+    expect(publicContent.home.dropdowns[0]!.tabs[0]!.informationCards).toEqual([apiCard.card]);
+    expect(publicContent.home.cards).toEqual([
+      expect.objectContaining({ id: "api-card", tabId: tab.id, sequence: 1 }),
+    ]);
+  });
+
+  it("keeps all local cards when Smart Village card loading fails", async () => {
+    const warn = vi.fn();
+    const repository = new SmartVillagePostgrestContentRepository({
+      postgrestRepository: {
+        getDashboard: vi.fn(async () => structuredClone(mockDashboardContent)),
+      } as never,
+      smartVillageEventRepository: {} as never,
+      smartVillageBookingFaqRepository: {} as never,
+      smartVillageCockpitCardRepository: {
+        getCockpitCards: vi.fn(async () => {
+          throw new Error("upstream unavailable");
+        }),
+      } as never,
+      warn,
+    });
+
+    await expect(repository.getDashboard("de")).resolves.toEqual(mockDashboardContent);
+    expect(warn).toHaveBeenCalledWith(
+      "Using local Cockpit Cards because Smart Village card loading failed",
+      expect.objectContaining({ languageCode: "de", error: "upstream unavailable" }),
+    );
   });
 });

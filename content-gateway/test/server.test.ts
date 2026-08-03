@@ -88,6 +88,7 @@ describe("server bootstrap", () => {
     const checkReadiness = vi.fn(async () => true);
     const checkGraphqlReadiness = vi.fn(async () => ({ eventRecords: [{ id: "sv-1" }] }));
     const smartVillageEventRepositoryOptions: Array<Record<string, unknown>> = [];
+    const smartVillageCockpitCardRepositoryOptions: Array<Record<string, unknown>> = [];
     const createApp = vi.fn(() => ({
       listen,
       log: {
@@ -96,6 +97,7 @@ describe("server bootstrap", () => {
       },
     }));
     const wrapperRepositoryInstances: unknown[] = [];
+    const wrapperRepositoryOptions: Array<Record<string, unknown>> = [];
 
     vi.doMock("../src/config.js", () => ({
       loadConfig: () => ({
@@ -118,8 +120,9 @@ describe("server bootstrap", () => {
     }));
     vi.doMock("../src/content/smart-village-postgrest-content-repository.js", () => ({
       SmartVillagePostgrestContentRepository: class SmartVillagePostgrestContentRepository {
-        public constructor() {
+        public constructor(options: Record<string, unknown>) {
           wrapperRepositoryInstances.push(this);
+          wrapperRepositoryOptions.push(options);
         }
       },
     }));
@@ -127,6 +130,13 @@ describe("server bootstrap", () => {
       SmartVillageEventRepository: class SmartVillageEventRepository {
         public constructor(options: Record<string, unknown>) {
           smartVillageEventRepositoryOptions.push(options);
+        }
+      },
+    }));
+    vi.doMock("../src/content/smart-village-cockpit-card-repository.js", () => ({
+      SmartVillageCockpitCardRepository: class SmartVillageCockpitCardRepository {
+        public constructor(options: Record<string, unknown>) {
+          smartVillageCockpitCardRepositoryOptions.push(options);
         }
       },
     }));
@@ -175,6 +185,14 @@ describe("server bootstrap", () => {
     expect(checkGraphqlReadiness).toHaveBeenCalledWith(expect.stringContaining("eventRecords"));
     expect(options.repository).toBe(wrapperRepositoryInstances[0]);
     expect(smartVillageEventRepositoryOptions[0]?.warn).toEqual(expect.any(Function));
+    expect(smartVillageCockpitCardRepositoryOptions[0]).toMatchObject({
+      client: expect.any(Object),
+      warn: expect.any(Function),
+    });
+    expect(wrapperRepositoryOptions[0]).toMatchObject({
+      smartVillageCockpitCardRepository: expect.any(Object),
+      warn: expect.any(Function),
+    });
   });
 
   it("reports Smart Village readiness separately without failing the overall readiness payload construction", async () => {
@@ -222,6 +240,9 @@ describe("server bootstrap", () => {
           smartVillageEventRepositoryOptions.push(options);
         }
       },
+    }));
+    vi.doMock("../src/content/smart-village-cockpit-card-repository.js", () => ({
+      SmartVillageCockpitCardRepository: class SmartVillageCockpitCardRepository {},
     }));
     vi.doMock("../src/upstream/postgrest-client.js", () => ({
       PostgrestClient: class PostgrestClient {
