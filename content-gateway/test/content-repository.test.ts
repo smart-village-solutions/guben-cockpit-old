@@ -61,6 +61,7 @@ describe("content repository glue", () => {
       getBookingTenants: async () => ({
         tenants: mockEventsContent.events.bookingTenants,
       }),
+      getBookingFaqs: async () => ({ items: [] }),
     } satisfies PublicContentRepository;
 
     expect(filters).toMatchObject({
@@ -84,6 +85,7 @@ describe("content repository glue", () => {
     await expect(repository.getBookingTenants()).resolves.toEqual({
       tenants: mockEventsContent.events.bookingTenants,
     });
+    await expect(repository.getBookingFaqs()).resolves.toEqual({ items: [] });
   });
 
   it("keeps the exported PostgrestContentRepository alias wired to the legacy PostgREST implementation", () => {
@@ -123,9 +125,13 @@ describe("content repository glue", () => {
       getEvents: vi.fn(async () => mockEventsContent),
       getEventById: vi.fn(async () => mockEventDetail),
     };
+    const smartVillageBookingFaqRepository = {
+      getBookingFaqs: vi.fn(async () => ({ items: [] })),
+    };
     const repository = new SmartVillagePostgrestContentRepository({
       postgrestRepository: postgrestRepository as never,
       smartVillageEventRepository: smartVillageEventRepository as never,
+      smartVillageBookingFaqRepository: smartVillageBookingFaqRepository as never,
     });
     const home = await repository.getHome("de");
     const projects = await repository.getProjects("de", 1, 12);

@@ -1,4 +1,5 @@
 import type {
+  BookingFaqsContent,
   BookingTenantsContent,
   DashboardContent,
   EventDetailContent,
@@ -12,10 +13,12 @@ import type {
 import type { EventFilters, PublicContentRepository } from "./content-repository-contract.js";
 import type { PostgrestContentRepository } from "./postgrest-content-repository.js";
 import type { SmartVillageEventRepository } from "./smart-village-event-repository.js";
+import type { SmartVillageBookingFaqRepository } from "./smart-village-booking-faq-repository.js";
 
 type SmartVillagePostgrestContentRepositoryOptions = {
   postgrestRepository: PostgrestContentRepository;
   smartVillageEventRepository: SmartVillageEventRepository;
+  smartVillageBookingFaqRepository: SmartVillageBookingFaqRepository;
 };
 
 export class SmartVillagePostgrestContentRepository implements PublicContentRepository {
@@ -57,5 +60,9 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
 
   public getBookingTenants(): Promise<BookingTenantsContent> {
     return this.options.postgrestRepository.getBookingTenants();
+  }
+
+  public getBookingFaqs(language: string): Promise<BookingFaqsContent> {
+    return this.options.smartVillageBookingFaqRepository.getBookingFaqs(language);
   }
 }

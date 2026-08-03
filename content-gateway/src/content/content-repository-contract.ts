@@ -1,4 +1,5 @@
 import type {
+  BookingFaqsContent,
   BookingTenantsContent,
   DashboardContent,
   EventDetailContent,
@@ -25,4 +26,5 @@ export interface PublicContentRepository {
   getMap(language: string): Promise<MapContent>;
   getFooter(): Promise<FooterContent>;
   getBookingTenants(): Promise<BookingTenantsContent>;
+  getBookingFaqs(language: string): Promise<BookingFaqsContent>;
 }

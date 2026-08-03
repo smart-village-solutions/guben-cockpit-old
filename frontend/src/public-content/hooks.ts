@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import {
+  bookingFaqsContentSchema,
   bookingTenantsContentSchema,
   eventDetailContentSchema,
   eventsContentSchema,
@@ -222,3 +223,14 @@ export const useGatewayBookingTenants = () =>
     queryFn: () =>
       fetchGatewayJson("/api/content/booking-tenants", bookingTenantsContentSchema),
   });
+
+export const useGatewayBookingFaqs = () => {
+  const language = useContentLanguage();
+  return useQuery({
+    queryKey: ["gateway-content", "booking-faqs", language],
+    enabled: isGatewayPublicContentEnabled,
+    queryFn: () =>
+      fetchGatewayJson("/api/content/booking/faqs", bookingFaqsContentSchema, { lang: language }),
+    retry: false,
+  });
+};

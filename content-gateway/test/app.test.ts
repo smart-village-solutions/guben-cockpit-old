@@ -24,6 +24,7 @@ const repositoryStub = (): PublicContentRepository => ({
   getBookingTenants: vi.fn(async () => ({
     tenants: mockEventsContent.events.bookingTenants,
   })),
+  getBookingFaqs: vi.fn(async () => ({ items: [] })),
   getDashboard: vi.fn(async () => mockDashboardContent),
   getMap: vi.fn(async () => mockMapContent),
   getFooter: vi.fn(async () => mockFooterContent),
@@ -122,6 +123,42 @@ describe("content gateway", () => {
     });
     expect(footerResponse.statusCode).toBe(200);
     expect(footerResponse.json().items).toHaveLength(3);
+  });
+
+  it("serves Booking FAQs using explicit and header-derived languages", async () => {
+    const app = createTestApp();
+    vi.mocked(repository.getBookingFaqs).mockResolvedValue({
+      items: [{ id: "faq-1", question: "Frage", answer: "Antwort", languageCode: "pl", sortWeight: 1 }],
+    });
+
+    const explicit = await app.inject({ method: "GET", url: "/api/content/booking/faqs?lang=pl" });
+    const header = await app.inject({
+      method: "GET",
+      url: "/api/content/booking/faqs",
+      headers: { "accept-language": "en-GB,en;q=0.8" },
+    });
+
+    expect(explicit.statusCode).toBe(200);
+    expect(explicit.json().items[0].id).toBe("faq-1");
+    expect(repository.getBookingFaqs).toHaveBeenNthCalledWith(1, "pl");
+    expect(repository.getBookingFaqs).toHaveBeenNthCalledWith(2, "en");
+    expect(header.statusCode).toBe(200);
+  });
+
+  it("returns empty FAQ collections and deterministic upstream errors", async () => {
+    const app = createTestApp();
+    await expect(app.inject({ method: "GET", url: "/api/content/booking/faqs" })).resolves.toMatchObject({ statusCode: 200 });
+
+    vi.mocked(repository.getBookingFaqs).mockRejectedValueOnce(new GatewayError({
+      code: "INVALID_UPSTREAM_PAYLOAD",
+      message: "invalid FAQs",
+      statusCode: 502,
+      upstream: "smartvillage",
+      retryable: false,
+    }));
+    const failure = await app.inject({ method: "GET", url: "/api/content/booking/faqs" });
+    expect(failure.statusCode).toBe(502);
+    expect(failure.json().error).toMatchObject({ code: "INVALID_UPSTREAM_PAYLOAD", upstream: "smartvillage" });
   });
 
   it("serves the bundled public content endpoint", async () => {

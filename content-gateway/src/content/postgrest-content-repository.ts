@@ -1,5 +1,6 @@
 import {
   BookingTenantsContent,
+  BookingFaqsContent,
   DashboardContent,
   EventDetailContent,
   EventsContent,
@@ -58,6 +59,10 @@ export class PostgrestContentRepository implements PublicContentRepository {
       },
       seo: page.seo,
     });
+  }
+
+  public async getBookingFaqs(): Promise<BookingFaqsContent> {
+    return { items: [] };
   }
 
   public async getProjects(

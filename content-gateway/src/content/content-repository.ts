@@ -1,5 +1,6 @@
 import {
   BookingTenantsContent,
+  BookingFaqsContent,
   DashboardContent,
   EventDetailContent,
   EventsContent,
@@ -9,6 +10,7 @@ import {
   ProjectsContent,
   PublicContentBundle,
   bookingTenantsContentSchema,
+  bookingFaqsContentSchema,
   dashboardContentSchema,
   eventDetailContentSchema,
   eventsContentSchema,
@@ -63,6 +65,10 @@ export class MockContentRepository implements PublicContentRepository {
     return bookingTenantsContentSchema.parse({
       tenants: mockEventsContent.events.bookingTenants,
     });
+  }
+
+  public async getBookingFaqs(): Promise<BookingFaqsContent> {
+    return bookingFaqsContentSchema.parse({ items: [] });
   }
 }
 
