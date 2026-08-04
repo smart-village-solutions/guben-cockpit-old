@@ -7,7 +7,7 @@ describe("validateProjectsSearch", () => {
     expect(validateProjectsSearch({
       search: " Schule ",
       categoryIds: ["6186", "6187", "6186"],
-      location: "guben",
+      location: " Guben ",
       radius: "10",
       sort: "updatedAt",
       direction: "desc",

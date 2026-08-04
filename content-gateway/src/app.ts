@@ -31,8 +31,8 @@ const eventsQuerySchema = z.object({
 });
 
 const categoryIdsSchema = z.preprocess((value) => {
-  if (Array.isArray(value)) return value.flatMap((entry) => String(entry).split(","));
-  if (typeof value === "string") return value.split(",").filter(Boolean);
+  if (Array.isArray(value)) return value.flatMap((entry) => String(entry).split(",")).map((entry) => entry.trim()).filter(Boolean);
+  if (typeof value === "string") return value.split(",").map((entry) => entry.trim()).filter(Boolean);
   return [];
 }, z.array(z.string().min(1)).default([]));
 

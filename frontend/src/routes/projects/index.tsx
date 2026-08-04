@@ -22,6 +22,9 @@ const optionalText = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const optionalLocation = (value: unknown) =>
+  optionalText(value)?.normalize("NFKC").replace(/\s+/g, " ").toLocaleLowerCase("de");
+
 export const validateProjectsSearch = (search: Record<string, unknown>): ProjectsSearch => {
   const rawCategories = Array.isArray(search.categoryIds)
     ? search.categoryIds
@@ -35,7 +38,7 @@ export const validateProjectsSearch = (search: Record<string, unknown>): Project
   return {
     search: optionalText(search.search),
     categoryIds,
-    location: optionalText(search.location),
+    location: optionalLocation(search.location),
     radius,
     sort: search.sort === "updatedAt" ? "updatedAt" : "name",
     direction: search.direction === "desc" ? "desc" : "asc",

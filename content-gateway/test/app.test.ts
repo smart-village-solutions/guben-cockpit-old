@@ -140,7 +140,7 @@ describe("content gateway", () => {
     const featured = await app.inject({ method: "GET", url: "/api/content/featured-projects?lang=de" });
     expect(featured.statusCode).toBe(200);
 
-    const list = await app.inject({ method: "GET", url: "/api/content/pois?categoryIds=6186,6187&sort=updatedAt&direction=desc&pageNumber=2&pageSize=5" });
+    const list = await app.inject({ method: "GET", url: "/api/content/pois?categoryIds=6186,%206187&sort=updatedAt&direction=desc&pageNumber=2&pageSize=5" });
     expect(list.statusCode).toBe(200);
     expect(repository.getPois).toHaveBeenCalledWith("de", expect.objectContaining({ categoryIds: ["6186", "6187"], direction: "desc", pageNumber: 2, pageSize: 5 }));
 
