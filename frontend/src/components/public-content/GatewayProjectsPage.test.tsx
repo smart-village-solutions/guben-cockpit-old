@@ -33,7 +33,7 @@ const state = vi.hoisted(() => ({
     refetch: vi.fn(),
   },
   poisQuery: {
-    data: { pageNumber: 1, pageSize: 12, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] },
+    data: { pageNumber: 1, pageSize: 12, totalCount: 0, pageCount: 1, results: [] as Array<any>, categories: [], locations: [] },
     error: null as unknown,
     isPending: false,
     refetch: vi.fn(),
@@ -55,6 +55,10 @@ vi.mock("@/public-content/hooks", () => ({
 
 vi.mock("@/components/projects/CategoryTiles", () => ({
   CategoryTiles: () => <div>Category Tiles</div>,
+}));
+
+vi.mock("@/components/projects/PoiCard", () => ({
+  PoiCard: ({ poi }: { poi: { title: string } }) => <div>{poi.title}</div>,
 }));
 
 vi.mock("@/components/ui/skeleton", () => ({
@@ -121,5 +125,32 @@ describe("GatewayProjectsPage", () => {
     expect(markup).toContain("POI upstream unavailable");
     state.poisQuery.data = previousData;
     state.poisQuery.error = null;
+  });
+
+  it("keeps the POI catalogue visible when only Featured Projects fail", () => {
+    const previousData = state.query.data;
+    state.query.data = undefined as unknown as typeof previousData;
+    state.query.error = new Error("Featured upstream unavailable");
+    state.poisQuery.data = {
+      pageNumber: 1,
+      pageSize: 12,
+      totalCount: 1,
+      pageCount: 1,
+      results: [{
+        id: "poi:1", title: "POI bleibt sichtbar", description: "", imageUrl: null, updatedAt: null,
+        categories: [], locationValue: null, locationLabel: null, coordinates: null, media: [], address: null,
+        contact: null, webUrls: [], openingHours: [], operatingCompany: null, dataProvider: null,
+      }],
+      categories: [],
+      locations: [],
+    };
+
+    const markup = renderToStaticMarkup(<GatewayProjectsPage />);
+
+    expect(markup).toContain("Featured upstream unavailable");
+    expect(markup).toContain("POI bleibt sichtbar");
+    state.query.data = previousData;
+    state.query.error = null;
+    state.poisQuery.data = { pageNumber: 1, pageSize: 12, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] };
   });
 });

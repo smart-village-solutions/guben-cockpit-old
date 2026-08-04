@@ -7,6 +7,7 @@ import {
   eventDetailContentSchema,
   eventsContentSchema,
   featuredProjectsContentSchema,
+  featuredProjectDetailContentSchema,
   footerContentSchema,
   homeContentSchema,
   mapContentSchema,
@@ -14,6 +15,7 @@ import {
   poiDetailContentSchema,
   poisContentSchema,
   type FeaturedProjectsContent,
+  type FeaturedProjectDetailContent,
   type Poi,
   type PoiDetailContent,
   type PoiFilters,
@@ -77,12 +79,10 @@ export const loadGatewayProjectDetailContent = async (
     return { kind: "poi", poi: detail.poi, seo: detail.seo };
   }
 
-  const data = await fetcher("/api/content/featured-projects", featuredProjectsContentSchema, {
+  const data = await fetcher(`/api/content/featured-projects/${encodeURIComponent(id)}`, featuredProjectDetailContentSchema, {
     lang: language,
-  }) as FeaturedProjectsContent;
-  const project = data.featuredProjects.find((entry) => entry.id === id);
-  if (!project) throw new Error(`Project with ID ${id} not found`);
-  return { kind: "featured", project, seo: data.seo };
+  }) as FeaturedProjectDetailContent;
+  return { kind: "featured", project: data.project, seo: data.seo };
 };
 
 const useContentLanguage = () => {

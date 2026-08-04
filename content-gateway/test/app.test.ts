@@ -19,6 +19,10 @@ const repositoryStub = (): PublicContentRepository => ({
   getHome: vi.fn(async () => mockHomeContent),
   getProjects: vi.fn(async () => mockProjectsContent),
   getFeaturedProjects: vi.fn(async () => ({ page: mockProjectsContent.page, featuredProjects: mockProjectsContent.featuredProjects, seo: mockProjectsContent.seo })),
+  getFeaturedProjectById: vi.fn(async (_language, id) => ({
+    project: { ...mockProjectsContent.featuredProjects[0]!, id },
+    seo: mockProjectsContent.seo,
+  })),
   getPois: vi.fn(async (_language, filters) => ({ pageNumber: filters.pageNumber, pageSize: filters.pageSize, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] })),
   getPoiById: vi.fn(async () => { throw new GatewayError({ code: "NOT_FOUND", message: "not found", statusCode: 404, upstream: "gateway", retryable: false }); }),
   getPublicContent: vi.fn(async () => mockPublicContentBundle),
@@ -139,6 +143,10 @@ describe("content gateway", () => {
 
     const featured = await app.inject({ method: "GET", url: "/api/content/featured-projects?lang=de" });
     expect(featured.statusCode).toBe(200);
+
+    const featuredDetail = await app.inject({ method: "GET", url: "/api/content/featured-projects/513?lang=pl" });
+    expect(featuredDetail.statusCode).toBe(200);
+    expect(repository.getFeaturedProjectById).toHaveBeenCalledWith("pl", "513");
 
     const list = await app.inject({ method: "GET", url: "/api/content/pois?categoryIds=6186,%206187&sort=updatedAt&direction=desc&pageNumber=2&pageSize=5" });
     expect(list.statusCode).toBe(200);

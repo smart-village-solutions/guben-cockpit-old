@@ -6,6 +6,7 @@ import {
   EventsContent,
   FooterContent,
   FeaturedProjectsContent,
+  FeaturedProjectDetailContent,
   HomeContent,
   MapContent,
   ProjectsContent,
@@ -20,6 +21,7 @@ import {
   eventsContentSchema,
   footerContentSchema,
   featuredProjectsContentSchema,
+  featuredProjectDetailContentSchema,
   homeContentSchema,
   mapContentSchema,
   projectsContentSchema,
@@ -49,6 +51,13 @@ export class MockContentRepository implements PublicContentRepository {
       featuredProjects: projects.featuredProjects,
       seo: projects.seo,
     });
+  }
+
+  public async getFeaturedProjectById(_language: string, id: string): Promise<FeaturedProjectDetailContent> {
+    const projects = projectsContentSchema.parse(mockProjectsContent);
+    const project = projects.featuredProjects.find((entry) => entry.id === id);
+    if (!project) throw new Error("Mock Featured Project not found");
+    return featuredProjectDetailContentSchema.parse({ project, seo: projects.seo });
   }
 
   public async getPois(_language: string, filters: PoiFilters): Promise<PoisContent> {

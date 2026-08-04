@@ -7,6 +7,7 @@ import {
   gatewayErrorSchema,
   homeContentSchema,
   featuredProjectsContentSchema,
+  featuredProjectDetailContentSchema,
   poiDetailContentSchema,
   poiFiltersSchema,
   poisContentSchema,
@@ -46,6 +47,11 @@ describe("public content contracts", () => {
       seo: { title: "Mein Guben", description: "Alle Inhalte", canonical: "https://example.com/projects", indexable: true },
     };
     expect(featuredProjectsContentSchema.parse(payload)).toEqual(payload);
+    const project = {
+      id: "513", type: 1, title: "Energiebericht", description: "", fullText: "Inhalt",
+      imageCaption: null, imageUrl: null, imageCredits: null, published: true,
+    };
+    expect(featuredProjectDetailContentSchema.parse({ project, seo: payload.seo })).toEqual({ project, seo: payload.seo });
   });
 
   it("accepts minimal and complete POI payloads and rejects malformed fields", () => {

@@ -5,13 +5,12 @@ import { loadGatewayProjectDetailContent } from "./hooks";
 describe("loadGatewayProjectDetailContent", () => {
   it("loads Featured Projects from the dedicated local endpoint", async () => {
     const fetcher = vi.fn(async () => ({
-      page: { id: "Projects", title: "Projects", description: "Projects", seo: { title: "Projects", description: "Projects", canonical: "https://example.com/projects", indexable: true } },
-      featuredProjects: [{ id: "featured-1", type: 1, title: "Featured", description: "Description", fullText: "Details", imageCaption: null, imageUrl: null, imageCredits: null, published: true }],
+      project: { id: "featured-1", type: 1, title: "Featured", description: "Description", fullText: "Details", imageCaption: null, imageUrl: null, imageCredits: null, published: true },
       seo: { title: "Projects", description: "Projects", canonical: "https://example.com/projects", indexable: true },
     }));
 
     const result = await loadGatewayProjectDetailContent("de", "featured-1", fetcher);
-    expect(fetcher).toHaveBeenCalledWith("/api/content/featured-projects", expect.anything(), { lang: "de" });
+    expect(fetcher).toHaveBeenCalledWith("/api/content/featured-projects/featured-1", expect.anything(), { lang: "de" });
     expect(result).toMatchObject({ kind: "featured", project: { id: "featured-1" } });
   });
 
@@ -46,11 +45,8 @@ describe("loadGatewayProjectDetailContent", () => {
   });
 
   it("fails clearly for a missing Featured Project", async () => {
-    const fetcher = vi.fn(async () => ({
-      page: { id: "Projects", title: "Projects", description: "Projects", seo: { title: "Projects", description: "Projects", canonical: "https://example.com/projects", indexable: true } },
-      featuredProjects: [],
-      seo: { title: "Projects", description: "Projects", canonical: "https://example.com/projects", indexable: true },
-    }));
-    await expect(loadGatewayProjectDetailContent("de", "missing", fetcher)).rejects.toThrow("Project with ID missing not found");
+    const fetcher = vi.fn(async () => { throw new Error("not found"); });
+    await expect(loadGatewayProjectDetailContent("de", "missing", fetcher)).rejects.toThrow("not found");
+    expect(fetcher).toHaveBeenCalledWith("/api/content/featured-projects/missing", expect.anything(), { lang: "de" });
   });
 });

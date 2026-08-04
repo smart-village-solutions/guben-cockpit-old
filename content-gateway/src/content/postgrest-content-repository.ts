@@ -114,6 +114,12 @@ export class PostgrestContentRepository {
     });
   }
 
+  public async getFeaturedProjectsMetadata(language: string): Promise<Pick<FeaturedProjectsContent, "page" | "seo">> {
+    const pages = await this.source.getPage("Projects");
+    const page = this.mapper.pageFromRow(this.expectSingle(pages, "Projects"), language);
+    return { page, seo: page.seo };
+  }
+
   public async getPublicContent(language: string): Promise<PublicContentBundle> {
     const [homePages, dashboard, projectPages, rows] = await Promise.all([
       this.source.getPage("Home"),
