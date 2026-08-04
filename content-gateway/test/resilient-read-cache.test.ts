@@ -49,4 +49,28 @@ describe("ResilientReadCache", () => {
     await expect(cache.getOrLoad("b", () => load("b-new"))).resolves.toBe("b-new");
     expect(load).toHaveBeenCalledTimes(4);
   });
+
+  it("stays bounded when an in-flight stale entry was evicted before refresh failure", async () => {
+    let now = 0;
+    const cache = new ResilientReadCache<string>({
+      freshMs: 1,
+      staleMs: 100,
+      maxEntries: 1,
+      now: () => now,
+    });
+    await cache.getOrLoad("a", async () => "stale-a");
+    now = 1;
+
+    let rejectRefresh!: (error: Error) => void;
+    const refreshingA = cache.getOrLoad("a", () => new Promise<string>((_resolve, reject) => {
+      rejectRefresh = reject;
+    }));
+    await cache.getOrLoad("b", async () => "value-b");
+    rejectRefresh(new Error("refresh failed"));
+    await expect(refreshingA).resolves.toBe("stale-a");
+
+    const reloadB = vi.fn(async () => "reloaded-b");
+    await expect(cache.getOrLoad("b", reloadB)).resolves.toBe("reloaded-b");
+    expect(reloadB).toHaveBeenCalledOnce();
+  });
 });

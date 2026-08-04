@@ -74,6 +74,7 @@ export class ResilientReadCache<Value = unknown> {
   private touch(key: string, entry: CacheEntry<Value>) {
     this.entries.delete(key);
     this.entries.set(key, entry);
+    this.evictIfNeeded();
   }
 
   private evictIfNeeded() {
