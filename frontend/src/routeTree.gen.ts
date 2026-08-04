@@ -17,6 +17,7 @@ import { Route as MapImport } from './routes/map'
 import { Route as EventsImport } from './routes/events'
 import { Route as BuilderPreviewImport } from './routes/builder-preview'
 import { Route as IndexImport } from './routes/index'
+import { Route as ProjectsIndexImport } from './routes/projects/index'
 import { Route as EventsIndexImport } from './routes/events/index'
 import { Route as BookingIndexImport } from './routes/booking/index'
 import { Route as ProjectsProjectIdImport } from './routes/projects/$projectId'
@@ -27,7 +28,6 @@ import { Route as BookingRoomTitleImport } from './routes/booking/room/$title'
 // Create Virtual Routes
 
 const ProjectsLazyImport = createFileRoute('/projects')()
-const ProjectsIndexLazyImport = createFileRoute('/projects/')()
 const ProjectsSchoolsLazyImport = createFileRoute('/projects/schools')()
 const ProjectsMarketplaceLazyImport = createFileRoute('/projects/marketplace')()
 
@@ -58,7 +58,7 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const ProjectsIndexLazyRoute = ProjectsIndexLazyImport.update({
+const ProjectsIndexRoute = ProjectsIndexImport.update({
   path: '/',
   getParentRoute: () => ProjectsLazyRoute,
 } as any).lazy(() =>
@@ -209,7 +209,7 @@ declare module '@tanstack/react-router' {
       id: '/projects/'
       path: '/'
       fullPath: '/projects/'
-      preLoaderRoute: typeof ProjectsIndexLazyImport
+      preLoaderRoute: typeof ProjectsIndexImport
       parentRoute: typeof ProjectsLazyImport
     }
     '/booking/room/$title': {
@@ -241,14 +241,14 @@ interface ProjectsLazyRouteChildren {
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
   ProjectsMarketplaceLazyRoute: typeof ProjectsMarketplaceLazyRoute
   ProjectsSchoolsLazyRoute: typeof ProjectsSchoolsLazyRoute
-  ProjectsIndexLazyRoute: typeof ProjectsIndexLazyRoute
+  ProjectsIndexRoute: typeof ProjectsIndexRoute
 }
 
 const ProjectsLazyRouteChildren: ProjectsLazyRouteChildren = {
   ProjectsProjectIdRoute: ProjectsProjectIdRoute,
   ProjectsMarketplaceLazyRoute: ProjectsMarketplaceLazyRoute,
   ProjectsSchoolsLazyRoute: ProjectsSchoolsLazyRoute,
-  ProjectsIndexLazyRoute: ProjectsIndexLazyRoute,
+  ProjectsIndexRoute: ProjectsIndexRoute,
 }
 
 const ProjectsLazyRouteWithChildren = ProjectsLazyRoute._addFileChildren(
@@ -268,7 +268,7 @@ export interface FileRoutesByFullPath {
   '/projects/schools': typeof ProjectsSchoolsLazyRoute
   '/booking': typeof BookingIndexRoute
   '/events/': typeof EventsIndexRoute
-  '/projects/': typeof ProjectsIndexLazyRoute
+  '/projects/': typeof ProjectsIndexRoute
   '/booking/room/$title': typeof BookingRoomTitleRoute
 }
 
@@ -283,7 +283,7 @@ export interface FileRoutesByTo {
   '/projects/schools': typeof ProjectsSchoolsLazyRoute
   '/booking': typeof BookingIndexRoute
   '/events': typeof EventsIndexRoute
-  '/projects': typeof ProjectsIndexLazyRoute
+  '/projects': typeof ProjectsIndexRoute
   '/booking/room/$title': typeof BookingRoomTitleRoute
 }
 
@@ -301,7 +301,7 @@ export interface FileRoutesById {
   '/projects/schools': typeof ProjectsSchoolsLazyRoute
   '/booking/': typeof BookingIndexRoute
   '/events/': typeof EventsIndexRoute
-  '/projects/': typeof ProjectsIndexLazyRoute
+  '/projects/': typeof ProjectsIndexRoute
   '/booking/room/$title': typeof BookingRoomTitleRoute
 }
 
@@ -451,7 +451,7 @@ export const routeTree = rootRoute
       "parent": "/events"
     },
     "/projects/": {
-      "filePath": "projects/index.lazy.tsx",
+      "filePath": "projects/index.tsx",
       "parent": "/projects"
     },
     "/booking/room/$title": {

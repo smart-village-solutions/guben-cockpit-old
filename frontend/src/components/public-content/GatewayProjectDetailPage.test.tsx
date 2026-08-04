@@ -6,8 +6,8 @@ import { GatewayProjectDetailPage } from "./GatewayProjectDetailPage";
 
 const queryState = vi.hoisted(() => ({
   data: {
-    results: [
-      {
+    kind: "featured",
+    project: {
         id: "project-1",
         type: 2,
         title: "Projekt 1",
@@ -17,12 +17,9 @@ const queryState = vi.hoisted(() => ({
         imageUrl: "/project-image.jpg",
         imageCredits: null,
         published: true,
-        _category: "schools",
       },
-    ],
-    _category: "schools",
     seo: undefined,
-  },
+  } as any,
   isPending: false,
   error: null as unknown,
   refetch: vi.fn(),
@@ -80,14 +77,15 @@ describe("GatewayProjectDetailPage", () => {
   beforeEach(() => {
     queryState.isPending = false;
     queryState.error = null;
-    queryState.data.results[0].description = "Kurzbeschreibung";
-    queryState.data.results[0].imageUrl = "/project-image.jpg";
+    queryState.data.project.description = "Kurzbeschreibung";
+    queryState.data.project.imageUrl = "/project-image.jpg";
+    queryState.data.project.fullText = "<p>Langtext</p>";
   });
 
   it("renders the project image beside the description and keeps the full text below", () => {
     render(<GatewayProjectDetailPage projectId="project-1" />);
 
-    expect(screen.getByText("Startseite > Mein Guben > Schulen > Projekt 1")).toBeTruthy();
+    expect(screen.getByText("Startseite > Mein Guben > Projekt 1")).toBeTruthy();
     expect(screen.getByRole("img", { name: "Projekt 1" })).toBeTruthy();
     expect(screen.getByText("Projektdetails")).toBeTruthy();
     expect(screen.getByText("Langtext")).toBeTruthy();
@@ -96,7 +94,7 @@ describe("GatewayProjectDetailPage", () => {
   });
 
   it("renders the project image even when the short description is empty", () => {
-    queryState.data.results[0].description = "";
+    queryState.data.project.description = "";
 
     render(<GatewayProjectDetailPage projectId="project-1" />);
 
@@ -112,8 +110,8 @@ describe("GatewayProjectDetailPage", () => {
   });
 
   it("renders the project image even when both description fields are empty", () => {
-    queryState.data.results[0].description = "";
-    queryState.data.results[0].fullText = "";
+    queryState.data.project.description = "";
+    queryState.data.project.fullText = "";
 
     render(<GatewayProjectDetailPage projectId="project-1" />);
 
@@ -121,5 +119,39 @@ describe("GatewayProjectDetailPage", () => {
     expect(screen.queryByText("Übersicht")).toBeNull();
     expect(screen.queryByText("Projektdetails")).toBeNull();
     expect(screen.queryByTestId("detail-header-image")).toBeNull();
+  });
+
+  it("renders available POI details and sanitizes HTML", () => {
+    queryState.data = {
+      kind: "poi",
+      poi: {
+        id: "poi:1",
+        title: "Schule 1",
+        description: "<p>Beschreibung</p><script>alert(1)</script>",
+        imageUrl: null,
+        updatedAt: null,
+        categories: [{ id: "6186", name: "Schulen", parentId: null, parentName: null }],
+        locationValue: "guben",
+        locationLabel: "Guben",
+        coordinates: null,
+        media: [],
+        address: { street: "Schulstraße 1", addition: null, zip: "03172", city: "Guben" },
+        contact: { firstName: null, lastName: null, email: "info@example.com", phone: "+49 1", fax: null },
+        webUrls: [{ url: "https://example.com/", description: "Website" }],
+        openingHours: [{ weekday: "Montag", timeFrom: "08:00", timeTo: "16:00", description: null, open: true, sortNumber: 1 }],
+        operatingCompany: null,
+        dataProvider: "Stadt Guben",
+      },
+      seo: undefined,
+    };
+
+    render(<GatewayProjectDetailPage projectId="poi:1" />);
+
+    expect(screen.getByText("Beschreibung")).toBeTruthy();
+    expect(document.querySelector("script")).toBeNull();
+    expect(screen.getByText("Schulstraße 1")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "info@example.com" }).getAttribute("href")).toBe("mailto:info@example.com");
+    expect(screen.getByText("Montag")).toBeTruthy();
+    expect(screen.getByText("Schulen")).toBeTruthy();
   });
 });

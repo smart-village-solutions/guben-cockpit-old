@@ -5,9 +5,13 @@ import {
   EventDetailContent,
   EventsContent,
   FooterContent,
+  FeaturedProjectsContent,
   HomeContent,
   MapContent,
   ProjectsContent,
+  PoiDetailContent,
+  PoiFilters,
+  PoisContent,
   PublicContentBundle,
   bookingTenantsContentSchema,
   bookingFaqsContentSchema,
@@ -15,6 +19,7 @@ import {
   eventDetailContentSchema,
   eventsContentSchema,
   footerContentSchema,
+  featuredProjectsContentSchema,
   homeContentSchema,
   mapContentSchema,
   projectsContentSchema,
@@ -35,6 +40,31 @@ export class MockContentRepository implements PublicContentRepository {
 
   public async getProjects(): Promise<ProjectsContent> {
     return projectsContentSchema.parse(mockProjectsContent);
+  }
+
+  public async getFeaturedProjects(): Promise<FeaturedProjectsContent> {
+    const projects = projectsContentSchema.parse(mockProjectsContent);
+    return featuredProjectsContentSchema.parse({
+      page: projects.page,
+      featuredProjects: projects.featuredProjects,
+      seo: projects.seo,
+    });
+  }
+
+  public async getPois(_language: string, filters: PoiFilters): Promise<PoisContent> {
+    return {
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+      totalCount: 0,
+      pageCount: 1,
+      results: [],
+      categories: [],
+      locations: [],
+    };
+  }
+
+  public async getPoiById(): Promise<PoiDetailContent> {
+    throw new Error("Mock POI not found");
   }
 
   public async getPublicContent(): Promise<PublicContentBundle> {

@@ -52,6 +52,9 @@ describe("content repository glue", () => {
     const repository = {
       getHome: async () => mockHomeContent,
       getProjects: async () => mockProjectsContent,
+      getFeaturedProjects: async () => ({ page: mockProjectsContent.page, featuredProjects: mockProjectsContent.featuredProjects, seo: mockProjectsContent.seo }),
+      getPois: async (_language: string, poiFilters: import("../../shared/public-content/contracts.js").PoiFilters) => ({ pageNumber: poiFilters.pageNumber, pageSize: poiFilters.pageSize, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] }),
+      getPoiById: async () => { throw new Error("not found"); },
       getPublicContent: async () => mockPublicContentBundle,
       getEvents: async () => mockEventsContent,
       getEventById: async () => mockEventDetail,
@@ -131,11 +134,16 @@ describe("content repository glue", () => {
     const smartVillageCockpitCardRepository = {
       getCockpitCards: vi.fn(async () => []),
     };
+    const smartVillagePoiRepository = {
+      getPois: vi.fn(async (_language, poiFilters) => ({ pageNumber: poiFilters.pageNumber, pageSize: poiFilters.pageSize, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] })),
+      getPoiById: vi.fn(async () => { throw new Error("not found"); }),
+    };
     const repository = new SmartVillagePostgrestContentRepository({
       postgrestRepository: postgrestRepository as never,
       smartVillageEventRepository: smartVillageEventRepository as never,
       smartVillageBookingFaqRepository: smartVillageBookingFaqRepository as never,
       smartVillageCockpitCardRepository: smartVillageCockpitCardRepository as never,
+      smartVillagePoiRepository: smartVillagePoiRepository as never,
     });
     const home = await repository.getHome("de");
     const projects = await repository.getProjects("de", 1, 12);
@@ -213,6 +221,7 @@ describe("content repository glue", () => {
       smartVillageCockpitCardRepository: {
         getCockpitCards: vi.fn(async () => [apiCard]),
       } as never,
+      smartVillagePoiRepository: {} as never,
     });
 
     const [home, dashboard, publicContent] = await Promise.all([
@@ -242,6 +251,7 @@ describe("content repository glue", () => {
           throw new Error("upstream unavailable");
         }),
       } as never,
+      smartVillagePoiRepository: {} as never,
       warn,
     });
 

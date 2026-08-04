@@ -432,7 +432,20 @@ interface Resources {
     "PublishSuccess": "Projekt/Geschäft/Schule erfolgreich veröffentlicht",
     "UnpublishSuccess": "Projekt/Geschäft/Schule erfolgreich offline genommen",
     "PublishConfirmation": "Mit dieser Aktion wird das Projekt/Geschäft/Schule veröffentlicht und ist für alle sichtbar.",
-    "UnpublishConfirmation": "Mit dieser Aktion wird das Projekt/Geschäft/Schule Offline genommen und ist nicht mehr für alle sichtbar."
+    "UnpublishConfirmation": "Mit dieser Aktion wird das Projekt/Geschäft/Schule Offline genommen und ist nicht mehr für alle sichtbar.",
+    "PoiFilters": "POI filtern",
+    "PoiSearch": "Suche",
+    "PoiSearchPlaceholder": "Name oder Beschreibung suchen",
+    "PoiCategories": "Kategorien",
+    "PoiLocation": "Ort",
+    "PoiAllLocations": "Alle Orte",
+    "PoiSorting": "Sortierung",
+    "PoiSortName": "Name",
+    "PoiSortUpdated": "Aktualität",
+    "PoiSortDirection": "Sortierrichtung",
+    "PoiAscending": "Aufsteigend",
+    "PoiDescending": "Absteigend",
+    "PoiEmpty": "Keine passenden Orte gefunden"
   },
   "users": {
     "Title": "Benutzer"

@@ -6,11 +6,67 @@ import {
   eventsContentSchema,
   gatewayErrorSchema,
   homeContentSchema,
+  featuredProjectsContentSchema,
+  poiDetailContentSchema,
+  poiFiltersSchema,
+  poisContentSchema,
   projectsContentSchema,
   publicContentBundleSchema,
 } from "./contracts.js";
 
 describe("public content contracts", () => {
+  const poi = {
+    id: "poi:123",
+    title: "Stadtbibliothek",
+    description: "Lesen und lernen",
+    imageUrl: null,
+    updatedAt: "2026-08-04T10:00:00Z",
+    categories: [{ id: "6186", name: "Schulen", parentId: null, parentName: null }],
+    locationValue: "guben",
+    locationLabel: "Guben",
+    coordinates: { latitude: 51.95, longitude: 14.71 },
+    media: [],
+    address: { street: "Gasstraße 7", addition: null, zip: "03172", city: "Guben" },
+    contact: { firstName: null, lastName: null, email: "info@example.com", phone: null, fax: null },
+    webUrls: [{ url: "https://example.com", description: "Website" }],
+    openingHours: [],
+    operatingCompany: null,
+    dataProvider: "Stadt Guben",
+  };
+
+  it("accepts featured projects independently from legacy school and business projections", () => {
+    const payload = {
+      page: {
+        id: "Projects",
+        title: "Mein Guben",
+        description: "Alle Inhalte",
+        seo: { title: "Mein Guben", description: "Alle Inhalte", canonical: "https://example.com/projects", indexable: true },
+      },
+      featuredProjects: [],
+      seo: { title: "Mein Guben", description: "Alle Inhalte", canonical: "https://example.com/projects", indexable: true },
+    };
+    expect(featuredProjectsContentSchema.parse(payload)).toEqual(payload);
+  });
+
+  it("accepts minimal and complete POI payloads and rejects malformed fields", () => {
+    const content = {
+      pageNumber: 1,
+      pageSize: 12,
+      totalCount: 1,
+      pageCount: 1,
+      results: [poi],
+      categories: poi.categories,
+      locations: [{ value: "guben", label: "Guben" }],
+    };
+    expect(poisContentSchema.parse(content)).toEqual(content);
+    expect(poiDetailContentSchema.parse({ poi, seo: { title: poi.title, description: poi.description, canonical: "https://example.com/projects/poi", indexable: true } }).poi).toEqual(poi);
+    expect(() => poisContentSchema.parse({ ...content, results: [{ ...poi, title: undefined }] })).toThrowError();
+  });
+
+  it("normalizes the shared POI filter defaults and excludes an image filter", () => {
+    expect(poiFiltersSchema.parse({})).toEqual({ categoryIds: [], sort: "name", direction: "asc", pageNumber: 1, pageSize: 12 });
+    expect(() => poiFiltersSchema.parse({ direction: "descending" })).toThrowError();
+  });
   it("accepts normalized Booking FAQs and rejects invalid fields", () => {
     const payload = {
       items: [{ id: "faq-1", question: "Frage", answer: "Antwort", languageCode: "de", sortWeight: 2 }],

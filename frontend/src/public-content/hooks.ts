@@ -6,22 +6,22 @@ import {
   bookingTenantsContentSchema,
   eventDetailContentSchema,
   eventsContentSchema,
+  featuredProjectsContentSchema,
   footerContentSchema,
   homeContentSchema,
   mapContentSchema,
   projectsContentSchema,
+  poiDetailContentSchema,
+  poisContentSchema,
+  type FeaturedProjectsContent,
+  type Poi,
+  type PoiDetailContent,
+  type PoiFilters,
   type Project,
   type ProjectsContent,
 } from "@shared/public-content/contracts";
 import { fetchGatewayJson } from "./client";
 import { isGatewayPublicContentEnabled } from "./source";
-
-type ProjectCategory = "featured" | "schools" | "marketplace";
-type ProjectFetcher = (
-  path: string,
-  schema: typeof projectsContentSchema,
-  searchParams?: Record<string, string | number | undefined>,
-) => Promise<ProjectsContent>;
 
 const localSchoolImageByTitle: Array<[match: (title: string) => boolean, imageUrl: string]> = [
   [
@@ -59,74 +59,30 @@ const withLocalSchoolImages = (content: ProjectsContent): ProjectsContent => ({
   schools: content.schools.map(withLocalSchoolImage),
 });
 
-export type GatewayProjectDetailResult = {
-  results: [Project & { _category: ProjectCategory }];
-  _category: ProjectCategory;
-  seo: ProjectsContent["seo"];
-};
-
-const withCategory = (projects: Project[], category: ProjectCategory) =>
-  projects.map((project) => ({
-    ...project,
-    _category: category,
-  }));
+export type GatewayProjectDetailResult =
+  | { kind: "featured"; project: Project; seo: FeaturedProjectsContent["seo"] }
+  | { kind: "poi"; poi: Poi; seo: PoiDetailContent["seo"] };
 
 export const loadGatewayProjectDetailContent = async (
   language: string,
   id: string,
-  fetcher: ProjectFetcher = fetchGatewayJson,
+  fetcher: (path: string, schema: any, searchParams?: Record<string, string | number | undefined>) => Promise<any> = fetchGatewayJson,
 ): Promise<GatewayProjectDetailResult> => {
-  const firstData = withLocalSchoolImages(
-    await fetcher("/api/content/projects", projectsContentSchema, {
-      lang: language,
-      pageNumber: 1,
-      pageSize: 100,
-    }),
-  );
-
-  const firstPageProjects = [
-    ...withCategory(firstData.featuredProjects, "featured"),
-    ...withCategory(firstData.schools, "schools"),
-    ...withCategory(firstData.businesses.results, "marketplace"),
-  ];
-
-  const firstPageMatch = firstPageProjects.find((entry) => entry.id === id);
-
-  if (firstPageMatch) {
-    return {
-      results: [firstPageMatch],
-      _category: firstPageMatch._category,
-      seo: firstData.seo,
-    };
+  if (id.startsWith("poi:")) {
+    const detail = await fetcher(
+      `/api/content/pois/${encodeURIComponent(id)}`,
+      poiDetailContentSchema,
+      { lang: language },
+    ) as PoiDetailContent;
+    return { kind: "poi", poi: detail.poi, seo: detail.seo };
   }
 
-  let pageNumber = 2;
-  let pageCount = firstData.businesses.pageCount;
-
-  while (pageNumber <= pageCount) {
-    const data = await fetcher("/api/content/projects", projectsContentSchema, {
-      lang: language,
-      pageNumber,
-      pageSize: 100,
-    });
-
-    const project = withCategory(withLocalSchoolImages(data).businesses.results, "marketplace").find(
-      (entry) => entry.id === id,
-    );
-
-    if (project) {
-      return {
-        results: [project],
-        _category: project._category,
-        seo: firstData.seo,
-      };
-    }
-
-    pageCount = data.businesses.pageCount;
-    pageNumber += 1;
-  }
-
-  throw new Error(`Project with ID ${id} not found`);
+  const data = await fetcher("/api/content/featured-projects", featuredProjectsContentSchema, {
+    lang: language,
+  }) as FeaturedProjectsContent;
+  const project = data.featuredProjects.find((entry) => entry.id === id);
+  if (!project) throw new Error(`Project with ID ${id} not found`);
+  return { kind: "featured", project, seo: data.seo };
 };
 
 const useContentLanguage = () => {
@@ -157,6 +113,35 @@ export const useGatewayProjectsContent = (pageNumber: number, pageSize: number) 
         pageNumber,
         pageSize,
       }).then(withLocalSchoolImages),
+  });
+};
+
+export const useGatewayFeaturedProjectsContent = () => {
+  const language = useContentLanguage();
+  return useQuery({
+    queryKey: ["gateway-content", "featured-projects", language],
+    enabled: isGatewayPublicContentEnabled,
+    queryFn: () => fetchGatewayJson("/api/content/featured-projects", featuredProjectsContentSchema, { lang: language }),
+  });
+};
+
+export const useGatewayPoisContent = (filters: PoiFilters) => {
+  const language = useContentLanguage();
+  return useQuery({
+    queryKey: ["gateway-content", "pois", language, filters],
+    enabled: isGatewayPublicContentEnabled,
+    retry: false,
+    queryFn: () => fetchGatewayJson("/api/content/pois", poisContentSchema, {
+      lang: language,
+      search: filters.search,
+      categoryIds: filters.categoryIds.length > 0 ? filters.categoryIds.join(",") : undefined,
+      location: filters.location,
+      radius: filters.radius,
+      sort: filters.sort,
+      direction: filters.direction,
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+    }),
   });
 };
 

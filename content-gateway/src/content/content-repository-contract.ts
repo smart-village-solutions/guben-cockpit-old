@@ -5,9 +5,13 @@ import type {
   EventDetailContent,
   EventsContent,
   FooterContent,
+  FeaturedProjectsContent,
   HomeContent,
   MapContent,
   ProjectsContent,
+  PoiDetailContent,
+  PoiFilters,
+  PoisContent,
   PublicContentBundle,
 } from "../../../shared/public-content/contracts.js";
 import type { EventFilters } from "./postgrest-content-types.js";
@@ -19,6 +23,9 @@ export type { EventFilters } from "./postgrest-content-types.js";
 export interface PublicContentRepository {
   getHome(language: string): Promise<HomeContent>;
   getProjects(language: string, pageNumber: number, pageSize: number): Promise<ProjectsContent>;
+  getFeaturedProjects(language: string): Promise<FeaturedProjectsContent>;
+  getPois(language: string, filters: PoiFilters): Promise<PoisContent>;
+  getPoiById(language: string, id: string): Promise<PoiDetailContent>;
   getPublicContent(language: string): Promise<PublicContentBundle>;
   getEvents(language: string, filters: EventFilters): Promise<EventsContent>;
   getEventById(language: string, id: string): Promise<EventDetailContent>;

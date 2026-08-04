@@ -1,10 +1,5 @@
-import { createLazyFileRoute } from '@tanstack/react-router';
-import { ProjectsMarketplacePage } from '@/components/public-content/ProjectsMarketplacePage';
+import { Navigate, createLazyFileRoute } from "@tanstack/react-router";
 
-export const Route = createLazyFileRoute('/projects/marketplace')({
-  component: Component,
-})
-
-function Component() {
-  return <ProjectsMarketplacePage />;
-}
+export const Route = createLazyFileRoute("/projects/marketplace")({
+  component: () => <Navigate to="/projects" search={{ categoryIds: ["6187"], sort: "name", direction: "asc", page: 1, pageSize: 12 }} replace />,
+});

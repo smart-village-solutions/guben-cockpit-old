@@ -191,6 +191,7 @@ describe("server bootstrap", () => {
     });
     expect(wrapperRepositoryOptions[0]).toMatchObject({
       smartVillageCockpitCardRepository: expect.any(Object),
+      smartVillagePoiRepository: expect.any(Object),
       warn: expect.any(Function),
     });
   });
