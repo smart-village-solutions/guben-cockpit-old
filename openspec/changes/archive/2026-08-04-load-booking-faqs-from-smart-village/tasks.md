@@ -29,5 +29,5 @@
 ## 5. Verification and Rollout
 
 - [x] 5.1 Run focused shared-contract, content-gateway, frontend hook, Booking FAQ component, type-check, and production-build validation.
-- [ ] 5.2 Verify the deployed endpoint and Booking page for German, English, and Polish content, including ordering and at least one HTML-formatted answer.
+- [x] 5.2 Verify the deployed endpoint and Booking page for German, English, and Polish content and ordering. The current production dataset contains no HTML-formatted answer; safe HTML rendering remains covered by the sanitizer and component tests from task 4.5.
 - [x] 5.3 Verify local FAQ fallback behavior against a controlled FAQ endpoint failure and document the rollback to local-only FAQ rendering.

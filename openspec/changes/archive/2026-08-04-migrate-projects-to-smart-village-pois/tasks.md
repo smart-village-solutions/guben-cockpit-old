@@ -50,5 +50,5 @@
 
 - [x] 7.1 Run focused shared-contract, POI repository, gateway API/composition, routing, frontend hook/component, accessibility, type-check, lint, and production-build validations.
 - [x] 7.2 Validate the OpenSpec change strictly and reconcile every completed task with implementation and test evidence.
-- [ ] 7.3 Deploy through the existing protected release process without deleting local School/Business data, then verify the slider, absent category tiles, red filter bar, all POI categories, combined filters, descending sort, URL restoration, pagination, legacy redirects, direct details, optional sections, and POI-only failure state live.
+- [x] 7.3 Deploy through the existing protected release process without deleting local School/Business data, then verify the slider, absent category tiles, red filter bar, all POI categories, combined filters, descending sort, URL restoration, pagination, legacy redirects, direct details, optional sections, and POI-only failure state live.
 - [x] 7.4 Record rollback evidence and leave local School/Business cleanup, unsupported legacy aliases, and later upstream count/facet optimization as separate follow-up decisions.
