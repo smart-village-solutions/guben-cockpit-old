@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { SmartVillageGraphQLClient } from "../src/upstream/smart-village-graphql-client.js";
+import { createCachedReadKey, SmartVillageGraphQLClient } from "../src/upstream/smart-village-graphql-client.js";
 
 describe("SmartVillageGraphQLClient", () => {
   afterEach(() => {
@@ -78,5 +78,114 @@ describe("SmartVillageGraphQLClient", () => {
       upstream: "smartvillage",
       retryable: false,
     });
+  });
+
+  it("caches validated reads and keeps the uncached path live", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: vi.fn(async () => ({ data: { items: [] } })),
+    } as unknown as Response);
+    const client = new SmartVillageGraphQLClient({
+      graphqlUrl: "https://example.com/graphql",
+      oauthClient: { getAccessToken: vi.fn(async () => "token-1") },
+    });
+    const read = () => client.requestCached({
+      contractId: "items.v1",
+      query: "query Items { items { id } }",
+      validate: (response: { items?: unknown[] }) => {
+        if (!Array.isArray(response.items)) throw new Error("invalid");
+      },
+    });
+
+    await read();
+    await read();
+    await client.request("query Items { items { id } }");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("serves the last valid response after validation failure", async () => {
+    let now = 0;
+    const responses = [{ data: { items: ["old"] } }, { data: { items: null } }];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => ({
+      ok: true,
+      json: vi.fn(async () => responses.shift()),
+    } as unknown as Response));
+    const client = new SmartVillageGraphQLClient({
+      graphqlUrl: "https://example.com/graphql",
+      oauthClient: { getAccessToken: vi.fn(async () => "token-1") },
+      readCacheOptions: { freshMs: 10, staleMs: 100, now: () => now },
+    });
+    const options = {
+      contractId: "items.v1",
+      query: "query Items { items }",
+      validate: (response: { items: unknown }) => {
+        if (!Array.isArray(response.items)) throw new Error("invalid");
+      },
+    };
+    await expect(client.requestCached(options)).resolves.toEqual({ items: ["old"] });
+    now = 10;
+    await expect(client.requestCached(options)).resolves.toEqual({ items: ["old"] });
+  });
+
+  it("exhausts transport retries before serving stale data", async () => {
+    let now = 0;
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn(async () => ({ data: { items: ["old"] } })),
+      } as unknown as Response)
+      .mockRejectedValue(new Error("down"));
+    const client = new SmartVillageGraphQLClient({
+      graphqlUrl: "https://example.com/graphql",
+      oauthClient: { getAccessToken: vi.fn(async () => "token-1") },
+      retryAttempts: 1,
+      retryBackoffMs: 0,
+      readCacheOptions: { freshMs: 10, staleMs: 100, now: () => now },
+    });
+    const options = {
+      contractId: "items.v1",
+      query: "query Items { items }",
+      validate: (response: { items: unknown }) => {
+        if (!Array.isArray(response.items)) throw new Error("invalid");
+      },
+    };
+
+    await client.requestCached(options);
+    now = 10;
+    await expect(client.requestCached(options)).resolves.toEqual({ items: ["old"] });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("canonicalizes variables and isolates validator contracts", () => {
+    expect(createCachedReadKey("a", "query", { nested: { b: 2, a: 1 } }))
+      .toBe(createCachedReadKey("a", "query", { nested: { a: 1, b: 2 } }));
+    expect(createCachedReadKey("a", "query")).toBe(createCachedReadKey("a", "query", {}));
+    expect(createCachedReadKey("a", "query", {})).not.toBe(createCachedReadKey("b", "query", {}));
+  });
+
+  it("stores a valid absent detail result instead of resurrecting stale content", async () => {
+    let now = 0;
+    const responses = [{ data: { item: { id: "1" } } }, { data: { item: null } }];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => ({
+      ok: true,
+      json: vi.fn(async () => responses.shift()),
+    } as unknown as Response));
+    const client = new SmartVillageGraphQLClient({
+      graphqlUrl: "https://example.com/graphql",
+      oauthClient: { getAccessToken: vi.fn(async () => "token-1") },
+      readCacheOptions: { freshMs: 10, staleMs: 100, now: () => now },
+    });
+    const options = {
+      contractId: "item.detail.v1",
+      query: "query Item { item { id } }",
+      validate: (response: { item?: { id: string } | null }) => {
+        if (!Object.hasOwn(response, "item")) throw new Error("invalid");
+      },
+    };
+
+    await expect(client.requestCached(options)).resolves.toEqual({ item: { id: "1" } });
+    now = 10;
+    await expect(client.requestCached(options)).resolves.toEqual({ item: null });
+    await expect(client.requestCached(options)).resolves.toEqual({ item: null });
   });
 });

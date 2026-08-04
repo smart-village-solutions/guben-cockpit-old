@@ -7,6 +7,7 @@ import {
   type PoisContent,
 } from "../../../shared/public-content/contracts.js";
 import { GatewayError } from "../errors.js";
+import { requestCached, type SmartVillageGraphQLReader } from "../upstream/smart-village-graphql-client.js";
 import { TTLCache } from "../upstream/ttl-cache.js";
 import { distanceInKm } from "./postgrest-content-mapper.js";
 
@@ -131,7 +132,7 @@ type SmartVillagePoi = {
 };
 
 type PoiRepositoryOptions = {
-  client: { request<T>(query: string, variables?: Record<string, unknown>): Promise<T> };
+  client: SmartVillageGraphQLReader;
   publicBaseUrl: string;
   warn?: (message: string, context: Record<string, unknown>) => void;
   cacheTtlMs?: number;
@@ -207,7 +208,13 @@ export class SmartVillagePoiRepository {
 
   public async getPois(_language: string, filters: PoiFilters): Promise<PoisContent> {
     const all = await this.listCache.getOrLoad("all", async () => {
-      const response = await this.options.client.request<{ pointsOfInterest?: SmartVillagePoi[] | null }>(POINTS_OF_INTEREST_QUERY);
+      const response = await requestCached(this.options.client, {
+        contractId: "pois.collection.v1",
+        query: POINTS_OF_INTEREST_QUERY,
+        validate: (value: { pointsOfInterest?: SmartVillagePoi[] | null }) => {
+          if (!Array.isArray(value.pointsOfInterest)) throw invalidCollectionError();
+        },
+      });
       if (!Array.isArray(response.pointsOfInterest)) throw invalidCollectionError();
       return response.pointsOfInterest.flatMap((record) => {
         const poi = this.mapPoi(record);
@@ -277,19 +284,22 @@ export class SmartVillagePoiRepository {
     const internalId = fromPublicPoiId(publicId);
     if (!internalId) throw notFoundError();
     return this.detailCache.getOrLoad(internalId, async () => {
-      const response = await this.options.client.request<{ pointOfInterest?: SmartVillagePoi | null }>(
-        POINT_OF_INTEREST_QUERY,
-        { id: internalId },
-      );
-      if (!Object.hasOwn(response, "pointOfInterest")) {
-        throw new GatewayError({
-          code: "INVALID_UPSTREAM_PAYLOAD",
-          message: "smartvillage pointOfInterest response did not include pointOfInterest",
-          statusCode: 502,
-          upstream: "smartvillage",
-          retryable: false,
-        });
-      }
+      const response = await requestCached(this.options.client, {
+        contractId: "pois.detail.v1",
+        query: POINT_OF_INTEREST_QUERY,
+        variables: { id: internalId },
+        validate: (value: { pointOfInterest?: SmartVillagePoi | null }) => {
+          if (!Object.hasOwn(value, "pointOfInterest")) {
+            throw new GatewayError({
+              code: "INVALID_UPSTREAM_PAYLOAD",
+              message: "smartvillage pointOfInterest response did not include pointOfInterest",
+              statusCode: 502,
+              upstream: "smartvillage",
+              retryable: false,
+            });
+          }
+        },
+      });
       const poi = response.pointOfInterest ? this.mapPoi(response.pointOfInterest) : null;
       if (!poi) throw notFoundError();
       return poiDetailContentSchema.parse({

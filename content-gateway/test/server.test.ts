@@ -189,7 +189,9 @@ describe("server bootstrap", () => {
         },
       },
     });
+    await expect(options.readinessProbe()).resolves.toMatchObject({ ready: true });
     expect(checkReadiness).toHaveBeenCalled();
+    expect(checkGraphqlReadiness).toHaveBeenCalledTimes(2);
     expect(checkGraphqlReadiness).toHaveBeenCalledWith(expect.stringContaining("eventRecords"));
     expect(options.repository).toBe(wrapperRepositoryInstances[0]);
     expect(smartVillageEventRepositoryOptions[0]?.warn).toEqual(expect.any(Function));

@@ -10,6 +10,7 @@ import type {
   SeoMetadata,
 } from "../../../shared/public-content/contracts.js";
 import { GatewayError } from "../errors.js";
+import { requestCached, type SmartVillageGraphQLReader } from "../upstream/smart-village-graphql-client.js";
 import type { SmartVillageEventRecord } from "../upstream/smart-village-types.js";
 import { TTLCache } from "../upstream/ttl-cache.js";
 import type { EventFilters } from "./content-repository-contract.js";
@@ -96,9 +97,7 @@ const EVENT_RECORD_QUERY = `
 `;
 
 type SmartVillageEventRepositoryOptions = {
-  client: {
-    request<T>(query: string, variables?: Record<string, unknown>): Promise<T>;
-  };
+  client: SmartVillageGraphQLReader;
   publicBaseUrl: string;
   warn?: (message: string, context: Record<string, unknown>) => void;
   cacheTtlMs?: number;
@@ -203,7 +202,13 @@ export class SmartVillageEventRepository {
   }
 
   private async loadEvents(language: string, filters: EventFilters): Promise<EventsContent> {
-    const response = await this.options.client.request<EventRecordsQueryResponse>(EVENT_RECORDS_QUERY);
+    const response = await requestCached(this.options.client, {
+      contractId: "events.collection.v1",
+      query: EVENT_RECORDS_QUERY,
+      validate: (value: EventRecordsQueryResponse) => {
+        this.expectEventRecords(value);
+      },
+    });
     const records = this.expectEventRecords(response);
 
     let results = records
@@ -243,14 +248,16 @@ export class SmartVillageEventRepository {
       throw notFoundError();
     }
 
-    const response = await this.options.client.request<EventRecordQueryResponse>(
-      EVENT_RECORD_QUERY,
-      { id: parsedOccurrenceId.internalId },
-    );
-
-    if (!Object.hasOwn(response, "eventRecord")) {
-      throw invalidPayloadError("smartvillage eventRecord response did not include eventRecord");
-    }
+    const response = await requestCached(this.options.client, {
+      contractId: "events.detail.v1",
+      query: EVENT_RECORD_QUERY,
+      variables: { id: parsedOccurrenceId.internalId },
+      validate: (value: EventRecordQueryResponse) => {
+        if (!Object.hasOwn(value, "eventRecord")) {
+          throw invalidPayloadError("smartvillage eventRecord response did not include eventRecord");
+        }
+      },
+    });
 
     if (response.eventRecord === null) {
       this.options.warn?.(

@@ -1,6 +1,7 @@
 import { bookingFaqsContentSchema } from "../../../shared/public-content/contracts.js";
 import type { BookingFaqItem, BookingFaqsContent } from "../../../shared/public-content/contracts.js";
 import { GatewayError } from "../errors.js";
+import { requestCached, type SmartVillageGraphQLReader } from "../upstream/smart-village-graphql-client.js";
 import type { SmartVillageGenericItem } from "../upstream/smart-village-types.js";
 
 const BOOKING_FAQS_QUERY = `
@@ -16,7 +17,7 @@ const BOOKING_FAQS_QUERY = `
 `;
 
 type Options = {
-  client: { request<T>(query: string, variables?: Record<string, unknown>): Promise<T> };
+  client: SmartVillageGraphQLReader;
   warn?: (message: string, context: Record<string, unknown>) => void;
 };
 
@@ -31,6 +32,11 @@ const invalidPayloadError = () =>
     upstream: "smartvillage",
     retryable: false,
   });
+
+const expectGenericItems = (response: QueryResponse) => {
+  if (!Array.isArray(response.genericItems)) throw invalidPayloadError();
+  return response.genericItems;
+};
 
 const normalizeLanguage = (value: string) => value.trim().slice(0, 2).toLowerCase();
 
@@ -52,11 +58,14 @@ export class SmartVillageBookingFaqRepository {
   public constructor(private readonly options: Options) {}
 
   public async getBookingFaqs(language: string): Promise<BookingFaqsContent> {
-    const response = await this.options.client.request<QueryResponse>(BOOKING_FAQS_QUERY);
-    if (!Array.isArray(response.genericItems)) throw invalidPayloadError();
+    const response = await requestCached(this.options.client, {
+      contractId: "booking-faqs.collection.v1",
+      query: BOOKING_FAQS_QUERY,
+      validate: expectGenericItems,
+    });
 
     const normalizedLanguage = normalizeLanguage(language);
-    const items = response.genericItems
+    const items = expectGenericItems(response)
       .flatMap((item) => this.mapItem(item))
       .filter((item) => item.languageCode === normalizedLanguage)
       .sort(this.compareItems);

@@ -122,6 +122,20 @@ describe("SmartVillageEventRepository", () => {
     vi.useRealTimers();
   });
 
+  it("accepts an upstream detail deletion and returns not found", async () => {
+    const responses = [{ eventRecord: makeRecord() }, { eventRecord: null }];
+    const requestCached = vi.fn(async (options: { validate: (value: unknown) => void }) => {
+      const value = responses.shift();
+      options.validate(value);
+      return value;
+    });
+    const repository = createRepository({ request: vi.fn(), requestCached } as never, 0);
+    const id = "1937530:2026-06-13:15%3A00";
+
+    await expect(repository.getEventById("de", id)).resolves.toMatchObject({ event: { title: "Sommerfest" } });
+    await expect(repository.getEventById("de", id)).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   it("caches list responses and refreshes them after ttl expiry", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-29T12:00:00.000Z"));
