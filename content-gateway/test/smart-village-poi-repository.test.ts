@@ -110,4 +110,21 @@ describe("SmartVillagePoiRepository", () => {
     const detailRepository = new SmartVillagePoiRepository({ client: { request: async () => ({}) } as never, publicBaseUrl: "https://example.com" });
     await expect(detailRepository.getPoiById("de", "poi:1")).rejects.toMatchObject({ code: "INVALID_UPSTREAM_PAYLOAD" });
   });
+
+  it("accepts an upstream detail deletion and returns not found", async () => {
+    const responses = [{ pointOfInterest: makePoi() }, { pointOfInterest: null }];
+    const requestCached = vi.fn(async (options: { validate: (value: unknown) => void }) => {
+      const value = responses.shift();
+      options.validate(value);
+      return value;
+    });
+    const repository = new SmartVillagePoiRepository({
+      client: { request: vi.fn(), requestCached } as never,
+      publicBaseUrl: "https://example.com",
+      cacheTtlMs: 0,
+    });
+
+    await expect(repository.getPoiById("de", "poi:1")).resolves.toMatchObject({ poi: { id: "poi:1" } });
+    await expect(repository.getPoiById("de", "poi:1")).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
 });

@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createApp } from "../src/app.js";
 import { GatewayError } from "../src/errors.js";
+import { SmartVillageBookingFaqRepository } from "../src/content/smart-village-booking-faq-repository.js";
+import { SmartVillageGraphQLClient } from "../src/upstream/smart-village-graphql-client.js";
 import type { PublicContentRepository } from "../src/content/content-repository-contract.js";
 import { loadConfig } from "../src/config.js";
 import { mockDashboardContent, mockEventDetail, mockEventsContent, mockFooterContent, mockHomeContent, mockMapContent, mockProjectsContent, mockPublicContentBundle } from "../src/content/mock-data.js";
@@ -56,6 +58,47 @@ describe("content gateway", () => {
       const app = apps.pop();
       await app?.close();
     }
+    vi.restoreAllMocks();
+  });
+
+  it("preserves the booking FAQ route contract when the GraphQL client serves stale data", async () => {
+    let now = 0;
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn(async () => ({ data: { genericItems: [{
+          id: "faq-1",
+          title: "Frage",
+          genericType: "FAQ",
+          payload: { languageCode: "de", sortWeight: 1 },
+          contentBlocks: [{ body: "Antwort" }],
+        }] } })),
+      } as unknown as Response)
+      .mockRejectedValue(new Error("upstream down"));
+    const client = new SmartVillageGraphQLClient({
+      graphqlUrl: "https://example.com/graphql",
+      oauthClient: { getAccessToken: vi.fn(async () => "token-1") },
+      retryAttempts: 0,
+      readCacheOptions: { freshMs: 10, staleMs: 100, now: () => now },
+    });
+    const faqRepository = new SmartVillageBookingFaqRepository({ client });
+    repository.getBookingFaqs = faqRepository.getBookingFaqs.bind(faqRepository);
+    const app = createTestApp();
+
+    const fresh = await app.inject({ method: "GET", url: "/api/content/booking/faqs?lang=de" });
+    now = 10;
+    const stale = await app.inject({ method: "GET", url: "/api/content/booking/faqs?lang=de" });
+
+    expect(fresh.statusCode).toBe(200);
+    expect(stale.statusCode).toBe(200);
+    expect(stale.json()).toEqual(fresh.json());
+    expect(stale.json()).toEqual({ items: [{
+      id: "faq-1",
+      question: "Frage",
+      answer: "Antwort",
+      languageCode: "de",
+      sortWeight: 1,
+    }] });
   });
 
   it("serves health, home and dashboard endpoints", async () => {

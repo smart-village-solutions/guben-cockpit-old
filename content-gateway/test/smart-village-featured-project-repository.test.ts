@@ -74,4 +74,20 @@ describe("SmartVillageFeaturedProjectRepository", () => {
     const repository = new SmartVillageFeaturedProjectRepository({ client: { request: request as never }, publicBaseUrl: "https://cockpit.example.com" });
     await expect(repository.getFeaturedProjects("de")).rejects.toThrow("offline");
   });
+
+  it("accepts an upstream detail deletion and returns not found", async () => {
+    const responses = [{ genericItems: [representativeSmartVillageFeaturedProjects[0]] }, { genericItems: [] }];
+    const requestCached = vi.fn(async (options: { validate: (value: unknown) => void }) => {
+      const value = responses.shift();
+      options.validate(value);
+      return value;
+    });
+    const repository = new SmartVillageFeaturedProjectRepository({
+      client: { request: vi.fn(), requestCached } as never,
+      publicBaseUrl: "https://cockpit.example.com",
+    });
+
+    await expect(repository.getFeaturedProjectById("de", "513")).resolves.toMatchObject({ project: { id: "513" } });
+    await expect(repository.getFeaturedProjectById("de", "513")).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
 });

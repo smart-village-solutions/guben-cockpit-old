@@ -26,6 +26,12 @@ External services still used by the public frontend:
 - Masterportal
 - Matomo
 
+### Smart Village read cache
+
+Smart Village GraphQL content reads use a process-local validated cache. Successful responses are fresh for four minutes; the existing one-minute POI and Event repository caches can therefore make normal upstream changes visible after approximately five minutes. If a refresh fails, the last domain-valid response may be served for up to 24 hours from its last successful validation. A successful absent detail response replaces older content and continues through the existing `NOT_FOUND` behavior.
+
+Cache entries and in-flight requests are not shared between gateway processes and are empty after every restart or deployment. Readiness requests always bypass the content cache and continue to report the live Smart Village dependency. No deployment variable is required. Roll back by reverting the cached-read repository wiring or the release containing it; the process-local cache has no persistent state to clean up.
+
 ## Local Docker setup
 
 Copy the local env template and fill in any overrides you need:

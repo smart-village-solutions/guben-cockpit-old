@@ -1,5 +1,6 @@
 import type { InformationCard } from "../../../shared/public-content/contracts.js";
 import { GatewayError } from "../errors.js";
+import { requestCached, type SmartVillageGraphQLReader } from "../upstream/smart-village-graphql-client.js";
 import type { SmartVillageGenericItem } from "../upstream/smart-village-types.js";
 
 const COCKPIT_CARDS_QUERY = `
@@ -18,7 +19,7 @@ const COCKPIT_CARDS_QUERY = `
 `;
 
 type Options = {
-  client: { request<T>(query: string, variables?: Record<string, unknown>): Promise<T> };
+  client: SmartVillageGraphQLReader;
   warn?: (message: string, context: Record<string, unknown>) => void;
 };
 
@@ -63,15 +64,23 @@ const invalidPayloadError = () =>
     retryable: false,
   });
 
+const expectGenericItems = (response: QueryResponse) => {
+  if (!Array.isArray(response.genericItems)) throw invalidPayloadError();
+  return response.genericItems;
+};
+
 export class SmartVillageCockpitCardRepository {
   public constructor(private readonly options: Options) {}
 
   public async getCockpitCards(language: string): Promise<CategorizedCockpitCard[]> {
-    const response = await this.options.client.request<QueryResponse>(COCKPIT_CARDS_QUERY);
-    if (!Array.isArray(response.genericItems)) throw invalidPayloadError();
+    const response = await requestCached(this.options.client, {
+      contractId: "cockpit-cards.collection.v1",
+      query: COCKPIT_CARDS_QUERY,
+      validate: expectGenericItems,
+    });
 
     const normalizedLanguage = normalizeLanguage(language);
-    return response.genericItems
+    return expectGenericItems(response)
       .flatMap((item) => this.mapItem(item))
       .filter((item) => item.languageCode === normalizedLanguage)
       .sort((left, right) => left.sortWeight - right.sortWeight || left.card.id.localeCompare(right.card.id));
