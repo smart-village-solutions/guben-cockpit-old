@@ -33,7 +33,7 @@ const state = vi.hoisted(() => ({
     refetch: vi.fn(),
   },
   poisQuery: {
-    data: { pageNumber: 1, pageSize: 12, totalCount: 0, pageCount: 1, results: [] as Array<any>, categories: [], locations: [] },
+    data: { pageNumber: 1, pageSize: 12, totalCount: 0, pageCount: 1, results: [] as unknown[], categories: [], locations: [] },
     error: null as unknown,
     isPending: false,
     refetch: vi.fn(),

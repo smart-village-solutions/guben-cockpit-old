@@ -147,7 +147,7 @@ export function createApp(options: {
   });
 
   app.get("/api/content/featured-projects/:id", async (request) => {
-    const params = z.object({ id: z.string().trim().min(1).max(200) }).parse(request.params);
+    const params = z.object({ id: z.string().trim().min(1) }).parse(request.params);
     const query = pageQuerySchema.parse(request.query);
     return options.repository.getFeaturedProjectById(
       resolveLanguage(query.lang, request.headers["accept-language"], options.config),
