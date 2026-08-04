@@ -30,6 +30,24 @@ const eventsQuerySchema = z.object({
   distance: z.coerce.number().optional(),
 });
 
+const categoryIdsSchema = z.preprocess((value) => {
+  if (Array.isArray(value)) return value.flatMap((entry) => String(entry).split(","));
+  if (typeof value === "string") return value.split(",").filter(Boolean);
+  return [];
+}, z.array(z.string().min(1)).default([]));
+
+const poisQuerySchema = z.object({
+  lang: z.string().optional(),
+  search: z.string().trim().max(200).optional(),
+  categoryIds: categoryIdsSchema,
+  location: z.string().trim().max(200).optional(),
+  radius: z.coerce.number().positive().max(500).optional(),
+  sort: z.enum(["name", "updatedAt"]).optional().default("name"),
+  direction: z.enum(["asc", "desc"]).optional().default("asc"),
+  pageNumber: z.coerce.number().int().positive().optional().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).optional().default(12),
+}).strict();
+
 export function createApp(options: {
   config: Config;
   repository: PublicContentRepository;
@@ -118,6 +136,30 @@ export function createApp(options: {
       resolveLanguage(query.lang, request.headers["accept-language"], options.config),
       query.pageNumber,
       query.pageSize,
+    );
+  });
+
+  app.get("/api/content/featured-projects", async (request) => {
+    const query = pageQuerySchema.parse(request.query);
+    return options.repository.getFeaturedProjects(
+      resolveLanguage(query.lang, request.headers["accept-language"], options.config),
+    );
+  });
+
+  app.get("/api/content/pois", async (request) => {
+    const query = poisQuerySchema.parse(request.query);
+    return options.repository.getPois(
+      resolveLanguage(query.lang, request.headers["accept-language"], options.config),
+      query,
+    );
+  });
+
+  app.get("/api/content/pois/:id", async (request) => {
+    const params = z.object({ id: z.string().min(1) }).parse(request.params);
+    const query = pageQuerySchema.parse(request.query);
+    return options.repository.getPoiById(
+      resolveLanguage(query.lang, request.headers["accept-language"], options.config),
+      params.id,
     );
   });
 

@@ -19,5 +19,18 @@
   "PublishSuccess": "Project/Business/School successfully published",
   "UnpublishSuccess": "Project/Business/School successfully taken offline",
   "PublishConfirmation": "With this action the Project/Business/School will be published and visible to everyone.",
-  "UnpublishConfirmation": "With this action the Project/Business/School will be taken offline and no longer be visible to anyone."
+  "UnpublishConfirmation": "With this action the Project/Business/School will be taken offline and no longer be visible to anyone.",
+  "PoiFilters": "Filter places",
+  "PoiSearch": "Search",
+  "PoiSearchPlaceholder": "Search by name or description",
+  "PoiCategories": "Categories",
+  "PoiLocation": "Location",
+  "PoiAllLocations": "All locations",
+  "PoiSorting": "Sorting",
+  "PoiSortName": "Name",
+  "PoiSortUpdated": "Recently updated",
+  "PoiSortDirection": "Sort direction",
+  "PoiAscending": "Ascending",
+  "PoiDescending": "Descending",
+  "PoiEmpty": "No matching places found"
 }

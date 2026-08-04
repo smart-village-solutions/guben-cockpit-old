@@ -1,131 +1,146 @@
 import { useNavigate } from "@tanstack/react-router";
-import { ReactNode } from "react";
 import sanitizeHtml from "sanitize-html";
 
 import { DetailPageLayout } from "@/components/ui/DetailPageLayout";
 import { DetailMediaSection } from "@/components/ui/detailMediaSection";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGatewayProjectDetailContent } from "@/public-content/hooks";
 import { isGatewayPublicContentEnabled } from "@/public-content/source";
 import { useRouteMetadata } from "@/public-content/useRouteMetadata";
 import { isNullOrUndefinedOrWhiteSpace } from "@/utilities/nullabilityUtils";
-import type { Project } from "@shared/public-content/contracts";
 
-import { PublicContentErrorState } from "./PublicContentErrorState";
 import { PublicContentDisabledState } from "./PublicContentDisabledState";
+import { PublicContentErrorState } from "./PublicContentErrorState";
+
+const safeHtml = (value: string) => ({ __html: sanitizeHtml(value) });
 
 export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) => {
   const navigate = useNavigate();
   const query = useGatewayProjectDetailContent(projectId);
   useRouteMetadata(query.data?.seo);
 
-  if (!isGatewayPublicContentEnabled) {
-    return <PublicContentDisabledState />;
+  if (!isGatewayPublicContentEnabled) return <PublicContentDisabledState />;
+  if (query.isPending && !query.data) return <div className="max-w-7xl mx-auto px-4"><Skeleton className="h-96 w-full rounded-lg" /></div>;
+  if (query.error || !query.data) return <PublicContentErrorState error={query.error} onRetry={() => void query.refetch()} />;
+
+  if (query.data.kind === "featured") {
+    const project = query.data.project;
+    const hasDescription = !isNullOrUndefinedOrWhiteSpace(project.description);
+    const hasFullText = !isNullOrUndefinedOrWhiteSpace(project.fullText);
+    const images = project.imageUrl ? [{ src: project.imageUrl, alt: project.title }] : [];
+    return (
+      <DetailPageLayout
+        heroAlt={project.title}
+        title={project.title}
+        breadcrumbItems={[
+          { label: "Startseite", href: "/" },
+          { label: "Mein Guben", href: "/projects" },
+          { label: project.title, href: `/projects/${projectId}` },
+        ]}
+        onBack={() => navigate({ to: "/projects", search: { categoryIds: [], sort: "name", direction: "asc", page: 1, pageSize: 12 } })}
+        backLabel="Zurück zu Projekten"
+      >
+        <div className="space-y-8">
+          {hasDescription && (
+            <DetailMediaSection
+              heading="Übersicht"
+              body={<div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={safeHtml(project.description)} />}
+              images={images}
+            />
+          )}
+          {hasFullText && !hasDescription && images.length > 0 ? (
+            <DetailMediaSection
+              heading="Projektdetails"
+              body={<div className="prose max-w-none text-neutral-700" dangerouslySetInnerHTML={safeHtml(project.fullText)} />}
+              images={images}
+            />
+          ) : hasFullText && (
+            <section>
+              <h2 className="font-bold text-xl mb-4">Projektdetails</h2>
+              <div className="prose max-w-none text-neutral-700" dangerouslySetInnerHTML={safeHtml(project.fullText)} />
+            </section>
+          )}
+          {!hasDescription && !hasFullText && images.length > 0 && <DetailMediaSection heading={null} body={null} images={images} />}
+        </div>
+      </DetailPageLayout>
+    );
   }
 
-  // Show error only if query failed, not just loading
-  if (query.error && !query.data) {
-    return <PublicContentErrorState error={query.error} onRetry={() => void query.refetch()} />;
-  }
-
-  const project = query.data?.results?.[0] as Project | undefined;
-  const category = (query.data as any)?._category as string | undefined;
-  const detailImages = project?.imageUrl ? [{ src: project.imageUrl, alt: project.title }] : [];
-  const hasProjectDescription = !isNullOrUndefinedOrWhiteSpace(project?.description);
-  const hasProjectFullText = !isNullOrUndefinedOrWhiteSpace(project?.fullText);
-  const hasProjectText = hasProjectDescription || hasProjectFullText;
-
-  if (!query.isPending && !project) {
-    return <PublicContentErrorState error={query.error} />;
-  }
-
-  // Build breadcrumb items based on project category
-  const getBreadcrumbItems = () => {
-    const baseBreadcrumbs = [
-      { label: 'Startseite', href: '/' },
-      { label: 'Mein Guben', href: '/projects' },
-    ];
-
-    if (category === 'schools') {
-      return [
-        ...baseBreadcrumbs,
-        { label: 'Schulen', href: '/projects/schools' },
-        { label: project!.title, href: `/projects/${projectId}` },
-      ];
-    } else if (category === 'marketplace') {
-      return [
-        ...baseBreadcrumbs,
-        { label: 'Marktplatz', href: '/projects/marketplace' },
-        { label: project!.title, href: `/projects/${projectId}` },
-      ];
-    } else {
-      // For featured projects, just show basic path
-      return [
-        ...baseBreadcrumbs,
-        { label: project!.title, href: `/projects/${projectId}` },
-      ];
-    }
-  };
+  const poi = query.data.poi;
+  const images = poi.media.map((media) => ({ src: media.url, alt: media.description ?? poi.title }));
+  const address = poi.address
+    ? [[poi.address.street, poi.address.addition].filter(Boolean).join(" "), [poi.address.zip, poi.address.city].filter(Boolean).join(" ")].filter(Boolean)
+    : [];
+  const contactName = poi.contact ? [poi.contact.firstName, poi.contact.lastName].filter(Boolean).join(" ") : "";
 
   return (
     <DetailPageLayout
-      heroAlt={project?.title ?? undefined}
-      title={project?.title || "Projekt"}
-      breadcrumbItems={project ? getBreadcrumbItems() : undefined}
-      onBack={() => navigate({ to: "/projects" })}
-      backLabel="Zurück zu Projekten"
+      heroAlt={poi.title}
+      title={poi.title}
+      breadcrumbItems={[
+        { label: "Startseite", href: "/" },
+        { label: "Mein Guben", href: "/projects" },
+        { label: poi.title, href: `/projects/${projectId}` },
+      ]}
+      onBack={() => navigate({ to: "/projects", search: { categoryIds: [], sort: "name", direction: "asc", page: 1, pageSize: 12 } })}
+      backLabel="Zurück zur Übersicht"
     >
       <div className="space-y-8">
-        {hasProjectDescription && project && (
+        {(poi.description || images.length > 0) && (
           <DetailMediaSection
-            heading="Übersicht"
-            body={
-              project.description.includes("<") && project.description.includes(">") ? (
-                <div
-                  className="prose max-w-none text-gray-700"
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(project.description),
-                  }}
-                />
-              ) : (
-                <p className="text-sm leading-relaxed text-gray-700">{project.description}</p>
-              )
-            }
-            images={detailImages}
+            heading={poi.description ? "Übersicht" : null}
+            body={poi.description ? <div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={safeHtml(poi.description)} /> : null}
+            images={images}
           />
         )}
 
-        {hasProjectFullText && !hasProjectDescription && detailImages.length > 0 && project ? (
-          <DetailMediaSection
-            heading="Projektdetails"
-            body={
-              <div
-                className="prose max-w-none text-neutral-700 leading-relaxed"
-                dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(project.fullText),
-                }}
-              />
-            }
-            images={detailImages}
-          />
-        ) : hasProjectFullText ? (
-          <div>
-            <h2 className="font-bold text-xl mb-4">Projektdetails</h2>
-            <div
-              className="prose max-w-none text-neutral-700 leading-relaxed"
-              dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(project!.fullText!),
-              }}
-            />
-          </div>
-        ) : null}
+        {address.length > 0 && (
+          <section>
+            <h2 className="font-bold text-xl mb-3">Anschrift</h2>
+            <address className="not-italic text-gray-700">{address.map((line) => <div key={line}>{line}</div>)}</address>
+          </section>
+        )}
 
-        {!hasProjectText && detailImages.length > 0 ? (
-          <DetailMediaSection
-            heading={null}
-            body={null}
-            images={detailImages}
-          />
-        ) : null}
+        {(poi.contact || poi.webUrls.length > 0) && (
+          <section>
+            <h2 className="font-bold text-xl mb-3">Kontakt</h2>
+            <div className="space-y-2 text-gray-700">
+              {contactName && <p>{contactName}</p>}
+              {poi.contact?.phone && <p><a href={`tel:${poi.contact.phone}`}>{poi.contact.phone}</a></p>}
+              {poi.contact?.email && <p><a href={`mailto:${poi.contact.email}`}>{poi.contact.email}</a></p>}
+              {poi.contact?.fax && <p>Fax: {poi.contact.fax}</p>}
+              {poi.webUrls.map((entry) => <p key={entry.url}><a href={entry.url} target="_blank" rel="noreferrer">{entry.description ?? entry.url}</a></p>)}
+            </div>
+          </section>
+        )}
+
+        {poi.openingHours.length > 0 && (
+          <section>
+            <h2 className="font-bold text-xl mb-3">Öffnungszeiten</h2>
+            <dl className="grid gap-2 sm:grid-cols-[auto_1fr]">
+              {poi.openingHours.map((entry, index) => (
+                <div className="contents" key={`${entry.weekday ?? "day"}-${index}`}>
+                  <dt className="font-medium">{entry.weekday ?? "Zeitraum"}</dt>
+                  <dd>{entry.description ?? (entry.open === false ? "Geschlossen" : [entry.timeFrom, entry.timeTo].filter(Boolean).join(" – "))}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        {poi.categories.length > 0 && (
+          <section>
+            <h2 className="font-bold text-xl mb-3">Kategorien</h2>
+            <div className="flex flex-wrap gap-2">{poi.categories.map((category) => <span key={category.id} className="rounded-full border px-3 py-1 text-sm">{category.name}</span>)}</div>
+          </section>
+        )}
+
+        {(poi.operatingCompany || poi.dataProvider) && (
+          <section className="text-sm text-gray-600">
+            {poi.operatingCompany && <p>Betreiber: {poi.operatingCompany}</p>}
+            {poi.dataProvider && <p>Datenquelle: {poi.dataProvider}</p>}
+          </section>
+        )}
       </div>
     </DetailPageLayout>
   );

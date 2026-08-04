@@ -43,8 +43,8 @@ type ProjectsQueryData = {
 };
 
 type ProjectDetailQueryData = {
-  results: Project[];
-  _category: string;
+  kind: "featured";
+  project: Project;
   seo: undefined;
 };
 
@@ -134,8 +134,8 @@ const mockState = vi.hoisted(() => {
     },
     projectDetailQuery: {
       data: {
-        results: [project],
-        _category: "marketplace",
+        kind: "featured",
+        project,
         seo: undefined,
       } as ProjectDetailQueryData | null,
       error: null as unknown,
@@ -402,8 +402,8 @@ beforeEach(() => {
   };
   mockState.projectDetailQuery = {
     data: {
-      results: [
-        {
+      kind: "featured",
+      project: {
           id: "project-1",
           type: 1,
           title: "Project",
@@ -414,8 +414,6 @@ beforeEach(() => {
           imageCredits: null,
           published: true,
         },
-      ],
-      _category: "marketplace",
       seo: undefined,
     } as ProjectDetailQueryData | null,
     error: null,
@@ -616,7 +614,7 @@ describe("Sonar fix smoke tests", () => {
     expect(renderToStaticMarkup(<GatewayProjectDetailPage projectId="project-1" />)).toContain("Public Content Error: project-failed");
 
     mockState.projectDetailQuery.error = null;
-    mockState.projectDetailQuery.data = { results: [], _category: "marketplace", seo: undefined };
+    mockState.projectDetailQuery.data = null;
     expect(renderToStaticMarkup(<GatewayProjectDetailPage projectId="project-1" />)).toContain("Public Content Error: none");
   });
 

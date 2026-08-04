@@ -5,9 +5,13 @@ import type {
   EventDetailContent,
   EventsContent,
   FooterContent,
+  FeaturedProjectsContent,
   HomeContent,
   MapContent,
   ProjectsContent,
+  PoiDetailContent,
+  PoiFilters,
+  PoisContent,
   PublicContentBundle,
 } from "../../../shared/public-content/contracts.js";
 import type { EventFilters, PublicContentRepository } from "./content-repository-contract.js";
@@ -15,6 +19,7 @@ import type { PostgrestContentRepository } from "./postgrest-content-repository.
 import type { SmartVillageEventRepository } from "./smart-village-event-repository.js";
 import type { SmartVillageBookingFaqRepository } from "./smart-village-booking-faq-repository.js";
 import type { SmartVillageCockpitCardRepository } from "./smart-village-cockpit-card-repository.js";
+import type { SmartVillagePoiRepository } from "./smart-village-poi-repository.js";
 import {
   enrichDashboardWithCockpitCards,
   flattenedDashboardCards,
@@ -25,6 +30,7 @@ type SmartVillagePostgrestContentRepositoryOptions = {
   smartVillageEventRepository: SmartVillageEventRepository;
   smartVillageBookingFaqRepository: SmartVillageBookingFaqRepository;
   smartVillageCockpitCardRepository: SmartVillageCockpitCardRepository;
+  smartVillagePoiRepository: SmartVillagePoiRepository;
   warn?: (message: string, context: Record<string, unknown>) => void;
 };
 
@@ -44,6 +50,18 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
 
   public getProjects(language: string, pageNumber: number, pageSize: number): Promise<ProjectsContent> {
     return this.options.postgrestRepository.getProjects(language, pageNumber, pageSize);
+  }
+
+  public getFeaturedProjects(language: string): Promise<FeaturedProjectsContent> {
+    return this.options.postgrestRepository.getFeaturedProjects(language);
+  }
+
+  public getPois(language: string, filters: PoiFilters): Promise<PoisContent> {
+    return this.options.smartVillagePoiRepository.getPois(language, filters);
+  }
+
+  public getPoiById(language: string, id: string): Promise<PoiDetailContent> {
+    return this.options.smartVillagePoiRepository.getPoiById(language, id);
   }
 
   public async getPublicContent(language: string): Promise<PublicContentBundle> {

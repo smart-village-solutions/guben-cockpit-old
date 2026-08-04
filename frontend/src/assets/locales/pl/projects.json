@@ -19,5 +19,18 @@
   "PublishSuccess": "Projekt/Firma/Szkoła została pomyślnie opublikowana",
   "UnpublishSuccess": "Projekt/Firma/Szkoła została pomyślnie wycofana",
   "PublishConfirmation": "Ta akcja spowoduje opublikowanie projektu/firmy/szkoły i będzie widoczne dla wszystkich.",
-  "UnpublishConfirmation": "Ta akcja spowoduje wycofanie projektu/firmy/szkoły i nie będzie już widoczne dla wszystkich."
+  "UnpublishConfirmation": "Ta akcja spowoduje wycofanie projektu/firmy/szkoły i nie będzie już widoczne dla wszystkich.",
+  "PoiFilters": "Filtruj miejsca",
+  "PoiSearch": "Szukaj",
+  "PoiSearchPlaceholder": "Szukaj według nazwy lub opisu",
+  "PoiCategories": "Kategorie",
+  "PoiLocation": "Miejscowość",
+  "PoiAllLocations": "Wszystkie miejscowości",
+  "PoiSorting": "Sortowanie",
+  "PoiSortName": "Nazwa",
+  "PoiSortUpdated": "Ostatnio zaktualizowane",
+  "PoiSortDirection": "Kierunek sortowania",
+  "PoiAscending": "Rosnąco",
+  "PoiDescending": "Malejąco",
+  "PoiEmpty": "Nie znaleziono pasujących miejsc"
 }

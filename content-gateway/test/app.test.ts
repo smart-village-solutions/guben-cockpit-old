@@ -18,6 +18,9 @@ const baseConfig = loadConfig({
 const repositoryStub = (): PublicContentRepository => ({
   getHome: vi.fn(async () => mockHomeContent),
   getProjects: vi.fn(async () => mockProjectsContent),
+  getFeaturedProjects: vi.fn(async () => ({ page: mockProjectsContent.page, featuredProjects: mockProjectsContent.featuredProjects, seo: mockProjectsContent.seo })),
+  getPois: vi.fn(async (_language, filters) => ({ pageNumber: filters.pageNumber, pageSize: filters.pageSize, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] })),
+  getPoiById: vi.fn(async () => { throw new GatewayError({ code: "NOT_FOUND", message: "not found", statusCode: 404, upstream: "gateway", retryable: false }); }),
   getPublicContent: vi.fn(async () => mockPublicContentBundle),
   getEvents: vi.fn(async () => mockEventsContent),
   getEventById: vi.fn(async () => mockEventDetail),
@@ -98,6 +101,59 @@ describe("content gateway", () => {
     });
     expect(eventDetailResponse.statusCode).toBe(200);
     expect(eventDetailResponse.json().event.title).toBe("Frühlingsmarkt");
+  });
+
+  it("serves Featured Projects and strictly validated POI list/detail endpoints", async () => {
+    const poi = {
+      id: "poi:1",
+      title: "Schule",
+      description: "Beschreibung",
+      imageUrl: null,
+      updatedAt: null,
+      categories: [{ id: "6186", name: "Schulen", parentId: null, parentName: null }],
+      locationValue: "guben",
+      locationLabel: "Guben",
+      coordinates: null,
+      media: [],
+      address: null,
+      contact: null,
+      webUrls: [],
+      openingHours: [],
+      operatingCompany: null,
+      dataProvider: null,
+    };
+    vi.mocked(repository.getPois).mockImplementation(async (_language, filters) => ({
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+      totalCount: 1,
+      pageCount: 1,
+      results: [poi],
+      categories: poi.categories,
+      locations: [{ value: "guben", label: "Guben" }],
+    }));
+    vi.mocked(repository.getPoiById).mockResolvedValue({
+      poi,
+      seo: { title: poi.title, description: poi.description, canonical: "http://localhost:3000/projects/poi", indexable: true },
+    });
+    const app = createTestApp();
+
+    const featured = await app.inject({ method: "GET", url: "/api/content/featured-projects?lang=de" });
+    expect(featured.statusCode).toBe(200);
+
+    const list = await app.inject({ method: "GET", url: "/api/content/pois?categoryIds=6186,6187&sort=updatedAt&direction=desc&pageNumber=2&pageSize=5" });
+    expect(list.statusCode).toBe(200);
+    expect(repository.getPois).toHaveBeenCalledWith("de", expect.objectContaining({ categoryIds: ["6186", "6187"], direction: "desc", pageNumber: 2, pageSize: 5 }));
+
+    const detail = await app.inject({ method: "GET", url: "/api/content/pois/poi%3A1" });
+    expect(detail.statusCode).toBe(200);
+    expect(repository.getPoiById).toHaveBeenCalledWith("de", "poi:1");
+
+    const invalid = await app.inject({ method: "GET", url: "/api/content/pois?onlyWithImage=true" });
+    expect(invalid.statusCode).toBe(500);
+    const radius = await app.inject({ method: "GET", url: "/api/content/pois?radius=10" });
+    expect(radius.statusCode).toBe(200);
+    expect(repository.getPois).toHaveBeenLastCalledWith("de", expect.objectContaining({ radius: 10 }));
+    expect(repository.getPois).toHaveBeenCalledTimes(2);
   });
 
   it("serves booking, map and footer endpoints", async () => {

@@ -198,6 +198,107 @@ export const projectsContentSchema = z.object({
   seo: seoMetadataSchema,
 });
 
+export const featuredProjectsContentSchema = z.object({
+  page: pageHeroSchema,
+  featuredProjects: z.array(projectSchema),
+  seo: seoMetadataSchema,
+});
+
+export const poiCategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  parentId: z.string().nullable(),
+  parentName: z.string().nullable(),
+});
+
+export const poiLocationOptionSchema = z.object({
+  value: z.string(),
+  label: z.string(),
+});
+
+export const poiMediaSchema = z.object({
+  url: z.string(),
+  description: z.string().nullable(),
+  copyright: z.string().nullable(),
+});
+
+export const poiAddressSchema = z.object({
+  street: z.string().nullable(),
+  addition: z.string().nullable(),
+  zip: z.string().nullable(),
+  city: z.string().nullable(),
+});
+
+export const poiContactSchema = z.object({
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  fax: z.string().nullable(),
+});
+
+export const poiWebUrlSchema = z.object({
+  url: z.string(),
+  description: z.string().nullable(),
+});
+
+export const poiOpeningHourSchema = z.object({
+  weekday: z.string().nullable(),
+  timeFrom: z.string().nullable(),
+  timeTo: z.string().nullable(),
+  description: z.string().nullable(),
+  open: z.boolean().nullable(),
+  sortNumber: z.number().nullable(),
+});
+
+export const poiSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  imageUrl: z.string().nullable(),
+  updatedAt: z.string().nullable(),
+  categories: z.array(poiCategorySchema),
+  locationValue: z.string().nullable(),
+  locationLabel: z.string().nullable(),
+  coordinates: coordinatesSchema,
+  media: z.array(poiMediaSchema),
+  address: poiAddressSchema.nullable(),
+  contact: poiContactSchema.nullable(),
+  webUrls: z.array(poiWebUrlSchema),
+  openingHours: z.array(poiOpeningHourSchema),
+  operatingCompany: z.string().nullable(),
+  dataProvider: z.string().nullable(),
+});
+
+export const poiSortFieldSchema = z.enum(["name", "updatedAt"]);
+export const poiSortDirectionSchema = z.enum(["asc", "desc"]);
+
+export const poiFiltersSchema = z.object({
+  search: z.string().optional(),
+  categoryIds: z.array(z.string()).default([]),
+  location: z.string().optional(),
+  radius: z.number().positive().optional(),
+  sort: poiSortFieldSchema.default("name"),
+  direction: poiSortDirectionSchema.default("asc"),
+  pageNumber: z.number().int().positive().default(1),
+  pageSize: z.number().int().positive().max(100).default(12),
+});
+
+export const poisContentSchema = z.object({
+  pageNumber: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  totalCount: z.number().int().nonnegative(),
+  pageCount: z.number().int().positive(),
+  results: z.array(poiSchema),
+  categories: z.array(poiCategorySchema),
+  locations: z.array(poiLocationOptionSchema),
+});
+
+export const poiDetailContentSchema = z.object({
+  poi: poiSchema,
+  seo: seoMetadataSchema,
+});
+
 export const eventsContentSchema = z.object({
   page: pageHeroSchema,
   events: pagedEventsSchema,
@@ -278,6 +379,12 @@ export type MapContent = z.infer<typeof mapContentSchema>;
 export type PageHero = z.infer<typeof pageHeroSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type ProjectsContent = z.infer<typeof projectsContentSchema>;
+export type FeaturedProjectsContent = z.infer<typeof featuredProjectsContentSchema>;
+export type Poi = z.infer<typeof poiSchema>;
+export type PoiCategory = z.infer<typeof poiCategorySchema>;
+export type PoiFilters = z.infer<typeof poiFiltersSchema>;
+export type PoisContent = z.infer<typeof poisContentSchema>;
+export type PoiDetailContent = z.infer<typeof poiDetailContentSchema>;
 export type PublicContentBundle = z.infer<typeof publicContentBundleSchema>;
 export type PublicContentHomeCard = z.infer<typeof publicContentHomeCardSchema>;
 export type PublicContentProjectCategory = z.infer<typeof publicContentProjectCategorySchema>;

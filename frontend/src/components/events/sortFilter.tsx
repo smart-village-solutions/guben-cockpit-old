@@ -15,30 +15,46 @@ export enum SortOrder {
 }
 
 type Props = {
-  option?: SortOption,
-  order?: SortOrder
+  option?: string,
+  order?: string,
+  options?: Array<{ value: string; label: string }>,
+  includeNone?: boolean,
+  ariaLabel?: string,
+  triggerClassName?: string,
   onChange: (options?: string, order?: string) => unknown;
 }
 
 export default function SortFilter({
   option = SortOption.NONE,
   order = SortOrder.ASC,
+  options = [
+    { value: SortOption.TITLE, label: "" },
+    { value: SortOption.START_DATE, label: "" },
+  ],
+  includeNone = true,
+  ariaLabel,
+  triggerClassName,
   onChange
 }: Props) {
   const {t} = useTranslation("common");
+  const resolvedOptions = options.map((entry) => ({
+    ...entry,
+    label: entry.label || (entry.value === SortOption.TITLE ? t("Sorting.Title") : t("Sorting.Date")),
+  }));
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline"><SortDescIcon className="size-4" /></Button>
+        <Button variant="outline" className={triggerClassName} aria-label={ariaLabel ?? t("Sorting.Option")}><SortDescIcon className="size-4" /></Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="flex flex-col gap-2">
         <DropdownMenuLabel>{t("Sorting.Option")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={option} onValueChange={v => onChange(v == "none" ? undefined : v, order)}>
-          <DropdownMenuRadioItem value={SortOption.NONE}>({t("Sorting.None")})</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value={SortOption.TITLE}>{t("Sorting.Title")}</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value={SortOption.START_DATE}>{t("Sorting.Date")}</DropdownMenuRadioItem>
+          {includeNone && <DropdownMenuRadioItem value={SortOption.NONE}>({t("Sorting.None")})</DropdownMenuRadioItem>}
+          {resolvedOptions.map((entry) => (
+            <DropdownMenuRadioItem key={entry.value} value={entry.value}>{entry.label}</DropdownMenuRadioItem>
+          ))}
         </DropdownMenuRadioGroup>
 
         <DropdownMenuLabel>{t("Sorting.Order")}</DropdownMenuLabel>

@@ -5,6 +5,7 @@ import {
   EventDetailContent,
   EventsContent,
   FooterContent,
+  FeaturedProjectsContent,
   HomeContent,
   MapContent,
   PublicContentBundle,
@@ -13,13 +14,13 @@ import {
   footerContentSchema,
   homeContentSchema,
   eventsContentSchema,
+  featuredProjectsContentSchema,
   projectsContentSchema,
   publicContentBundleSchema,
 } from "../../../shared/public-content/contracts.js";
 import { Config } from "../config.js";
 import { GatewayError } from "../errors.js";
 import { PostgrestClient } from "../upstream/postgrest-client.js";
-import type { PublicContentRepository } from "./content-repository-contract.js";
 import { PostgrestContentMapper, distanceInKm } from "./postgrest-content-mapper.js";
 import { PostgrestContentSource } from "./postgrest-content-source.js";
 import { EventFilters, EventCategoryRow, EventImageRow, EventUrlRow } from "./postgrest-content-types.js";
@@ -33,7 +34,7 @@ const additionalBookingTenants = [
 
 const supportedPublicProjectTypes = new Set([0, 1, 2]);
 
-export class PostgrestContentRepository implements PublicContentRepository {
+export class PostgrestContentRepository {
   private readonly mapper: PostgrestContentMapper;
   private readonly source: PostgrestContentSource;
 
@@ -96,6 +97,19 @@ export class PostgrestContentRepository implements PublicContentRepository {
         pageCount: Math.max(1, Math.ceil(businessesAll.length / pageSize)),
         results: businessesAll.slice(startIndex, startIndex + pageSize),
       },
+      seo: page.seo,
+    });
+  }
+
+  public async getFeaturedProjects(language: string): Promise<FeaturedProjectsContent> {
+    const [pages, rows] = await Promise.all([this.source.getPage("Projects"), this.source.getProjects()]);
+    const page = this.mapper.pageFromRow(this.expectSingle(pages, "Projects"), language);
+
+    return featuredProjectsContentSchema.parse({
+      page,
+      featuredProjects: rows
+        .filter((row) => row.published && !row.deleted && row.type === 1)
+        .map((row) => this.mapper.projectFromRow(row, language)),
       seo: page.seo,
     });
   }
