@@ -53,6 +53,7 @@ describe("content repository glue", () => {
       getHome: async () => mockHomeContent,
       getProjects: async () => mockProjectsContent,
       getFeaturedProjects: async () => ({ page: mockProjectsContent.page, featuredProjects: mockProjectsContent.featuredProjects, seo: mockProjectsContent.seo }),
+      getFeaturedProjectById: async () => ({ project: mockProjectsContent.featuredProjects[0]!, seo: mockProjectsContent.seo }),
       getPois: async (_language: string, poiFilters: import("../../shared/public-content/contracts.js").PoiFilters) => ({ pageNumber: poiFilters.pageNumber, pageSize: poiFilters.pageSize, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] }),
       getPoiById: async () => { throw new Error("not found"); },
       getPublicContent: async () => mockPublicContentBundle,
@@ -116,6 +117,7 @@ describe("content repository glue", () => {
     const postgrestRepository = {
       getHome: vi.fn(async () => mockHomeContent),
       getProjects: vi.fn(async () => mockProjectsContent),
+      getFeaturedProjectsMetadata: vi.fn(async () => ({ page: mockProjectsContent.page, seo: mockProjectsContent.seo })),
       getPublicContent: vi.fn(async () => mockPublicContentBundle),
       getDashboard: vi.fn(async () => mockDashboardContent),
       getMap: vi.fn(async () => mockMapContent),
@@ -138,15 +140,22 @@ describe("content repository glue", () => {
       getPois: vi.fn(async (_language, poiFilters) => ({ pageNumber: poiFilters.pageNumber, pageSize: poiFilters.pageSize, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] })),
       getPoiById: vi.fn(async () => { throw new Error("not found"); }),
     };
+    const smartVillageFeaturedProjectRepository = {
+      getFeaturedProjects: vi.fn(async () => mockProjectsContent.featuredProjects),
+      getFeaturedProjectById: vi.fn(async () => ({ project: mockProjectsContent.featuredProjects[0]!, seo: mockProjectsContent.seo })),
+    };
     const repository = new SmartVillagePostgrestContentRepository({
       postgrestRepository: postgrestRepository as never,
       smartVillageEventRepository: smartVillageEventRepository as never,
       smartVillageBookingFaqRepository: smartVillageBookingFaqRepository as never,
       smartVillageCockpitCardRepository: smartVillageCockpitCardRepository as never,
       smartVillagePoiRepository: smartVillagePoiRepository as never,
+      smartVillageFeaturedProjectRepository: smartVillageFeaturedProjectRepository as never,
     });
     const home = await repository.getHome("de");
     const projects = await repository.getProjects("de", 1, 12);
+    const featuredProjects = await repository.getFeaturedProjects("de");
+    const featuredProjectDetail = await repository.getFeaturedProjectById("de", mockProjectsContent.featuredProjects[0]!.id);
     const publicContent = await repository.getPublicContent("de");
     const events = await repository.getEvents("de", filters);
     const eventDetail = await repository.getEventById("de", mockEventDetail.event.id);
@@ -157,6 +166,8 @@ describe("content repository glue", () => {
 
     expect(home).toEqual(mockHomeContent);
     expect(projects).toEqual(mockProjectsContent);
+    expect(featuredProjects).toEqual({ page: mockProjectsContent.page, featuredProjects: mockProjectsContent.featuredProjects, seo: mockProjectsContent.seo });
+    expect(featuredProjectDetail.project).toEqual(mockProjectsContent.featuredProjects[0]);
     expect(publicContent).toEqual(publicContentBundleSchema.parse(mockPublicContentBundle));
     expect(events).toEqual(eventsContentSchema.parse(mockEventsContent));
     expect(eventDetail).toEqual(eventDetailContentSchema.parse(mockEventDetail));
@@ -169,6 +180,9 @@ describe("content repository glue", () => {
 
     expect(postgrestRepository.getHome).toHaveBeenCalledWith("de");
     expect(postgrestRepository.getProjects).toHaveBeenCalledWith("de", 1, 12);
+    expect(postgrestRepository.getFeaturedProjectsMetadata).toHaveBeenCalledWith("de");
+    expect(smartVillageFeaturedProjectRepository.getFeaturedProjects).toHaveBeenCalledWith("de");
+    expect(smartVillageFeaturedProjectRepository.getFeaturedProjectById).toHaveBeenCalledWith("de", mockProjectsContent.featuredProjects[0]!.id);
     expect(postgrestRepository.getPublicContent).toHaveBeenCalledWith("de");
     expect(smartVillageEventRepository.getEvents).toHaveBeenCalledWith("de", filters);
     expect(smartVillageEventRepository.getEventById).toHaveBeenCalledWith("de", mockEventDetail.event.id);
@@ -222,6 +236,7 @@ describe("content repository glue", () => {
         getCockpitCards: vi.fn(async () => [apiCard]),
       } as never,
       smartVillagePoiRepository: {} as never,
+      smartVillageFeaturedProjectRepository: {} as never,
     });
 
     const [home, dashboard, publicContent] = await Promise.all([
@@ -238,6 +253,26 @@ describe("content repository glue", () => {
     ]);
   });
 
+  it("does not fall back to PostgREST project rows when Featured Projects fail", async () => {
+    const getProjects = vi.fn(async () => mockProjectsContent);
+    const repository = new SmartVillagePostgrestContentRepository({
+      postgrestRepository: {
+        getFeaturedProjectsMetadata: vi.fn(async () => ({ page: mockProjectsContent.page, seo: mockProjectsContent.seo })),
+        getProjects,
+      } as never,
+      smartVillageEventRepository: {} as never,
+      smartVillageBookingFaqRepository: {} as never,
+      smartVillageCockpitCardRepository: {} as never,
+      smartVillagePoiRepository: {} as never,
+      smartVillageFeaturedProjectRepository: {
+        getFeaturedProjects: vi.fn(async () => { throw new Error("mainserver unavailable"); }),
+      } as never,
+    });
+
+    await expect(repository.getFeaturedProjects("de")).rejects.toThrow("mainserver unavailable");
+    expect(getProjects).not.toHaveBeenCalled();
+  });
+
   it("keeps all local cards when Smart Village card loading fails", async () => {
     const warn = vi.fn();
     const repository = new SmartVillagePostgrestContentRepository({
@@ -252,6 +287,7 @@ describe("content repository glue", () => {
         }),
       } as never,
       smartVillagePoiRepository: {} as never,
+      smartVillageFeaturedProjectRepository: {} as never,
       warn,
     });
 

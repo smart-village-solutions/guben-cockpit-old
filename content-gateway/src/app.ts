@@ -146,6 +146,15 @@ export function createApp(options: {
     );
   });
 
+  app.get("/api/content/featured-projects/:id", async (request) => {
+    const params = z.object({ id: z.string().trim().min(1) }).parse(request.params);
+    const query = pageQuerySchema.parse(request.query);
+    return options.repository.getFeaturedProjectById(
+      resolveLanguage(query.lang, request.headers["accept-language"], options.config),
+      params.id,
+    );
+  });
+
   app.get("/api/content/pois", async (request) => {
     const query = poisQuerySchema.parse(request.query);
     return options.repository.getPois(

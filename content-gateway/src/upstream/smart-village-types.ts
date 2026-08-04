@@ -75,8 +75,10 @@ export type SmartVillageEventRecord = {
 
 export type SmartVillageGenericItem = {
   id?: string | null;
+  externalId?: string | null;
   title?: string | null;
   genericType?: string | null;
+  visible?: boolean | null;
   payload?: unknown;
   contentBlocks?: Array<{ body?: string | null }> | null;
   mediaContents?: SmartVillageMediaContent[] | null;

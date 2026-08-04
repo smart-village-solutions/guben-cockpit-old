@@ -89,6 +89,7 @@ describe("server bootstrap", () => {
     const checkGraphqlReadiness = vi.fn(async () => ({ eventRecords: [{ id: "sv-1" }] }));
     const smartVillageEventRepositoryOptions: Array<Record<string, unknown>> = [];
     const smartVillageCockpitCardRepositoryOptions: Array<Record<string, unknown>> = [];
+    const smartVillageFeaturedProjectRepositoryOptions: Array<Record<string, unknown>> = [];
     const createApp = vi.fn(() => ({
       listen,
       log: {
@@ -137,6 +138,13 @@ describe("server bootstrap", () => {
       SmartVillageCockpitCardRepository: class SmartVillageCockpitCardRepository {
         public constructor(options: Record<string, unknown>) {
           smartVillageCockpitCardRepositoryOptions.push(options);
+        }
+      },
+    }));
+    vi.doMock("../src/content/smart-village-featured-project-repository.js", () => ({
+      SmartVillageFeaturedProjectRepository: class SmartVillageFeaturedProjectRepository {
+        public constructor(options: Record<string, unknown>) {
+          smartVillageFeaturedProjectRepositoryOptions.push(options);
         }
       },
     }));
@@ -189,9 +197,15 @@ describe("server bootstrap", () => {
       client: expect.any(Object),
       warn: expect.any(Function),
     });
+    expect(smartVillageFeaturedProjectRepositoryOptions[0]).toMatchObject({
+      client: expect.any(Object),
+      publicBaseUrl: "http://localhost:3000",
+      warn: expect.any(Function),
+    });
     expect(wrapperRepositoryOptions[0]).toMatchObject({
       smartVillageCockpitCardRepository: expect.any(Object),
       smartVillagePoiRepository: expect.any(Object),
+      smartVillageFeaturedProjectRepository: expect.any(Object),
       warn: expect.any(Function),
     });
   });

@@ -6,6 +6,7 @@ import type {
   EventsContent,
   FooterContent,
   FeaturedProjectsContent,
+  FeaturedProjectDetailContent,
   HomeContent,
   MapContent,
   ProjectsContent,
@@ -14,12 +15,14 @@ import type {
   PoisContent,
   PublicContentBundle,
 } from "../../../shared/public-content/contracts.js";
+import { featuredProjectsContentSchema } from "../../../shared/public-content/contracts.js";
 import type { EventFilters, PublicContentRepository } from "./content-repository-contract.js";
 import type { PostgrestContentRepository } from "./postgrest-content-repository.js";
 import type { SmartVillageEventRepository } from "./smart-village-event-repository.js";
 import type { SmartVillageBookingFaqRepository } from "./smart-village-booking-faq-repository.js";
 import type { SmartVillageCockpitCardRepository } from "./smart-village-cockpit-card-repository.js";
 import type { SmartVillagePoiRepository } from "./smart-village-poi-repository.js";
+import type { SmartVillageFeaturedProjectRepository } from "./smart-village-featured-project-repository.js";
 import {
   enrichDashboardWithCockpitCards,
   flattenedDashboardCards,
@@ -31,6 +34,7 @@ type SmartVillagePostgrestContentRepositoryOptions = {
   smartVillageBookingFaqRepository: SmartVillageBookingFaqRepository;
   smartVillageCockpitCardRepository: SmartVillageCockpitCardRepository;
   smartVillagePoiRepository: SmartVillagePoiRepository;
+  smartVillageFeaturedProjectRepository: SmartVillageFeaturedProjectRepository;
   warn?: (message: string, context: Record<string, unknown>) => void;
 };
 
@@ -52,8 +56,16 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
     return this.options.postgrestRepository.getProjects(language, pageNumber, pageSize);
   }
 
-  public getFeaturedProjects(language: string): Promise<FeaturedProjectsContent> {
-    return this.options.postgrestRepository.getFeaturedProjects(language);
+  public async getFeaturedProjects(language: string): Promise<FeaturedProjectsContent> {
+    const [metadata, featuredProjects] = await Promise.all([
+      this.options.postgrestRepository.getFeaturedProjectsMetadata(language),
+      this.options.smartVillageFeaturedProjectRepository.getFeaturedProjects(language),
+    ]);
+    return featuredProjectsContentSchema.parse({ ...metadata, featuredProjects });
+  }
+
+  public getFeaturedProjectById(language: string, id: string): Promise<FeaturedProjectDetailContent> {
+    return this.options.smartVillageFeaturedProjectRepository.getFeaturedProjectById(language, id);
   }
 
   public getPois(language: string, filters: PoiFilters): Promise<PoisContent> {

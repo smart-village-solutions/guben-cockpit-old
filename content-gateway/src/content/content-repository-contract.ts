@@ -6,6 +6,7 @@ import type {
   EventsContent,
   FooterContent,
   FeaturedProjectsContent,
+  FeaturedProjectDetailContent,
   HomeContent,
   MapContent,
   ProjectsContent,
@@ -24,6 +25,7 @@ export interface PublicContentRepository {
   getHome(language: string): Promise<HomeContent>;
   getProjects(language: string, pageNumber: number, pageSize: number): Promise<ProjectsContent>;
   getFeaturedProjects(language: string): Promise<FeaturedProjectsContent>;
+  getFeaturedProjectById(language: string, id: string): Promise<FeaturedProjectDetailContent>;
   getPois(language: string, filters: PoiFilters): Promise<PoisContent>;
   getPoiById(language: string, id: string): Promise<PoiDetailContent>;
   getPublicContent(language: string): Promise<PublicContentBundle>;

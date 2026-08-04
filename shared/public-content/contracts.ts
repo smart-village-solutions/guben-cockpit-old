@@ -204,6 +204,11 @@ export const featuredProjectsContentSchema = z.object({
   seo: seoMetadataSchema,
 });
 
+export const featuredProjectDetailContentSchema = z.object({
+  project: projectSchema,
+  seo: seoMetadataSchema,
+});
+
 export const poiCategorySchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -380,6 +385,7 @@ export type PageHero = z.infer<typeof pageHeroSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type ProjectsContent = z.infer<typeof projectsContentSchema>;
 export type FeaturedProjectsContent = z.infer<typeof featuredProjectsContentSchema>;
+export type FeaturedProjectDetailContent = z.infer<typeof featuredProjectDetailContentSchema>;
 export type Poi = z.infer<typeof poiSchema>;
 export type PoiCategory = z.infer<typeof poiCategorySchema>;
 export type PoiFilters = z.infer<typeof poiFiltersSchema>;
