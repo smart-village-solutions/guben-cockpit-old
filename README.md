@@ -15,8 +15,18 @@ The former `.NET` CMS/admin stack has been removed from this branch.
 Runtime flow:
 
 1. `frontend` fetches public content from `content-gateway`
-2. `content-gateway` reads `/api/content/events`, `/api/content/events/:id`, and the language-specific `/api/content/booking/faqs` from Smart Village, while the remaining public content stays on PostgREST
-3. `postgrest` exposes the `public_content` schema from PostgreSQL for the non-event gateway content
+2. `content-gateway` combines PostgREST page/layout data with Smart Village GraphQL content
+3. Smart Village supplies Events, POIs, Booking FAQs, Featured Projects, and dashboard cards (`COCKPIT_CARD`)
+4. `postgrest` exposes the `public_content` schema from PostgreSQL for page metadata, layout, regular projects, map/footer data, booking tenants, and local dashboard-card fallbacks
+
+Important public content endpoints:
+
+- `GET /api/content/public`, `/home`, and `/dashboard`: PostgREST layout enriched with language-specific Smart Village dashboard cards; local cards remain the fallback
+- `GET /api/content/events` and `/events/:id`: Smart Village Events
+- `GET /api/content/pois` and `/pois/:id`: Smart Village Points of Interest
+- `GET /api/content/featured-projects` and `/featured-projects/:id`: Smart Village Featured Projects with PostgREST page metadata for the collection
+- `GET /api/content/booking/faqs`: language-specific Smart Village `FAQ` items
+- `GET /api/content/projects`: regular PostgREST projects; in the public bundle schools and marketplace entries are found in `projects.items` with category `school` or `business`
 
 External services still used by the public frontend:
 
@@ -79,7 +89,7 @@ npm run build
 npm start
 ```
 
-For local gateway runs in `CONTENT_SOURCE_MODE=postgrest`, configure these Smart Village event credentials in `content-gateway/.env`:
+For local gateway runs in `CONTENT_SOURCE_MODE=postgrest`, configure these Smart Village credentials in `content-gateway/.env`:
 
 - `SV_GRAPHQL_URL`
 - `SV_OAUTH_TOKEN_URL`
@@ -133,7 +143,7 @@ GitHub Actions builds and publishes two images:
 
 PostgREST uses the upstream `postgrest/postgrest` image plus the SQL/bootstrap files from this repository.
 
-The deployed `content-gateway` image also needs `SV_GRAPHQL_URL`, `SV_OAUTH_TOKEN_URL`, `SV_CLIENT_ID`, and `SV_CLIENT_SECRET` whenever it runs in `CONTENT_SOURCE_MODE=postgrest`, because event reads come from Smart Village after the cutover.
+The deployed `content-gateway` image also needs `SV_GRAPHQL_URL`, `SV_OAUTH_TOKEN_URL`, `SV_CLIENT_ID`, and `SV_CLIENT_SECRET` whenever it runs in `CONTENT_SOURCE_MODE=postgrest`, because Events, POIs, Booking FAQs, Featured Projects, and dashboard cards are read from Smart Village.
 
 ## Weitere Dokumentation
 
