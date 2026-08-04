@@ -25,6 +25,8 @@ flowchart LR
   Web --> Gateway["content-gateway"]
   Gateway --> PostgREST["postgrest"]
   PostgREST --> PostgreSQL["PostgreSQL / public_content"]
+  Gateway --> SmartVillage["Smart Village GraphQL"]
+  Gateway --> OAuth["Smart Village OAuth"]
 
   Browser --> Booking["Booking"]
   Browser --> Masterportal["Masterportal"]
@@ -55,18 +57,38 @@ flowchart LR
 - `GET /api/content/home`
 - `GET /api/content/dashboard`
 - `GET /api/content/projects`
+- `GET /api/content/featured-projects`
+- `GET /api/content/featured-projects/:id`
+- `GET /api/content/pois`
+- `GET /api/content/pois/:id`
+- `GET /api/content/public`
 - `GET /api/content/events`
 - `GET /api/content/events/:id`
 - `GET /api/content/map`
 - `GET /api/content/footer`
 - `GET /api/content/booking-tenants`
+- `GET /api/content/booking/faqs`
 
 Wichtige Query-Parameter:
 
-- `lang`
-- `pageNumber`
-- `pageSize`
+- `lang` fuer alle sprachabhaengigen Inhalte; ohne Parameter wird zuerst `Accept-Language`, danach `DEFAULT_LANGUAGE` verwendet
+- `pageNumber` und `pageSize` fuer paginierte Listen
 - bei Events zusaetzlich `title`, `category`, `startDate`, `endDate`, `sortBy`, `ordering`, `distance`
+- bei POIs zusaetzlich `search`, `categoryIds` (mehrfach oder kommasepariert), `location`, `radius`, `sort=name|updatedAt` und `direction=asc|desc`
+
+### Quellen je Inhaltsbereich
+
+| Gateway-Inhalt | Primaerquelle | Verhalten und Fallback |
+| --- | --- | --- |
+| `/events`, `/events/:id` | Smart Village `eventRecords` / `eventRecord` | serverseitig per OAuth und GraphQL |
+| `/pois`, `/pois/:id` | Smart Village `pointsOfInterest` / `pointOfInterest` | nur aktive und sichtbare, gueltig abbildbare POIs; Filterung und Paginierung erfolgen im Gateway |
+| `/featured-projects`, `/featured-projects/:id` | Smart Village `genericItems(genericType: "FeaturedProject")` | Listenseiten-Metadaten kommen weiterhin aus PostgREST; ausgeliefert werden nur sichtbare und als publiziert markierte Items |
+| `/booking/faqs` | Smart Village `genericItems(genericType: "FAQ")` | Filterung nach `payload.languageCode`; das Frontend behaelt seine lokalen Sprachdateien als Fallback fuer leere, ungueltige oder nicht erreichbare API-Antworten |
+| `/home`, `/dashboard`, `/public` – Kacheln | Smart Village `genericItems(genericType: "COCKPIT_CARD")` | PostgREST liefert Dropdown-/Tab-Struktur und lokale Karten. Smart-Village-Karten werden sprach- und kategoriebasiert zugeordnet; wenn keine Karte zugeordnet werden kann oder der Abruf fehlschlaegt, bleiben alle lokalen Karten erhalten. |
+| `/projects` sowie sonstige Bereiche von `/home`, `/dashboard`, `/public` | PostgREST | regulaere Projekte bleiben in PostgreSQL; im Public Bundle liegen Schulen und Marktplatz-Unternehmen gemeinsam unter `projects.items` mit `category=school` beziehungsweise `category=business` |
+| `/map`, `/footer`, `/booking-tenants` | PostgREST | keine Smart-Village-Anreicherung |
+
+`/api/content/public` ist der gebuendelte, fuer einfache Datenabfragen geeignete Endpunkt. Seine Dashboard-Karten stehen flach unter `home.cards`; die vollstaendige Dropdown-/Tab-Struktur liefern `/api/content/home` und `/api/content/dashboard`.
 
 ### PostgREST
 
@@ -79,6 +101,13 @@ PostgREST ist keine Browser-API. Der Dienst wird nur intern zwischen Gateway und
 - Das Gateway kennt nur `CONTENT_SOURCE_MODE=mock` und `CONTENT_SOURCE_MODE=postgrest`.
 - Das Frontend schaltet Public Content ueber `VITE_PUBLIC_CONTENT_SOURCE=gateway|disabled`.
 - PostgREST verwendet konsistent `PGRST_DB_SCHEMAS=public_content`.
+- Im Modus `postgrest` sind `SV_GRAPHQL_URL`, `SV_OAUTH_TOKEN_URL`, `SV_CLIENT_ID` und `SV_CLIENT_SECRET` gemeinsam verpflichtend. Die Zugangsdaten bleiben ausschliesslich im Gateway; der Browser greift nicht direkt auf Smart Village GraphQL zu.
+
+### Smart-Village-Read-Cache
+
+Validierte GraphQL-Antworten werden pro Gateway-Prozess zwischengespeichert. Erfolgreiche Antworten sind vier Minuten frisch; die zusaetzlichen einminuetigen Repository-Caches fuer Events und POIs koennen die normale Sichtbarkeit einer Aenderung auf ungefaehr fuenf Minuten verlaengern. Scheitert eine Aktualisierung, darf die letzte fachlich gueltige Antwort bis zu 24 Stunden nach ihrer letzten erfolgreichen Validierung weiterverwendet werden.
+
+Cache und laufende Requests werden nicht zwischen Gateway-Prozessen geteilt und sind nach Neustart oder Deployment leer. `/health/ready` umgeht den Content-Cache und prueft PostgREST sowie Smart Village live.
 
 ## Betrieb
 
