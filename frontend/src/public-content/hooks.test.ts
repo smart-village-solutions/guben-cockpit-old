@@ -5,13 +5,13 @@ import { loadGatewayProjectDetailContent } from "./hooks";
 describe("loadGatewayProjectDetailContent", () => {
   it("loads Featured Projects from the dedicated local endpoint", async () => {
     const fetcher = vi.fn(async () => ({
-      project: { id: "featured-1", type: 1, title: "Featured", description: "Description", fullText: "Details", imageCaption: null, imageUrl: null, imageCredits: null, published: true },
+      project: { id: "featured:abc%2F123", type: 1, title: "Featured", description: "Description", fullText: "Details", imageCaption: null, imageUrl: null, imageCredits: null, published: true },
       seo: { title: "Projects", description: "Projects", canonical: "https://example.com/projects", indexable: true },
     }));
 
-    const result = await loadGatewayProjectDetailContent("de", "featured-1", fetcher);
-    expect(fetcher).toHaveBeenCalledWith("/api/content/featured-projects/featured-1", expect.anything(), { lang: "de" });
-    expect(result).toMatchObject({ kind: "featured", project: { id: "featured-1" } });
+    const result = await loadGatewayProjectDetailContent("de", "featured:abc%2F123", fetcher);
+    expect(fetcher).toHaveBeenCalledWith("/api/content/featured-projects/featured%3Aabc%252F123", expect.anything(), { lang: "de" });
+    expect(result).toMatchObject({ kind: "featured", project: { id: "featured:abc%2F123" } });
   });
 
   it("loads typed POI identifiers directly without scanning project pages", async () => {
