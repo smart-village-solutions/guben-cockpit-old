@@ -24,16 +24,20 @@ describe("SmartVillageFeaturedProjectRepository", () => {
     const { repository, request, warn } = createRepository(representativeSmartVillageFeaturedProjects);
     await expect(repository.getFeaturedProjects("de")).resolves.toEqual([
       {
-        id: "513", type: 1, title: "Energiebericht der Stadt Guben", description: "", fullText: "<p>Projektdetails</p>",
+        id: "featured:100", type: 1, title: "Energiebericht der Stadt Guben", description: "", fullText: "<p>Projektdetails</p>",
         imageCaption: "Bildunterschrift", imageUrl: "https://example.com/project.jpg", imageCredits: "Stadt Guben", published: true,
       },
       {
-        id: "1071", type: 1, title: "Bildungscampus Altstadt Ost", description: "", fullText: "",
+        id: "featured:101", type: 1, title: "Bildungscampus Altstadt Ost", description: "", fullText: "",
         imageCaption: null, imageUrl: null, imageCredits: null, published: true,
+      },
+      {
+        id: "featured:104", type: 1, title: "Fehlerhaft", description: "", fullText: "<p>Projektdetails</p>",
+        imageCaption: "Bildunterschrift", imageUrl: "https://example.com/project.jpg", imageCredits: "Stadt Guben", published: true,
       },
     ]);
     expect(request).toHaveBeenCalledWith(expect.stringContaining('genericItems(genericType: "FeaturedProject", order: id_ASC)'));
-    expect(warn).toHaveBeenCalledTimes(3);
+    expect(warn).toHaveBeenCalledTimes(2);
   });
 
   it("returns identical Mainserver content for every requested locale", async () => {
@@ -47,21 +51,30 @@ describe("SmartVillageFeaturedProjectRepository", () => {
     await expect(repository.getFeaturedProjects("de")).resolves.toMatchObject([{ imageUrl: null }]);
   });
 
-  it("rejects malformed collection envelopes and duplicate identities", async () => {
+  it("rejects malformed collection envelopes and preserves records with duplicate external IDs", async () => {
     await expect(createRepository(null).repository.getFeaturedProjects("de")).rejects.toMatchObject({ code: "INVALID_UPSTREAM_PAYLOAD" });
-    await expect(createRepository(duplicateSmartVillageFeaturedProjects).repository.getFeaturedProjects("de")).rejects.toMatchObject({
-      code: "INVALID_UPSTREAM_PAYLOAD",
-      message: expect.stringContaining("duplicate"),
-    });
+    await expect(createRepository(duplicateSmartVillageFeaturedProjects).repository.getFeaturedProjects("de")).resolves.toMatchObject([
+      { id: "featured:200", title: "Doppelt" },
+      { id: "featured:201", title: "Doppelt" },
+    ]);
   });
 
   it("loads detail by externalId and preserves the public URL", async () => {
     const { repository, request } = createRepository([representativeSmartVillageFeaturedProjects[0]]);
     await expect(repository.getFeaturedProjectById("de", "513")).resolves.toMatchObject({
-      project: { id: "513", title: "Energiebericht der Stadt Guben" },
+      project: { id: "featured:100", title: "Energiebericht der Stadt Guben" },
       seo: { canonical: "https://cockpit.example.com/projects/513", indexable: true },
     });
     expect(request).toHaveBeenCalledWith(expect.stringContaining("externalId: $externalId"), { externalId: "513" });
+  });
+
+  it("loads each namespaced detail by its exact Mainserver ID", async () => {
+    const { repository, request } = createRepository(duplicateSmartVillageFeaturedProjects);
+    await expect(repository.getFeaturedProjectById("de", "featured:201")).resolves.toMatchObject({
+      project: { id: "featured:201" },
+      seo: { canonical: "https://cockpit.example.com/projects/featured%3A201" },
+    });
+    expect(request).toHaveBeenCalledWith(expect.stringContaining('genericItems(genericType: "FeaturedProject", order: id_ASC)'));
   });
 
   it("returns not found for absent public detail and rejects duplicate detail", async () => {
@@ -87,7 +100,7 @@ describe("SmartVillageFeaturedProjectRepository", () => {
       publicBaseUrl: "https://cockpit.example.com",
     });
 
-    await expect(repository.getFeaturedProjectById("de", "513")).resolves.toMatchObject({ project: { id: "513" } });
+    await expect(repository.getFeaturedProjectById("de", "513")).resolves.toMatchObject({ project: { id: "featured:100" } });
     await expect(repository.getFeaturedProjectById("de", "513")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });

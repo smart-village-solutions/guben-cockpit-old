@@ -7,10 +7,21 @@ const state = vi.hoisted(() => ({
     data: {
       featuredProjects: [
         {
-          id: "project-1",
+          id: "featured:100",
           type: 1,
           title: "Projekt 1",
           description: "<p>Ein <strong>wichtiger</strong> Text</p>",
+          fullText: "",
+          imageCaption: null,
+          imageUrl: null,
+          imageCredits: null,
+          published: true,
+        },
+        {
+          id: "featured:101",
+          type: 1,
+          title: "Projekt 2",
+          description: "Zweiter Datensatz mit gleicher externer Identität",
           fullText: "",
           imageCaption: null,
           imageUrl: null,
@@ -101,6 +112,9 @@ describe("GatewayProjectsPage", () => {
 
     expect(markup).toContain("Ein wichtiger Text");
     expect(markup).toContain("Mehr erfahren &gt;");
+    expect(markup).toContain('href="/projects/featured:100"');
+    expect(markup).toContain('href="/projects/featured:101"');
+    expect(markup).toContain("Projekt 2");
     expect(markup).not.toContain("&lt;p&gt;");
     expect(markup).not.toContain("&lt;strong&gt;");
     expect(markup).toContain("bg-gubenAccent");

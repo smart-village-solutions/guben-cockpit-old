@@ -90,6 +90,18 @@ const notFoundError = () => new GatewayError({
   retryable: false,
 });
 
+export const toPublicFeaturedProjectId = (id: string) => `featured:${encodeURIComponent(id)}`;
+
+export const fromPublicFeaturedProjectId = (id: string) => {
+  if (!id.startsWith("featured:")) return null;
+  try {
+    const decoded = decodeURIComponent(id.slice("featured:".length));
+    return decoded.length > 0 ? decoded : null;
+  } catch {
+    return null;
+  }
+};
+
 export class SmartVillageFeaturedProjectRepository {
   public constructor(private readonly options: Options) {}
 
@@ -103,15 +115,29 @@ export class SmartVillageFeaturedProjectRepository {
       },
     });
     if (!Array.isArray(response.genericItems)) throw invalidCollectionError();
-    const projects = response.genericItems.flatMap((item) => this.mapItemOrWarn(item));
-    this.assertUniqueExternalIds(projects);
-    return projects;
+    return response.genericItems.flatMap((item) => this.mapItemOrWarn(item));
   }
 
-  public async getFeaturedProjectById(language: string, externalId: string): Promise<FeaturedProjectDetailContent> {
+  public async getFeaturedProjectById(language: string, publicId: string): Promise<FeaturedProjectDetailContent> {
     void language;
-    const normalizedId = nonEmpty(externalId);
+    const normalizedId = nonEmpty(publicId);
     if (!normalizedId) throw notFoundError();
+    const internalId = fromPublicFeaturedProjectId(normalizedId);
+    if (normalizedId.startsWith("featured:")) {
+      if (!internalId) throw notFoundError();
+      const response = await requestCached(this.options.client, {
+        contractId: "featured-projects.collection.v1",
+        query: FEATURED_PROJECTS_QUERY,
+        validate: (value: { genericItems?: SmartVillageGenericItem[] | null }) => {
+          this.validateCollection(value);
+        },
+      });
+      if (!Array.isArray(response.genericItems)) throw invalidCollectionError();
+      const matches = response.genericItems.filter((item) => nonEmpty(item.id) === internalId).flatMap((item) => this.mapItemOrWarn(item));
+      if (matches.length === 0) throw notFoundError();
+      if (matches.length > 1) throw invalidCollectionError(`Smart Village returned duplicate Featured Projects for id ${internalId}`);
+      return this.toDetailContent(matches[0]!, normalizedId);
+    }
     const response = await requestCached(this.options.client, {
       contractId: "featured-projects.detail.v1",
       query: FEATURED_PROJECT_DETAIL_QUERY,
@@ -124,13 +150,16 @@ export class SmartVillageFeaturedProjectRepository {
     const projects = response.genericItems.flatMap((item) => this.mapItemOrWarn(item));
     if (projects.length === 0) throw notFoundError();
     if (projects.length > 1) throw invalidCollectionError(`Smart Village returned duplicate Featured Projects for externalId ${normalizedId}`);
-    const project = projects[0]!;
+    return this.toDetailContent(projects[0]!, normalizedId);
+  }
+
+  private toDetailContent(project: Project, canonicalId: string): FeaturedProjectDetailContent {
     return featuredProjectDetailContentSchema.parse({
       project,
       seo: {
         title: project.title,
         description: project.description || project.title,
-        canonical: new URL(`/projects/${encodeURIComponent(project.id)}`, this.options.publicBaseUrl).toString(),
+        canonical: new URL(`/projects/${encodeURIComponent(canonicalId)}`, this.options.publicBaseUrl).toString(),
         indexable: true,
       },
     });
@@ -150,13 +179,13 @@ export class SmartVillageFeaturedProjectRepository {
   }
 
   private mapItem(item: SmartVillageGenericItem): Project | null {
-    const externalId = nonEmpty(item.externalId);
+    const internalId = nonEmpty(item.id);
     const title = nonEmpty(item.title);
     const payload = parsePayload(item.payload);
-    if (!nonEmpty(item.id) || !externalId || !title || item.genericType !== "FeaturedProject" || item.visible !== true || !payload?.published) return null;
+    if (!internalId || !title || item.genericType !== "FeaturedProject" || item.visible !== true || !payload?.published) return null;
     const imageUrl = (item.mediaContents ?? []).map((media) => httpUrl(media.sourceUrl?.url)).find(Boolean) ?? null;
     return {
-      id: externalId,
+      id: toPublicFeaturedProjectId(internalId),
       type: 1,
       title,
       description: "",
@@ -168,25 +197,17 @@ export class SmartVillageFeaturedProjectRepository {
     };
   }
 
-  private assertUniqueExternalIds(projects: Project[]) {
-    const seen = new Set<string>();
-    for (const project of projects) {
-      if (seen.has(project.id)) throw invalidCollectionError(`Smart Village returned duplicate Featured Projects for externalId ${project.id}`);
-      seen.add(project.id);
-    }
-  }
-
   private validateCollection(
     response: { genericItems?: SmartVillageGenericItem[] | null },
     expectedExternalId?: string,
   ) {
     if (!Array.isArray(response.genericItems)) throw invalidCollectionError();
-    const projects = response.genericItems.flatMap((item) => {
-      const mapped = this.mapItem(item);
-      return mapped ? [mapped] : [];
-    });
-    this.assertUniqueExternalIds(projects);
-    if (expectedExternalId && projects.length > 1) {
+    if (expectedExternalId) {
+      const projects = response.genericItems.flatMap((item) => {
+        const mapped = this.mapItem(item);
+        return mapped ? [mapped] : [];
+      });
+      if (projects.length <= 1) return;
       throw invalidCollectionError(`Smart Village returned duplicate Featured Projects for externalId ${expectedExternalId}`);
     }
   }
