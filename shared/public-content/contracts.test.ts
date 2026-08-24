@@ -192,6 +192,8 @@ describe("public content contracts", () => {
           originalUrl: "https://example.com/original.jpg",
         },
       ],
+      registrationRequired: true,
+      maximumAttendees: 120,
       published: true,
     };
 
@@ -237,6 +239,18 @@ describe("public content contracts", () => {
         },
       }).event.id,
     ).toBe("event-1");
+
+    expect(() =>
+      eventDetailContentSchema.parse({
+        event: { ...event, maximumAttendees: 0 },
+        seo: {
+          title: "Fruehlingsmarkt",
+          description: "Beschreibung",
+          canonical: "https://example.com/events/event-1",
+          indexable: true,
+        },
+      }),
+    ).toThrowError();
   });
 
   it("accepts a valid bundled public content payload", () => {

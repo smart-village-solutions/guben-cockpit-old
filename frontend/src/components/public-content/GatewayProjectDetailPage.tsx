@@ -104,7 +104,7 @@ export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) =
         {(poi.contact || poi.webUrls.length > 0) && (
           <section>
             <h2 className="font-bold text-xl mb-3">Kontakt</h2>
-            <div className="space-y-2 text-gray-700">
+            <div className="prose max-w-none space-y-2 text-gray-700">
               {contactName && <p>{contactName}</p>}
               {poi.contact?.phone && <p><a href={`tel:${poi.contact.phone}`}>{poi.contact.phone}</a></p>}
               {poi.contact?.email && <p><a href={`mailto:${poi.contact.email}`}>{poi.contact.email}</a></p>}

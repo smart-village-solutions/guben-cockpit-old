@@ -150,7 +150,15 @@ describe("GatewayProjectDetailPage", () => {
     expect(screen.getByText("Beschreibung")).toBeTruthy();
     expect(document.querySelector("script")).toBeNull();
     expect(screen.getByText("Schulstraße 1")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "info@example.com" }).getAttribute("href")).toBe("mailto:info@example.com");
+    const emailLink = screen.getByRole("link", { name: "info@example.com" });
+    const phoneLink = screen.getByRole("link", { name: "+49 1" });
+    const websiteLink = screen.getByRole("link", { name: "Website" });
+    const contactLinks = emailLink.closest(".prose");
+
+    expect(emailLink.getAttribute("href")).toBe("mailto:info@example.com");
+    expect(contactLinks).not.toBeNull();
+    expect(contactLinks?.contains(phoneLink)).toBe(true);
+    expect(contactLinks?.contains(websiteLink)).toBe(true);
     expect(screen.getByText("Montag")).toBeTruthy();
     expect(screen.getByText("Schulen")).toBeTruthy();
   });

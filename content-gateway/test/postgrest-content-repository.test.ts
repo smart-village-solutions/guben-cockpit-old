@@ -312,7 +312,7 @@ describe("PostgrestContentRepository", () => {
         categoryRows: [
           { event_id: "event-a", category_id: "culture", name: "Kultur" },
           { event_id: "event-b", category_id: "culture", name: "Kultur" },
-          { event_id: "event-c", category_id: "culture", name: "Kultur" },
+          { event_id: "event-c", category_id: "sport", name: "Sport" },
         ],
         urlRows: [],
         imageRows: [],
@@ -334,7 +334,10 @@ describe("PostgrestContentRepository", () => {
 
     expect(result.events.results.map((event) => event.id)).toEqual(["event-b", "event-a"]);
     expect(result.events.totalCount).toBe(2);
-    expect(result.events.categories).toEqual([{ id: "culture", name: "Kultur" }]);
+    expect(result.events.categories).toEqual([
+      { id: "culture", name: "Kultur" },
+      { id: "sport", name: "Sport" },
+    ]);
     expect(result.events.bookingTenants).toEqual([{ id: "tenant-1", tenantId: "bk-1" }]);
   });
 

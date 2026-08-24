@@ -37,10 +37,6 @@ export const Combobox = ({
   const {t} = useTranslation();
   const [open, setOpen] = React.useState(defaultOpen);
 
-  if (options.length === 1 && value == null) {
-    onSelect(options[0].value);
-  }
-
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>

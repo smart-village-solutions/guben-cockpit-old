@@ -29,6 +29,8 @@ const EVENT_RECORD_FIELDS = `
   title
   description
   visible
+  registrationRequired
+  maximumAttendees
   categories {
     id
     name
@@ -77,6 +79,24 @@ const EVENT_RECORD_FIELDS = `
       url
       description
     }
+  }
+  contacts {
+    email
+    phone
+    webUrls {
+      url
+    }
+  }
+  organizer {
+    name
+  }
+  priceInformations {
+    name
+    description
+    amount
+  }
+  dataProvider {
+    name
   }
 `;
 
@@ -211,18 +231,21 @@ export class SmartVillageEventRepository {
     });
     const records = this.expectEventRecords(response);
 
-    let results = records
+    const allEvents = records
       .flatMap((record) => this.mapRecordWithDiagnostics(record, "eventRecords"))
       .filter((event) => event.published);
 
-    results = this.filterEvents(results, filters);
-    this.sortEvents(results, filters);
-
     const categories = Array.from(
       new Map(
-        results.flatMap((event) => event.categories).map((category) => [category.id, category]),
+        allEvents.flatMap((event) => event.categories).map((category) => [category.id, category]),
       ).values(),
+    ).sort(
+      (left, right) =>
+        left.name.localeCompare(right.name, language) || left.id.localeCompare(right.id),
     );
+
+    const results = this.filterEvents(allEvents, filters);
+    this.sortEvents(results, filters);
 
     const startIndex = (filters.pageNumber - 1) * filters.pageSize;
     const page = this.createEventsPage(language);

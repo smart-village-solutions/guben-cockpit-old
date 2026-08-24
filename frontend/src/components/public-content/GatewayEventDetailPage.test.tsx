@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "@/utilities/dateExtensions";
+import type { EventDetailContent } from "@shared/public-content/contracts";
 
 import { GatewayEventDetailPage } from "./GatewayEventDetailPage";
 
@@ -26,7 +27,7 @@ const queryState = vi.hoisted(() => ({
         latitude: 51.949,
         longitude: 14.715,
       },
-      urls: [],
+      urls: [] as EventDetailContent["event"]["urls"],
       categories: [{ id: "category-1", name: "Fest" }],
       images: [
         {
@@ -40,6 +41,12 @@ const queryState = vi.hoisted(() => ({
           originalUrl: "/image-2.jpg",
         },
       ],
+      organizerName: null as EventDetailContent["event"]["organizerName"],
+      contact: null as EventDetailContent["event"]["contact"],
+      priceInformations: [] as NonNullable<EventDetailContent["event"]["priceInformations"]>,
+      dataProviderName: null as EventDetailContent["event"]["dataProviderName"],
+      registrationRequired: undefined as EventDetailContent["event"]["registrationRequired"],
+      maximumAttendees: undefined as EventDetailContent["event"]["maximumAttendees"],
       published: true,
     },
     seo: undefined,
@@ -130,6 +137,12 @@ describe("GatewayEventDetailPage", () => {
       zip: "03172",
       city: "Guben",
     };
+    queryState.data.event.organizerName = null;
+    queryState.data.event.contact = null;
+    queryState.data.event.priceInformations = [];
+    queryState.data.event.dataProviderName = null;
+    queryState.data.event.registrationRequired = undefined;
+    queryState.data.event.maximumAttendees = undefined;
   });
 
   it("renders event images in the shared content media slot instead of the header", () => {
@@ -194,5 +207,50 @@ describe("GatewayEventDetailPage", () => {
     render(<GatewayEventDetailPage eventId="event-1" />);
 
     expect(screen.queryByText("map-component")).toBeNull();
+  });
+
+  it("renders optional event metadata without rendering empty sections", () => {
+    queryState.data.event.organizerName = "Guben Kultur";
+    queryState.data.event.contact = {
+      email: "kontakt@example.test",
+      phone: "+49 3561 123",
+      website: "https://example.test",
+    };
+    queryState.data.event.priceInformations = [
+      { name: "Erwachsene", amount: 3, description: "Abendkasse" },
+    ];
+    queryState.data.event.urls = [{ link: "https://tickets.example.test", description: "Tickets" }];
+    queryState.data.event.dataProviderName = "Cockpit User";
+
+    render(<GatewayEventDetailPage eventId="event-1" />);
+
+    expect(screen.getByText("Veranstaltet von")).toBeTruthy();
+    expect(screen.getByText("Guben Kultur")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /kontakt@example.test/ }).getAttribute("href")).toBe("mailto:kontakt@example.test");
+    expect(screen.getByText(/Erwachsene.*Abendkasse/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Tickets/ }).getAttribute("href")).toBe("https://tickets.example.test");
+    expect(screen.getByText("Quelle: Cockpit User")).toBeTruthy();
+  });
+
+  it("renders available participation information", () => {
+    queryState.data.event.registrationRequired = true;
+    queryState.data.event.maximumAttendees = 120;
+
+    render(<GatewayEventDetailPage eventId="event-1" />);
+
+    expect(screen.getByText("Teilnahme")).toBeTruthy();
+    expect(screen.getByText("Anmeldung erforderlich")).toBeTruthy();
+    expect(screen.getByText("Maximale Teilnehmerzahl: 120")).toBeTruthy();
+  });
+
+  it("distinguishes no registration requirement and hides unknown participation information", () => {
+    const { rerender } = render(<GatewayEventDetailPage eventId="event-1" />);
+
+    expect(screen.queryByText("Teilnahme")).toBeNull();
+
+    queryState.data.event.registrationRequired = false;
+    rerender(<GatewayEventDetailPage eventId="event-1" />);
+
+    expect(screen.getByText("Keine Anmeldung erforderlich")).toBeTruthy();
   });
 });

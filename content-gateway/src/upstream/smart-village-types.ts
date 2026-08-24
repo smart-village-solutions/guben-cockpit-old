@@ -51,6 +51,18 @@ export type SmartVillageUrl = {
   url?: string | null;
 };
 
+export type SmartVillageContact = {
+  email?: string | null;
+  phone?: string | null;
+  webUrls?: SmartVillageUrl[] | null;
+};
+
+export type SmartVillagePrice = {
+  name?: string | null;
+  description?: string | null;
+  amount?: number | null;
+};
+
 export type SmartVillageMediaContent = {
   sourceUrl?: {
     url?: string | null;
@@ -64,6 +76,8 @@ export type SmartVillageEventRecord = {
   title?: string | null;
   description?: string | null;
   visible?: boolean | null;
+  registrationRequired?: boolean | null;
+  maximumAttendees?: number | null;
   categories?: SmartVillageCategory[] | null;
   addresses?: SmartVillageAddress[] | null;
   location?: SmartVillageLocation;
@@ -71,6 +85,10 @@ export type SmartVillageEventRecord = {
   dates?: SmartVillageEventOccurrence[] | null;
   urls?: SmartVillageUrl[] | null;
   mediaContents?: SmartVillageMediaContent[] | null;
+  contacts?: SmartVillageContact[] | null;
+  organizer?: { name?: string | null } | null;
+  priceInformations?: SmartVillagePrice[] | null;
+  dataProvider?: { name?: string | null } | null;
 };
 
 export type SmartVillageGenericItem = {
