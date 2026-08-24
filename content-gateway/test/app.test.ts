@@ -252,6 +252,25 @@ describe("content gateway", () => {
     expect(header.statusCode).toBe(200);
   });
 
+  it("falls back to the default language for wildcard and invalid language values", async () => {
+    const app = createTestApp();
+
+    const wildcardHeader = await app.inject({
+      method: "GET",
+      url: "/api/content/events?pageNumber=1&pageSize=25",
+      headers: { "accept-language": "*" },
+    });
+    const invalidExplicitLanguage = await app.inject({
+      method: "GET",
+      url: "/api/content/events?lang=1%40&pageNumber=1&pageSize=25",
+    });
+
+    expect(wildcardHeader.statusCode).toBe(200);
+    expect(invalidExplicitLanguage.statusCode).toBe(200);
+    expect(repository.getEvents).toHaveBeenNthCalledWith(1, "de", expect.any(Object));
+    expect(repository.getEvents).toHaveBeenNthCalledWith(2, "de", expect.any(Object));
+  });
+
   it("returns empty FAQ collections and deterministic upstream errors", async () => {
     const app = createTestApp();
     await expect(app.inject({ method: "GET", url: "/api/content/booking/faqs" })).resolves.toMatchObject({ statusCode: 200 });
