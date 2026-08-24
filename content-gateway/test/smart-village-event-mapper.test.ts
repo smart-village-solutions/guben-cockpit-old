@@ -131,6 +131,32 @@ describe("SmartVillageEventMapper", () => {
     });
   });
 
+  it("maps known participation metadata and preserves an explicit false", () => {
+    const [event] = mapper.eventsFromRecord(
+      makeRecord({
+        registrationRequired: false,
+        maximumAttendees: 120,
+      }),
+    );
+
+    expect(event).toMatchObject({
+      registrationRequired: false,
+      maximumAttendees: 120,
+    });
+  });
+
+  it("omits unknown registration metadata and invalid attendee limits", () => {
+    const [event] = mapper.eventsFromRecord(
+      makeRecord({
+        registrationRequired: null,
+        maximumAttendees: 0,
+      }),
+    );
+
+    expect(event).not.toHaveProperty("registrationRequired");
+    expect(event).not.toHaveProperty("maximumAttendees");
+  });
+
   it("skips records when the internal id is missing even if externalId is present", () => {
     const events = mapper.eventsFromRecord(
       makeRecord({

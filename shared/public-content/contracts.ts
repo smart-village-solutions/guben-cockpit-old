@@ -114,6 +114,18 @@ export const eventImageSchema = z.object({
   originalUrl: z.string(),
 });
 
+export const eventContactSchema = z.object({
+  email: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+});
+
+export const eventPriceSchema = z.object({
+  name: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  amount: z.number().nullable().optional(),
+});
+
 export const eventSchema = z.object({
   id: z.string(),
   eventId: z.string(),
@@ -127,6 +139,12 @@ export const eventSchema = z.object({
   urls: z.array(urlSchema),
   categories: z.array(categorySchema),
   images: z.array(eventImageSchema),
+  registrationRequired: z.boolean().optional(),
+  maximumAttendees: z.number().int().positive().optional(),
+  organizerName: z.string().nullable().optional(),
+  contact: eventContactSchema.nullable().optional(),
+  priceInformations: z.array(eventPriceSchema).optional(),
+  dataProviderName: z.string().nullable().optional(),
   published: z.boolean(),
 });
 

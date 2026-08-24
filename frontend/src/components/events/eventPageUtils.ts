@@ -20,12 +20,24 @@ const GUBEN_COORDINATES = {
   longitude: 14.7143,
 };
 
+const startOfLocalDay = (value: Date) => {
+  const normalized = new Date(value);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+};
+
+const endOfLocalDay = (value: Date) => {
+  const normalized = new Date(value);
+  normalized.setHours(23, 59, 59, 999);
+  return normalized;
+};
+
 export const buildEventsQueryFilters = (filters: EventPageFilters) => ({
   ...(filters.search ? { title: filters.search } : {}),
   ...(filters.distance ? { distance: filters.distance } : {}),
   ...(filters.category ? { category: filters.category } : {}),
-  ...(filters.dateRange?.from ? { startDate: filters.dateRange.from.toISOString() } : {}),
-  ...(filters.dateRange?.to ? { endDate: filters.dateRange.to.toISOString() } : {}),
+  ...(filters.dateRange?.from ? { startDate: startOfLocalDay(filters.dateRange.from).toISOString() } : {}),
+  ...(filters.dateRange?.to ? { endDate: endOfLocalDay(filters.dateRange.to).toISOString() } : {}),
   ...(filters.sortBy ? { sortBy: filters.sortBy } : {}),
   ...(filters.ordering ? { ordering: filters.ordering } : {}),
 });
@@ -108,8 +120,12 @@ export const filterBookingEvents = (
     if (activeFilters.dateRange?.from || activeFilters.dateRange?.to) {
       const eventStart = new Date(event.startDate);
       const eventEnd = new Date(event.endDate);
-      const filterStart = activeFilters.dateRange?.from ?? new Date(-8640000000000000);
-      const filterEnd = activeFilters.dateRange?.to ?? new Date(8640000000000000);
+      const filterStart = activeFilters.dateRange?.from
+        ? startOfLocalDay(activeFilters.dateRange.from)
+        : new Date(-8640000000000000);
+      const filterEnd = activeFilters.dateRange?.to
+        ? endOfLocalDay(activeFilters.dateRange.to)
+        : new Date(8640000000000000);
       if (!(eventStart <= filterEnd && eventEnd >= filterStart)) {
         return false;
       }
@@ -156,6 +172,10 @@ export const buildCombinedCategories = (
         })),
       ].map((category) => [category.id, category]),
     ).values(),
+  ).sort(
+    (left, right) =>
+      left.name.localeCompare(right.name, "de", { sensitivity: "base" }) ||
+      left.id.localeCompare(right.id),
   );
 
 const parseBookingDateRange = (value: string) => {

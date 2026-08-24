@@ -142,23 +142,56 @@ describe("eventPageUtils", () => {
   });
 
   it("builds query filters without undefined noise", () => {
+    const from = new Date(2026, 5, 13, 14, 30);
+    const to = new Date(2026, 5, 14, 9, 15);
     expect(
       buildEventsQueryFilters({
         search: "Markt",
         distance: 10,
         category: "culture",
         dateRange: {
-          from: new Date("2026-06-13T00:00:00.000Z"),
-          to: new Date("2026-06-14T00:00:00.000Z"),
+          from,
+          to,
         },
       }),
-    ).toEqual({
+    ).toMatchObject({
       title: "Markt",
       distance: 10,
       category: "culture",
-      startDate: "2026-06-13T00:00:00.000Z",
-      endDate: "2026-06-14T00:00:00.000Z",
     });
+
+    const filters = buildEventsQueryFilters({ dateRange: { from, to } });
+    const normalizedStart = new Date(filters.startDate!);
+    const normalizedEnd = new Date(filters.endDate!);
+    expect([
+      normalizedStart.getHours(),
+      normalizedStart.getMinutes(),
+      normalizedStart.getSeconds(),
+      normalizedStart.getMilliseconds(),
+    ]).toEqual([0, 0, 0, 0]);
+    expect([
+      normalizedEnd.getHours(),
+      normalizedEnd.getMinutes(),
+      normalizedEnd.getSeconds(),
+      normalizedEnd.getMilliseconds(),
+    ]).toEqual([23, 59, 59, 999]);
+    expect(from.getHours()).toBe(14);
+    expect(to.getHours()).toBe(9);
+  });
+
+  it("includes booking events on the evening of the selected final day", () => {
+    const eveningEvent = normalizeBookingEvent(
+      bookingEvent({ date: "13.06.2026 20:00 - 22:00" }),
+    );
+
+    const result = filterBookingEvents([eveningEvent], {
+      dateRange: {
+        from: new Date(2026, 5, 13),
+        to: new Date(2026, 5, 13),
+      },
+    });
+
+    expect(result.map((event) => event.id)).toEqual(["booking-1"]);
   });
 
   it("merges backend and booking categories without duplicates", () => {
@@ -167,11 +200,11 @@ describe("eventPageUtils", () => {
       [bookingEvent(), bookingEvent({ bkid: "booking-2", flags: ["Kultur", "Sport"] })],
     );
 
-    expect(categories).toEqual([
-      { id: "culture", name: "Kultur" },
-      { id: "Markt", name: "Markt" },
-      { id: "Kultur", name: "Kultur" },
-      { id: "Sport", name: "Sport" },
+    expect(categories.map((category) => category.name)).toEqual([
+      "Kultur",
+      "Kultur",
+      "Markt",
+      "Sport",
     ]);
   });
 });

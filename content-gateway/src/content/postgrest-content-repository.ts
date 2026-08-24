@@ -159,18 +159,23 @@ export class PostgrestContentRepository {
     const urlsByEvent = this.groupRowsByEvent(bundle.urlRows);
     const imagesByEvent = this.groupRowsByEvent(bundle.imageRows);
 
-    let results = bundle.eventRows
+    const allEvents = bundle.eventRows
       .filter((row) => row.published && !row.deleted)
       .map((row) =>
         this.mapper.eventFromRow(row, language, locations, categoriesByEvent, urlsByEvent, imagesByEvent),
       );
 
-    results = this.filterEvents(results, filters);
-    this.sortEvents(results, filters);
-
     const categories = Array.from(
-      new Map(results.flatMap((event) => event.categories).map((category) => [category.id, category])).values(),
+      new Map(
+        allEvents.flatMap((event) => event.categories).map((category) => [category.id, category]),
+      ).values(),
+    ).sort(
+      (left, right) =>
+        left.name.localeCompare(right.name, language) || left.id.localeCompare(right.id),
     );
+
+    const results = this.filterEvents(allEvents, filters);
+    this.sortEvents(results, filters);
 
     const page = this.mapper.pageFromRow(this.expectSingle(pages, "Events"), language);
     const startIndex = (filters.pageNumber - 1) * filters.pageSize;

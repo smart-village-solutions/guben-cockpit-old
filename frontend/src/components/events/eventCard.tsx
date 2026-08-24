@@ -96,6 +96,17 @@ function EventCard({ event }: EventCardProps) {
     () => [new Date(event.startDate), new Date(event.endDate)],
     [event]
   );
+  const firstPrice = event.priceInformations?.[0];
+  const priceLabel = firstPrice
+    ? [
+        firstPrice.name,
+        firstPrice.amount === 0
+          ? "Kostenlos"
+          : typeof firstPrice.amount === "number"
+            ? `${new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(firstPrice.amount)}`
+            : null,
+      ].filter(Boolean).join(" · ")
+    : null;
 
   const extraInfo: ReactNode = (
     <div className="space-y-2 flex flex-col">
@@ -107,6 +118,10 @@ function EventCard({ event }: EventCardProps) {
         <ClockIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <p className="line-clamp-2">{formatEventDateRange(startDate, endDate)}</p>
       </div>
+      {event.organizerName ? (
+        <p className="text-sm text-neutral-600">Veranstaltet von {event.organizerName}</p>
+      ) : null}
+      {priceLabel ? <p className="text-sm font-medium text-neutral-700">{priceLabel}</p> : null}
     </div>
   );
 

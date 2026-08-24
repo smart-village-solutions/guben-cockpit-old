@@ -157,6 +157,8 @@ describe("SmartVillageEventRepository", () => {
         bookingTenants: [],
       },
     });
+    expect(client.request).toHaveBeenCalledWith(expect.stringContaining("registrationRequired"));
+    expect(client.request).toHaveBeenCalledWith(expect.stringContaining("maximumAttendees"));
     await expect(repository.getEvents("de", { ...defaultFilters })).resolves.toMatchObject({
       events: {
         totalCount: 1,
@@ -364,6 +366,7 @@ describe("SmartVillageEventRepository", () => {
             id: "1937532",
             externalId: "99193150",
             title: "Sommerlesung",
+            categories: [{ id: "exhibition", name: "Ausstellung" }],
             dates: [
               {
                 dateStart: "2026-07-05",
@@ -391,7 +394,11 @@ describe("SmartVillageEventRepository", () => {
     expect(result.events.results.map((event) => event.id)).toEqual([
       "1937530:2026-06-18:18%3A00",
     ]);
-    expect(result.events.categories).toEqual([{ id: "culture", name: "Kultur" }]);
+    expect(result.events.categories).toEqual([
+      { id: "exhibition", name: "Ausstellung" },
+      { id: "culture", name: "Kultur" },
+      { id: "market", name: "Markt" },
+    ]);
     expect(result.events.bookingTenants).toEqual([]);
     expect(result.page.seo.canonical).toBe("http://localhost:3000/events");
     expect(result.seo.title).toBe("Veranstaltungen");

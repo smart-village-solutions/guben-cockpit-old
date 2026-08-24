@@ -17,6 +17,30 @@ const nonEmptyString = (value: string | null | undefined): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const toHttpUrl = (value: string | null | undefined): string | null => {
+  const url = nonEmptyString(value);
+  if (!url) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? url : null;
+  } catch {
+    return null;
+  }
+};
+
+const toEmail = (value: string | null | undefined): string | null => {
+  const email = nonEmptyString(value);
+  return email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+};
+
+const toPhone = (value: string | null | undefined): string | null => {
+  const phone = nonEmptyString(value);
+  return phone && /^[0-9+().\s/-]+$/.test(phone) ? phone : null;
+};
+
 const normalizeTime = (value: string | null | undefined): string | null => {
   const time = nonEmptyString(value);
   if (!time) {
@@ -59,6 +83,12 @@ const toLocalDateTime = (date: string, time: string | null | undefined): string 
   return `${date}T${normalizedTime}`;
 };
 
+const toPriceAmount = (value: number | null | undefined): number | null =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
+
+const toMaximumAttendees = (value: number | null | undefined): number | null =>
+  typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+
 export class SmartVillageEventMapper {
   public eventsFromRecord(record: SmartVillageEventRecord): Event[] {
     const occurrences = this.getOccurrences(record);
@@ -94,6 +124,25 @@ export class SmartVillageEventMapper {
     const coordinates =
       toCoordinates(address?.geoLocation ?? null) ??
       toCoordinates(record.location?.geoLocation ?? null);
+    const contact = (record.contacts ?? [])
+      .map((entry) => ({
+        email: toEmail(entry.email),
+        phone: toPhone(entry.phone),
+        website: entry.webUrls
+          ?.map((url) => toHttpUrl(url.url))
+          .find((url): url is string => url !== null) ?? null,
+      }))
+      .find((entry) => entry.email || entry.phone || entry.website) ?? null;
+    const priceInformations = (record.priceInformations ?? [])
+      .map((price) => ({
+        name: nonEmptyString(price.name),
+        description: nonEmptyString(price.description),
+        amount: toPriceAmount(price.amount),
+      }))
+      .filter((price) => price.name || price.description || price.amount !== null);
+    const organizerName = nonEmptyString(record.organizer?.name);
+    const dataProviderName = nonEmptyString(record.dataProvider?.name);
+    const maximumAttendees = toMaximumAttendees(record.maximumAttendees);
 
     return eventSchema.parse({
       id: occurrenceId,
@@ -117,7 +166,7 @@ export class SmartVillageEventMapper {
       coordinates,
       urls: (record.urls ?? [])
         .map((url) => {
-          const link = nonEmptyString(url.url);
+          const link = toHttpUrl(url.url);
           if (!link) {
             return null;
           }
@@ -148,6 +197,14 @@ export class SmartVillageEventMapper {
           previewUrl: url,
           originalUrl: url,
         })),
+      ...(typeof record.registrationRequired === "boolean"
+        ? { registrationRequired: record.registrationRequired }
+        : {}),
+      ...(maximumAttendees !== null ? { maximumAttendees } : {}),
+      ...(organizerName ? { organizerName } : {}),
+      ...(contact ? { contact } : {}),
+      ...(priceInformations.length > 0 ? { priceInformations } : {}),
+      ...(dataProviderName ? { dataProviderName } : {}),
       published: record.visible === true,
     });
   }

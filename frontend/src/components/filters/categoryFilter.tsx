@@ -19,6 +19,9 @@ export const CategoryFilter = ({
   const { t } = useTranslation("common");
   const mergedCategories = Array.from(
     new Map(customCategories.map(c => [c.name, c])).values()
+  ).sort((left, right) =>
+    left.name.localeCompare(right.name, undefined, { sensitivity: "base" }) ||
+    left.id.localeCompare(right.id)
   );
 
   const options = mergedCategories.map(c => ({
