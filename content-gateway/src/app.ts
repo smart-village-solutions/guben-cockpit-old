@@ -260,16 +260,23 @@ const resolveLanguage = (
   acceptLanguageHeader: string | string[] | undefined,
   config: Config,
 ) => {
+  const defaultLanguage = normalizeLanguageCode(config.DEFAULT_LANGUAGE) ?? "de";
+
   if (explicitLanguage) {
-    return explicitLanguage.slice(0, 2).toLowerCase();
+    return normalizeLanguageCode(explicitLanguage) ?? defaultLanguage;
   }
 
   const header = Array.isArray(acceptLanguageHeader)
     ? acceptLanguageHeader[0]
     : acceptLanguageHeader;
   if (!header) {
-    return config.DEFAULT_LANGUAGE;
+    return defaultLanguage;
   }
 
-  return header.split(",")[0]?.trim().slice(0, 2).toLowerCase() || config.DEFAULT_LANGUAGE;
+  return normalizeLanguageCode(header.split(",")[0]) ?? defaultLanguage;
+};
+
+const normalizeLanguageCode = (value: string | undefined) => {
+  const languageCode = value?.trim().slice(0, 2).toLowerCase();
+  return languageCode && /^[a-z]{2}$/.test(languageCode) ? languageCode : null;
 };
