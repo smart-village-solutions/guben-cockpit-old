@@ -30,6 +30,10 @@ const additionalBookingTenants = [
     id: "smart-city-booking-bike-boxes",
     tenantId: "2b12ce76-c513-40d0-bb56-51a597556f9d",
   },
+  {
+    id: "smart-city-booking-stadtwerke-guben",
+    tenantId: "55ed6f60-7d0b-4f0e-9bb4-7f2ca5e7554b",
+  },
 ] as const;
 
 const supportedPublicProjectTypes = new Set([0, 1, 2]);
