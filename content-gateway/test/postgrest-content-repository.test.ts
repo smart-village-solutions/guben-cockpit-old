@@ -356,7 +356,7 @@ describe("PostgrestContentRepository", () => {
     });
   });
 
-  it("augments booking tenants with the smart city booking bike-box tenant", async () => {
+  it("augments booking tenants with the configured additional tenants", async () => {
     const repository = new PostgrestContentRepository(config, {
       select: async () => [],
     } as never);
@@ -372,6 +372,10 @@ describe("PostgrestContentRepository", () => {
       {
         id: "smart-city-booking-bike-boxes",
         tenantId: "2b12ce76-c513-40d0-bb56-51a597556f9d",
+      },
+      {
+        id: "smart-city-booking-stadtwerke-guben",
+        tenantId: "55ed6f60-7d0b-4f0e-9bb4-7f2ca5e7554b",
       },
     ]);
   });
@@ -396,6 +400,10 @@ describe("PostgrestContentRepository", () => {
       {
         id: "existing-bike-box-tenant",
         tenantId: "2b12ce76-c513-40d0-bb56-51a597556f9d",
+      },
+      {
+        id: "smart-city-booking-stadtwerke-guben",
+        tenantId: "55ed6f60-7d0b-4f0e-9bb4-7f2ca5e7554b",
       },
     ]);
   });
