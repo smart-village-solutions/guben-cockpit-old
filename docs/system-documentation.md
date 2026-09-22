@@ -4,6 +4,7 @@ Diese Datei ist die kompakte technische Uebersicht des aktiven Public-Content-St
 
 Weiterfuehrende Betriebsdokumente:
 
+- [Content-Gateway-API](./content-gateway-api.md)
 - [Public Content Gateway Rollout](./public-content-gateway-rollout.md)
 - [Deploy Runbook](./deploy-runbook.md)
 

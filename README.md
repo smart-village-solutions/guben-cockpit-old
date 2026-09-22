@@ -149,5 +149,6 @@ The deployed `content-gateway` image also needs `SV_GRAPHQL_URL`, `SV_OAUTH_TOKE
 
 - [arc42-Architekturdokumentation](./docs/arc42.md)
 - [Systemdokumentation](./docs/system-documentation.md)
+- [Content-Gateway-API](./docs/content-gateway-api.md)
 - [Gateway-Rollout](./docs/public-content-gateway-rollout.md)
 - [Deploy-Runbook](./docs/deploy-runbook.md)
