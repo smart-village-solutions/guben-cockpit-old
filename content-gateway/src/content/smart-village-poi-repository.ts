@@ -19,7 +19,6 @@ const POI_FIELDS = `
   externalId
   name
   description
-  mobileDescription
   active
   visible
   updatedAt
@@ -88,7 +87,6 @@ type SmartVillagePoi = {
   externalId?: OptionalString;
   name?: OptionalString;
   description?: OptionalString;
-  mobileDescription?: OptionalString;
   active?: boolean | null;
   visible?: boolean | null;
   updatedAt?: OptionalString;
@@ -366,7 +364,7 @@ export class SmartVillagePoiRepository {
     return {
       id: toPublicPoiId(internalId),
       title,
-      description: nonEmpty(record.description) ?? nonEmpty(record.mobileDescription) ?? "",
+      description: nonEmpty(record.description) ?? "",
       imageUrl: media[0]?.url ?? null,
       updatedAt: nonEmpty(record.updatedAt),
       categories,
