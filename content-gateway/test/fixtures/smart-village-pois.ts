@@ -1,7 +1,6 @@
 const basePoi = {
   externalId: null,
   description: null,
-  mobileDescription: null,
   active: true,
   visible: true,
   updatedAt: "2026-08-04T10:00:00Z",

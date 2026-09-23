@@ -60,6 +60,7 @@ describe("SmartVillagePoiRepository", () => {
 
     expect(request).toHaveBeenCalledWith(expect.stringContaining("pointsOfInterest"));
     expect(POINTS_OF_INTEREST_QUERY).toContain("openingHours");
+    expect(POINTS_OF_INTEREST_QUERY).not.toContain("mobileDescription");
     expect(result.results).toHaveLength(1);
     expect(result.results[0]).toMatchObject({ id: "poi:1", title: "Unternehmen A", locationValue: "guben" });
     expect(warn).toHaveBeenCalledTimes(2);
@@ -90,6 +91,17 @@ describe("SmartVillagePoiRepository", () => {
 
     await expect(repository.getPois("de", { ...filters, location: "gubin" })).resolves.toMatchObject({ totalCount: 1 });
     await expect(repository.getPois("de", { ...filters, radius: 1 })).resolves.toMatchObject({ totalCount: 1 });
+  });
+
+  it("leaves descriptions empty instead of falling back to mobileDescription", async () => {
+    const request = vi.fn(async () => ({
+      pointsOfInterest: [makePoi({ description: null, mobileDescription: "Nur mobil" })],
+    }));
+    const repository = new SmartVillagePoiRepository({ client: { request } as never, publicBaseUrl: "https://example.com" });
+
+    await expect(repository.getPois("de", filters)).resolves.toMatchObject({
+      results: [{ description: "" }],
+    });
   });
 
   it("loads details directly with typed IDs and rejects invalid identifiers", async () => {
