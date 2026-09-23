@@ -32,6 +32,20 @@ interface ComboboxProps {
   disabled?: boolean;
 }
 
+export const sortComboboxOptionValues = (
+  values: string[],
+  optionsIndex: Record<string, ComboboxOption>,
+) => values.toSorted((left, right) => {
+  const leftOption = optionsIndex[left];
+  const rightOption = optionsIndex[right];
+
+  return (leftOption?.label ?? left).localeCompare(
+    rightOption?.label ?? right,
+    "de",
+    { sensitivity: "base" },
+  ) || left.localeCompare(right);
+});
+
 export const MultiComboBox = ({
                            options,
                            placeholder,
@@ -44,11 +58,10 @@ export const MultiComboBox = ({
 
   const {t} = useTranslation();
   const [open, setOpen] = React.useState(defaultOpen);
-  const [selectedValues, setSelectedValues] = useState<string[]>(defaultValues
-    ?.toSorted((a,b) => a.localeCompare(b)));
+  const [selectedValues, setSelectedValues] = useState<string[]>(defaultValues);
 
   useEffect(() => {
-    setSelectedValues(defaultValues?.toSorted((a, b) => a.localeCompare(b)) ?? []);
+    setSelectedValues(defaultValues ?? []);
   }, [defaultValues]);
 
   const optionsIndex = useMemo(() => {
@@ -59,12 +72,18 @@ export const MultiComboBox = ({
   } ,[options]);
 
   const unselectedValues = useMemo(() => {
-    return options.reduce((acc: string[], val) => {
+    const unselected = options.reduce((acc: string[], val) => {
       if (selectedValues.indexOf(val.value) === -1) acc.push(val.value);
       return acc;
-    }, [])
-      .toSorted((a, b) => a.localeCompare(b));
-  }, [selectedValues, options]);
+    }, []);
+
+    return sortComboboxOptionValues(unselected, optionsIndex);
+  }, [selectedValues, options, optionsIndex]);
+
+  const sortedSelectedValues = useMemo(
+    () => sortComboboxOptionValues(selectedValues, optionsIndex),
+    [selectedValues, optionsIndex],
+  );
 
   const handleItemSelect = useCallback((selectedValue: string) => {
     setSelectedValues(curr => {
@@ -108,7 +127,7 @@ export const MultiComboBox = ({
                   {selectedValues.length > 0 && (
                     <>
                       <CommandGroup heading={t("SelectedItems")}>
-                        {selectedValues.map((value) => {
+                        {sortedSelectedValues.map((value) => {
                           const option = optionsIndex[value]
                           return option && (
                             <CommandItem
