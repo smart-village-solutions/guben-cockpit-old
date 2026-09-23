@@ -1,7 +1,7 @@
 export const buildplaceMapUrl = (geodataview: string) =>
-  `https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?geodataview=${geodataview}&layerOrder=geoDataLayer,xPlanLayer&mapview=13.67/51.951171/14.702273/0.00/0.00&sidemode=portfolioGeoData&activeLocation=no-location`;
+  `https://public.buildplace.io/_/stadt-guben/portfolio/9SwckJpXpc812vR0Vm39R/overview/map?mapview=12.11/51.951378/14.684505/0.00/0.00&sidemode=portfolioGeoData&geodataview=${geodataview}`;
 
-export const buildplaceMapOverviewUrl = buildplaceMapUrl("Q0eIRLhq8q7PXzRujP7sv");
+export const buildplaceMapOverviewUrl = buildplaceMapUrl("VCLRxcYi93GPjoPP9DFKL");
 
 export const buildplaceMapUrlByCanonicalTitle: Record<string, string> = {
   euroregion: buildplaceMapUrl("OgBlQ3t5LyqT3jiOe9n0t"),
