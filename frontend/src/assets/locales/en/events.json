@@ -21,6 +21,7 @@
   "Latitude": "Latitude",
   "Longitude": "Longitude",
   "Category": "Category",
+  "NoMatchingEvents": "No events found for this selection.",
   "Location": "Address",
   "Save": "Save",
   "Cancel": "Cancel"

@@ -21,6 +21,7 @@
   "Latitude": "Szerokość geograficzna",
   "Longitude": "Długość geograficzna",
   "Category": "Kategoria",
+  "NoMatchingEvents": "Nie znaleziono wydarzeń dla tego wyboru.",
   "Location": "Adres",
   "Save": "Zapisz",
   "Cancel": "Anuluj"

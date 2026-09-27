@@ -345,6 +345,7 @@ interface Resources {
     "Latitude": "Breitengrad",
     "Longitude": "Längengrad",
     "Category": "Kategorien",
+    "NoMatchingEvents": "Keine Veranstaltungen für diese Auswahl gefunden.",
     "Location": "Adresse",
     "Save": "Speichern",
     "Cancel": "Abbrechen"
