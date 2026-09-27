@@ -11,6 +11,15 @@ const defaultFilters: EventFilters = {
   pageSize: 25,
 };
 
+const categoryCatalog = [
+  { id: "exhibition", name: "Ausstellung", active: true, dataTypes: ["event_record"] },
+  { id: "culture", name: "Kultur", active: true, dataTypes: ["event_record"] },
+  { id: "market", name: "Markt", active: true, dataTypes: ["event_record"] },
+  { id: "sport", name: "Sport", active: true, dataTypes: ["event_record"] },
+  { id: "retired", name: "Veraltet", active: false, dataTypes: ["event_record"] },
+  { id: "poi", name: "POI", active: true, dataTypes: ["point_of_interest"] },
+];
+
 type WarnHook = (message: string, context: Record<string, unknown>) => void;
 
 type GraphQLClientStub = {
@@ -143,8 +152,9 @@ describe("SmartVillageEventRepository", () => {
     const client = {
       request: vi
         .fn()
-        .mockResolvedValueOnce({ eventRecords: [makeRecord()] })
+        .mockResolvedValueOnce({ categories: categoryCatalog, eventRecords: [makeRecord()] })
         .mockResolvedValueOnce({
+          categories: categoryCatalog,
           eventRecords: [makeRecord({ title: "Sommerfest Reloaded" })],
         }),
     };
@@ -188,7 +198,7 @@ describe("SmartVillageEventRepository", () => {
         .fn()
         .mockImplementation(async (query: string) => {
           if (query.includes("eventRecords")) {
-            return { eventRecords: [makeRecord()] };
+            return { categories: categoryCatalog, eventRecords: [makeRecord()] };
           }
 
           return { eventRecord: makeRecord() };
@@ -211,13 +221,13 @@ describe("SmartVillageEventRepository", () => {
 
   it("deduplicates identical concurrent list requests to one GraphQL call", async () => {
     let resolveResponse:
-      | ((value: { eventRecords: SmartVillageEventRecord[] }) => void)
+      | ((value: { eventRecords: SmartVillageEventRecord[]; categories: typeof categoryCatalog }) => void)
       | undefined;
 
     const client = {
       request: vi.fn(
         () =>
-          new Promise<{ eventRecords: SmartVillageEventRecord[] }>((resolve) => {
+          new Promise<{ eventRecords: SmartVillageEventRecord[]; categories: typeof categoryCatalog }>((resolve) => {
             resolveResponse = resolve;
           }),
       ),
@@ -237,7 +247,7 @@ describe("SmartVillageEventRepository", () => {
 
     expect(client.request).toHaveBeenCalledTimes(1);
 
-    resolveResponse?.({ eventRecords: [makeRecord()] });
+    resolveResponse?.({ categories: categoryCatalog, eventRecords: [makeRecord()] });
 
     const [left, right] = await Promise.all([first, second]);
 
@@ -279,6 +289,7 @@ describe("SmartVillageEventRepository", () => {
   it("paginates after expanding records into occurrences", async () => {
     const client = {
       request: vi.fn(async () => ({
+        categories: categoryCatalog,
         eventRecords: [
           makeRecord({
             dates: [
@@ -331,6 +342,7 @@ describe("SmartVillageEventRepository", () => {
   it("filters occurrences by title, category, and date overlap while skipping malformed occurrences", async () => {
     const client = {
       request: vi.fn(async () => ({
+        categories: categoryCatalog,
         eventRecords: [
           makeRecord({
             dates: [
@@ -398,16 +410,46 @@ describe("SmartVillageEventRepository", () => {
       { id: "exhibition", name: "Ausstellung" },
       { id: "culture", name: "Kultur" },
       { id: "market", name: "Markt" },
+      { id: "sport", name: "Sport" },
     ]);
     expect(result.events.bookingTenants).toEqual([]);
     expect(result.page.seo.canonical).toBe("http://localhost:3000/events");
     expect(result.seo.title).toBe("Veranstaltungen");
   });
 
+  it("uses the catalog for empty categories and matches equivalent source category names", async () => {
+    const client = {
+      request: vi.fn(async () => ({
+        categories: categoryCatalog,
+        eventRecords: [makeRecord({ categories: [{ id: "source-market", name: "Markt" }] })],
+      })),
+    };
+    const repository = createRepository(client);
+
+    const market = await repository.getEvents("de", { ...defaultFilters, category: "market" });
+    expect(market.events.totalCount).toBe(1);
+    expect(market.events.categories).toContainEqual({ id: "sport", name: "Sport" });
+
+    const sport = await repository.getEvents("de", { ...defaultFilters, category: "sport" });
+    expect(sport.events.totalCount).toBe(0);
+    expect(sport.events.categories).toContainEqual({ id: "sport", name: "Sport" });
+  });
+
+  it("rejects a missing category catalog instead of returning an incomplete filter", async () => {
+    const repository = createRepository({
+      request: vi.fn(async () => ({ eventRecords: [makeRecord()], categories: null })),
+    });
+
+    await expect(repository.getEvents("de", defaultFilters)).rejects.toMatchObject({
+      code: "INVALID_UPSTREAM_PAYLOAD",
+    });
+  });
+
   it("logs context when malformed upstream records or occurrences are skipped", async () => {
     const warn = vi.fn<WarnHook>();
     const client = {
       request: vi.fn(async () => ({
+        categories: categoryCatalog,
         eventRecords: [
           makeRecord({
             id: null,

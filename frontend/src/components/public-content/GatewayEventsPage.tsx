@@ -3,7 +3,6 @@ import CitizenInformationSystemBanner from "@/components/events/citizenInformati
 import EventCard from "@/components/events/eventCard";
 import EventIntegration from "@/components/events/eventIntegration";
 import {
-  buildCombinedCategories,
   buildEventsQueryFilters,
   filterBookingEvents,
   mergeEventsWithBookingEvents,
@@ -122,9 +121,9 @@ const GatewayEventsPageContent = () => {
   const allEvents = mergeEventsWithBookingEvents(query.data?.events.results ?? [], filteredNormalizedEvents);
 
   useEffect(() => {
-    pagination.setTotal(allEvents.length);
+    pagination.setTotal(query.data?.events.totalCount ?? 0);
     pagination.setPageCount(query.data?.events.pageCount ?? 1);
-  }, [allEvents.length, query.data]);
+  }, [query.data]);
 
   // Progressive loading: show content immediately, load translations in background
   useEffect(() => {
@@ -161,8 +160,6 @@ const GatewayEventsPageContent = () => {
     }
   }, [allEvents, currentLang, shouldShowIntegration]);
 
-  const combinedCategories = buildCombinedCategories(query.data?.events.categories ?? [], bookingEvents);
-
   // Show error only if query has failed, not just loading
   if (query.error && !query.data) {
     return <PublicContentErrorState error={query.error} onRetry={() => void query.refetch()} />;
@@ -192,7 +189,7 @@ const GatewayEventsPageContent = () => {
             <CategoryFilter
               value={filters.category ?? null}
               onChange={(value) => handleFilterChange({ category: value })}
-              categories={combinedCategories}
+              categories={query.data?.events.categories ?? []}
             />
             <DistanceFilter
               value={filters.distance?.toString()}
@@ -241,7 +238,7 @@ const GatewayEventsPageContent = () => {
                       className="w-full h-96 rounded-lg"
                     />
                   ))
-                : null}
+                : <p className="col-span-full text-center py-12 text-muted-foreground">{t("NoMatchingEvents", { ns: "events" })}</p>}
           </div>
         </PaginationContainer>
       </section>

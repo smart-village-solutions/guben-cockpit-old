@@ -23,6 +23,38 @@ const GUBEN_COORDINATES = {
   longitude: 14.7143,
 } as const;
 
+// TMB Veranstaltungskalender categories, using the names in the Guben Mainserver catalog.
+// https://tourismusnetzwerk-brandenburg.de/sites/default/files/beteiligungsangebot/32/dokumente/vertrag_white_label_veranstaltungskalender_tmb_125.pdf
+const TMB_EVENT_CATEGORY_NAMES = new Set([
+  "Ausstellung",
+  "Chor / Folklore / Volksmusik",
+  "Essen und Trinken",
+  "Exkursion / Wanderung",
+  "Fest / Brauchtum",
+  "Film",
+  "Führung / Besichtigung",
+  "Großveranstaltung",
+  "Historische Stadtkerne",
+  "Industriekultur",
+  "Kinder und Jugendliche",
+  "Klassisches Konzert / Oper",
+  "Lesung / Vortrag",
+  "Lust auf NaTour",
+  "Markt",
+  "Musical",
+  "Radtouren",
+  "Rock / Pop / Jazz",
+  "Rund ums Wasser",
+  "Schlösser, Parks und Gärten",
+  "Silvester",
+  "Sport",
+  "Tagung / Messe",
+  "Theater / Tanz / Kabarett",
+  "Weihnachtsmarkt",
+  "Wellness / Gesundheit",
+  "Workshop / Seminar",
+]);
+
 const EVENT_RECORD_FIELDS = `
   id
   externalId
@@ -105,6 +137,11 @@ const EVENT_RECORDS_QUERY = `
     eventRecords(onlyUniqEvents: true) {
       ${EVENT_RECORD_FIELDS}
     }
+    categories {
+      id
+      name
+      active
+    }
   }
 `;
 
@@ -127,6 +164,11 @@ type SmartVillageEventRepositoryOptions = {
 
 type EventRecordsQueryResponse = {
   eventRecords: SmartVillageEventRecord[] | null;
+  categories: Array<{
+    id?: string | null;
+    name?: string | null;
+    active?: boolean | null;
+  }> | null;
 };
 
 type EventRecordQueryResponse = {
@@ -172,6 +214,8 @@ const invalidPayloadError = (message: string) =>
   });
 
 const normalizeLanguage = (language: string) => language.trim().slice(0, 2).toLowerCase() || "de";
+const normalizeCategoryName = (name: string) =>
+  name.trim().normalize("NFKC").replace(/\s+/g, " ").toLocaleLowerCase("de");
 
 const normalizeFilters = (filters: EventFilters) => ({
   pageNumber: filters.pageNumber,
@@ -227,24 +271,39 @@ export class SmartVillageEventRepository {
       query: EVENT_RECORDS_QUERY,
       validate: (value: EventRecordsQueryResponse) => {
         this.expectEventRecords(value);
+        this.expectCategoryCatalog(value);
       },
     });
     const records = this.expectEventRecords(response);
+    const catalog = this.expectCategoryCatalog(response);
 
     const allEvents = records
       .flatMap((record) => this.mapRecordWithDiagnostics(record, "eventRecords"))
       .filter((event) => event.published);
 
-    const categories = Array.from(
-      new Map(
-        allEvents.flatMap((event) => event.categories).map((category) => [category.id, category]),
-      ).values(),
-    ).sort(
+    const catalogCategories = catalog
+      .filter((category) =>
+        category.active === true && TMB_EVENT_CATEGORY_NAMES.has(category.name?.trim() ?? ""))
+      .flatMap((category) => {
+        const id = category.id?.trim();
+        const name = category.name?.trim();
+        return id && name ? [{ id, name }] : [];
+      });
+    const catalogNames = new Set(
+      catalogCategories.map((category) => normalizeCategoryName(category.name)),
+    );
+    const sourceCategories = allEvents
+      .flatMap((event) => event.categories)
+      .filter((category) => !catalogNames.has(normalizeCategoryName(category.name)));
+    const categoriesById = new Map(
+      [...sourceCategories, ...catalogCategories].map((category) => [category.id, category]),
+    );
+    const categories = Array.from(categoriesById.values()).sort(
       (left, right) =>
         left.name.localeCompare(right.name, language) || left.id.localeCompare(right.id),
     );
 
-    const results = this.filterEvents(allEvents, filters);
+    const results = this.filterEvents(allEvents, filters, categories);
     this.sortEvents(results, filters);
 
     const startIndex = (filters.pageNumber - 1) * filters.pageSize;
@@ -326,6 +385,16 @@ export class SmartVillageEventRepository {
     return response.eventRecords;
   }
 
+  private expectCategoryCatalog(
+    response: EventRecordsQueryResponse,
+  ): NonNullable<EventRecordsQueryResponse["categories"]> {
+    if (!Array.isArray(response.categories)) {
+      throw invalidPayloadError("smartvillage categories response did not include an array");
+    }
+
+    return response.categories;
+  }
+
   private parseOccurrenceId(value: string): ParsedOccurrenceId | null {
     const firstSeparator = value.indexOf(":");
     const secondSeparator =
@@ -389,7 +458,11 @@ export class SmartVillageEventRepository {
     return record.date ? 1 : 0;
   }
 
-  private filterEvents(events: Event[], filters: EventFilters) {
+  private filterEvents(
+    events: Event[],
+    filters: EventFilters,
+    categories: EventsContent["events"]["categories"],
+  ) {
     let results = events;
 
     if (filters.title) {
@@ -398,8 +471,12 @@ export class SmartVillageEventRepository {
     }
 
     if (filters.category) {
+      const selectedName = categories.find((category) => category.id === filters.category)?.name;
       results = results.filter((event) =>
-        event.categories.some((category) => category.id === filters.category),
+        event.categories.some((category) =>
+          category.id === filters.category ||
+          (selectedName !== undefined &&
+            normalizeCategoryName(category.name) === normalizeCategoryName(selectedName))),
       );
     }
 

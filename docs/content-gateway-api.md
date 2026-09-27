@@ -137,6 +137,14 @@ unveraendert und URL-kodiert in der Detail-URL eingesetzt werden.
 | `ordering` | String | — | Sortierrichtung des Event-Upstreams. |
 | `distance` | Zahl | — | Distanz-Filterwert des Event-Upstreams. |
 
+`events.categories` enthaelt die aktiven Kategorien des TMB-Veranstaltungskalenders
+aus dem Mainserver-Katalog auch dann, wenn aktuell kein sichtbares Event zugeordnet
+ist. Kategorien sichtbarer Events ausserhalb dieses Katalogs bleiben ebenfalls
+auswaehlbar. Die Auswahl verwendet die Katalog-ID; beim Filtern werden
+quellbedingte Unterschiede der Kategorie-IDs ueber den Kategorienamen
+abgeglichen. `events.totalCount` zaehlt alle Treffer vor der Pagination,
+`events.results` nur die aktuelle Seite.
+
 Beispiel:
 
 ```bash
