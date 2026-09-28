@@ -73,6 +73,31 @@ describe("useBookingDetailHydration", () => {
     expect(result.current.hydrationError).toBeNull();
   });
 
+  it("loads the old Alte Färberei link despite trailing whitespace in the API title", async () => {
+    const { loadPublicBookings } = await import("@/booking-api/client");
+    vi.mocked(loadPublicBookings).mockResolvedValue([
+      {
+        tenantId: "tenant-1",
+        title: "Alte Färberei ",
+        description: "Beschreibung",
+        location: "Guben",
+        type: "room",
+        imgUrl: "",
+        bookingUrl: "https://example.com/checkout",
+        price: "Auf Anfrage",
+        prices: [],
+        category: "room",
+        bkid: "offer-1",
+      },
+    ]);
+
+    const { result } = renderHook(() => useBookingDetailHydration("Alte Färberei"));
+
+    await waitFor(() => {
+      expect(result.current.booking?.bkid).toBe("offer-1");
+    });
+  });
+
   it("surfaces hydration failures and retries them on demand", async () => {
     const { loadPublicBookings } = await import("@/booking-api/client");
     vi.mocked(loadPublicBookings)

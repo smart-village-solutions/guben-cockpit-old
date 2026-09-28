@@ -7,6 +7,8 @@ import { MapPinIcon } from "lucide-react";
 import { BookingErrorState } from "./BookingErrorState";
 import { useBookingDetailHydration } from "./useBookingDetailHydration";
 import { DetailMediaSection } from "../ui/detailMediaSection";
+import { useEffect } from "react";
+import { bookingPath, bookingSegment } from "./bookingPath";
 
 export default function BookingComponent() {
   const { t } = useTranslation("booking");
@@ -14,6 +16,12 @@ export default function BookingComponent() {
   const navigate = useNavigate();
   const { title } = useParams({ from: '/booking/$title' });
   const { booking, isHydrating, hydrationError, retry } = useBookingDetailHydration(title);
+
+  useEffect(() => {
+    if (booking && title !== bookingSegment(booking)) {
+      void navigate({ to: bookingPath(booking), replace: true });
+    }
+  }, [booking, navigate, title]);
 
   if (isHydrating && !booking) {
     return (
@@ -35,16 +43,17 @@ export default function BookingComponent() {
     );
   }
 
-  const images = booking.imgUrl ? [{ src: booking.imgUrl, alt: title }] : [];
+  const displayTitle = booking.title.trim();
+  const images = booking.imgUrl ? [{ src: booking.imgUrl, alt: displayTitle }] : [];
 
   return (
     <DetailPageLayout
-      heroAlt={title}
-      title={title}
+      heroAlt={displayTitle}
+      title={displayTitle}
       breadcrumbItems={[
         { label: 'Startseite', href: '/' },
         { label: 'Buchungen', href: '/booking' },
-        { label: title, href: `/booking/${title}` }
+        { label: displayTitle, href: bookingPath(booking) }
       ]}
       metadata={
         <div className="space-y-4">
@@ -93,7 +102,7 @@ export default function BookingComponent() {
                   bookingUrl={ticket.bookingUrl}
                   price={ticket.price}
                   prices={ticket.prices || []}
-                  title={ticket.title || title}
+                  title={ticket.title || displayTitle}
                   flags={ticket.flags || booking.flags}
                   location={ticket.location || booking.location}
                   autoCommitNote={ticket.autoCommitNote || booking.autoCommitNote}
@@ -107,7 +116,7 @@ export default function BookingComponent() {
                 bookingUrl={booking.bookingUrl}
                 price={booking.price}
                 prices={booking.prices || []}
-                title={title}
+                title={displayTitle}
                 flags={booking.flags}
                 location={booking.location}
                 autoCommitNote={booking.autoCommitNote}

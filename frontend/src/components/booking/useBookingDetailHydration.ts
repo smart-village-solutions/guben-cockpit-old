@@ -2,13 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { loadPublicBookings } from "@/booking-api/client";
 import { useGatewayBookingTenants } from "@/public-content/hooks";
-import { useBookingStore, type Booking } from "@/stores/bookingStore";
+import { useBookingStore } from "@/stores/bookingStore";
+import { findBookingBySegment } from "./bookingPath";
 
-const findBookingByTitle = (bookings: Booking[], title: string) =>
-  bookings.find((booking) => booking.title === title) ??
-  bookings.flatMap((booking) => booking.bookings || []).find((booking) => booking.title === title);
-
-export const useBookingDetailHydration = (title: string) => {
+export const useBookingDetailHydration = (segment: string) => {
   const bookings = useBookingStore((state) => state.bookings);
   const processedTenants = useBookingStore((state) => state.processedTenants);
   const addBookings = useBookingStore((state) => state.addBookings);
@@ -19,7 +16,7 @@ export const useBookingDetailHydration = (title: string) => {
   const [hydrationError, setHydrationError] = useState<unknown>(null);
   const [retryToken, setRetryToken] = useState(0);
 
-  const booking = useMemo(() => findBookingByTitle(bookings, title), [bookings, title]);
+  const booking = useMemo(() => findBookingBySegment(bookings, segment), [bookings, segment]);
 
   const retry = useCallback(() => {
     setHydrationError(null);
@@ -70,7 +67,7 @@ export const useBookingDetailHydration = (title: string) => {
             markProcessedTenants(tenant.tenantId);
             nextBookings = [...nextBookings, ...tenantBookings];
 
-            if (findBookingByTitle(nextBookings, title)) {
+            if (findBookingBySegment(nextBookings, segment)) {
               firstError = null;
               break;
             }
@@ -102,7 +99,7 @@ export const useBookingDetailHydration = (title: string) => {
     gatewayTenantIdsQuery,
     markProcessedTenants,
     retryToken,
-    title,
+    segment,
   ]);
 
   return {

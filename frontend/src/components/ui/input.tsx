@@ -79,7 +79,7 @@ const FloatInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"inpu
         let value = e.target.value.replace(",", ".");
 
         // Convert to a number only if it's valid
-        const numericValue = value === "" ? null : parseFloat(value);
+        const numericValue = value === "" ? null : Number.parseFloat(value);
         onChange(numericValue as any);
       }
     };

@@ -115,6 +115,11 @@ describe("bookingComponent", () => {
 
     render(<BookingComponent />);
 
+    expect(navigateMock).toHaveBeenCalledWith({
+      to: "/booking/fahrradbox-laternengasse--box-1",
+      replace: true,
+    });
+
     expect(screen.getByText("bookingComponent.description")).toBeTruthy();
     expect(screen.getByText("Beschreibung")).toBeTruthy();
     expect(screen.getByText("Ressource")).toBeTruthy();
