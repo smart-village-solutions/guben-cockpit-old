@@ -89,16 +89,20 @@ export default function ({
             ) : null}
             <div className="absolute inset-0 bg-red-600/50" />
             <div className="relative z-10 h-full flex flex-col justify-between items-start p-5">
-              {/* Price Information */}
-              <div>
+              <div className="space-y-2">
                 {prices && prices.length > 0 ? (
-                  prices.map((p, idx) => (
-                    <p key={idx}>
-                      {t("priceCard.price")}: {p.price}
-                      {p.interval && ` (${p.interval})`}
-                      {p.category && ` - ${p.category}`}
-                    </p>
-                  ))
+                  <>
+                    {prices.length > 1 && price && <p className="font-semibold">{price}</p>}
+                    <h3 className="font-semibold">{t("priceCard.priceInfo")}</h3>
+                    <dl className="space-y-1">
+                      {prices.map((p, idx) => (
+                        <div key={idx} className="flex justify-between gap-4">
+                          <dt>{[p.interval, p.category].filter(Boolean).join(" - ") || t("priceCard.price")}</dt>
+                          <dd className="text-right whitespace-nowrap">{p.price}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </>
                 ) : (
                   <p>{t("priceCard.price")}: {price}</p>
                 )}

@@ -9,6 +9,7 @@ export const bookingLocationSchema = z.object({
 export const bookingPriceCategorySchema = z.object({
   priceEur: z.number().nullable().optional(),
   unit: z.string().nullable().optional(),
+  interval: z.object({ start: z.string(), end: z.string() }).nullable().optional().catch(undefined),
   external: z.boolean().nullable().optional(),
 });
 
@@ -41,6 +42,7 @@ export const publicBookableSchema = z.object({
   autoCommitBooking: z.boolean().optional().default(false),
   location: bookingLocationSchema.optional().default({ display_address: "" }),
   priceCategories: z.array(bookingPriceCategorySchema).optional().default([]),
+  priceType: z.string().nullable().optional(),
   requiresLogin: z.boolean().optional().default(false),
   attachments: z.array(bookingAttachmentSchema).optional().default([]),
   externalProviders: z.array(bookingExternalProviderSchema).optional().default([]),

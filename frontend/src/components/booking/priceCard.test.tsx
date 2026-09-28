@@ -41,11 +41,11 @@ describe("priceCard", () => {
       <PriceCard
         bookingUrl="https://guben.smart-city-booking.de/admin/checkout?id=box-1"
         title="Fahrradbox"
-        price="2,35 EUR"
+        price="ab 2,35 €"
         imgUrl="/bike-box.jpg"
         prices={[
-          { price: "2,35 EUR", interval: "pro Tag", category: "Standard" },
-          { price: "40,00 EUR", interval: "pro Monat" },
+          { price: "2,35 €", interval: "pro Tag", category: "Standard" },
+          { price: "40,00 €", interval: "pro Monat" },
         ]}
         location="Bahnhof"
         autoCommitNote="Online bezahlen"
@@ -54,8 +54,12 @@ describe("priceCard", () => {
       />,
     );
 
-    expect(screen.getByText("priceCard.price: 2,35 EUR (pro Tag) - Standard")).toBeTruthy();
-    expect(screen.getByText("priceCard.price: 40,00 EUR (pro Monat)")).toBeTruthy();
+    expect(screen.getByText("ab 2,35 €")).toBeTruthy();
+    expect(screen.getByText("priceCard.priceInfo")).toBeTruthy();
+    expect(screen.getByText("pro Tag - Standard")).toBeTruthy();
+    expect(screen.getByText("2,35 €")).toBeTruthy();
+    expect(screen.getByText("pro Monat")).toBeTruthy();
+    expect(screen.getByText("40,00 €")).toBeTruthy();
     expect(screen.getByText("priceCard.place: Bahnhof")).toBeTruthy();
     expect(screen.getByText("Online bezahlen")).toBeTruthy();
     expect(screen.getByText("availability:tenant-1:box-1")).toBeTruthy();

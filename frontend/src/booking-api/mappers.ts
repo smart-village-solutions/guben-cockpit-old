@@ -4,17 +4,69 @@ import { buildBookingPortalUrl } from "./config";
 
 const FALLBACK_IMAGE_URL = "/images/guben-city-booking-card-placeholder.png";
 
-const formatPrice = (price: BookingApiBookable["priceCategories"][number]): BookingPrice => ({
+const formatAmount = (amount: number) => `${amount.toLocaleString("de-DE", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})} €`;
+
+const formatUnit = (unit: string | null | undefined) => {
+  const value = unit?.trim();
+  switch (value?.toLowerCase()) {
+    case "hour":
+    case "per-hour":
+      return "pro Stunde";
+    case "day":
+    case "per-day":
+      return "pro Tag";
+    case "month":
+    case "per-month":
+      return "pro Monat";
+    default:
+      return value || undefined;
+  }
+};
+
+const formatInterval = (
+  price: BookingApiBookable["priceCategories"][number],
+  priceType: BookingApiBookable["priceType"],
+) => {
+  if (priceType === "per-hour" && price.interval) {
+    const { start, end } = price.interval;
+    const from = Number(start);
+    const to = Number(end);
+    if (start.trim() && end.trim() && Number.isFinite(from) && Number.isFinite(to) && from >= 0 && to > from) {
+      return `${from} - ${to} Std.`;
+    }
+  }
+  return formatUnit(price.unit);
+};
+
+const formatPrice = (
+  price: BookingApiBookable["priceCategories"][number],
+  priceType: BookingApiBookable["priceType"],
+): BookingPrice => ({
   price:
     typeof price.priceEur === "number"
-      ? `${price.priceEur.toLocaleString("de-DE", {
-          minimumFractionDigits: price.priceEur % 1 === 0 ? 0 : 2,
-          maximumFractionDigits: 2,
-        })} EUR`
+      ? formatAmount(price.priceEur)
       : "Auf Anfrage",
-  interval: price.unit ?? undefined,
+  interval: formatInterval(price, priceType),
   category: price.external ? "extern" : undefined,
 });
+
+const formatStartingPrice = (bookable: BookingApiBookable) => {
+  const amounts = bookable.priceCategories
+    .map((category) => category.priceEur)
+    .filter((amount): amount is number => typeof amount === "number");
+  if (amounts.length === 0) return "Auf Anfrage";
+  const amount = formatAmount(Math.min(...amounts));
+  const prefix = amounts.length > 1 ? "ab " : "";
+  const units = bookable.priceCategories
+    .filter((category) => typeof category.priceEur === "number")
+    .map((category) => formatUnit(category.unit));
+  const sharedUnit = units[0] && units.every((value) => value === units[0]) ? units[0] : undefined;
+  const unit = bookable.priceType === "per-hour" ? "pro Stunde" : sharedUnit;
+  return `${prefix}${amount}${unit ? ` ${unit}` : ""}`;
+};
 
 const deriveCategory = (bookable: BookingApiBookable, privateTenant: boolean) => {
   if (privateTenant) {
@@ -40,8 +92,8 @@ const createDefaultTicket = (bookable: BookingApiBookable): Ticket => ({
   type: bookable.type,
   flags: [...bookable.flags],
   autoCommitNote: bookable.bookingNotes || (bookable.autoCommitBooking ? "Automatische Bestätigung" : ""),
-  price: bookable.priceCategories[0] ? formatPrice(bookable.priceCategories[0]).price : "Auf Anfrage",
-  prices: bookable.priceCategories.map(formatPrice),
+  price: formatStartingPrice(bookable),
+  prices: bookable.priceCategories.map((price) => formatPrice(price, bookable.priceType)),
   bookingUrl: buildBookingPortalUrl(bookable.tenantId, bookable.id),
   bkid: bookable.id,
   imgUrl: bookable.imgUrl || FALLBACK_IMAGE_URL,
