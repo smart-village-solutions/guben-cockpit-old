@@ -113,6 +113,7 @@
   "priceCard": {
     "included": "W pokoju zawarte są",
     "price": "Cena",
+    "priceInfo": "Informacje o cenach",
     "place": "Miejsce"
   },
   "howItWorks": {

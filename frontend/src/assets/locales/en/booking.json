@@ -114,6 +114,7 @@
   "priceCard": {
     "included": "Included in the room are",
     "price": "Price",
+    "priceInfo": "Price information",
     "place": "Place"
   },
   "howItWorks": {

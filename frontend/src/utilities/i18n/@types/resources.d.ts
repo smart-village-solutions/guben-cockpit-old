@@ -115,6 +115,7 @@ interface Resources {
     "priceCard": {
       "included": "Im Raum inkludiert sind",
       "price": "Preis",
+      "priceInfo": "Preisinformationen",
       "place": "Ort"
     },
     "howItWorks": {

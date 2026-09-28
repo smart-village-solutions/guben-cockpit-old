@@ -22,9 +22,12 @@ export default function BookingCard({booking, columns = 'three'}: BookingCardPro
     : 'w-full sm:w-1/3 md:w-1/3 lg:w-1/3';
 
   const extraInfo: ReactNode = booking.type !== "resource" && (
-    <div className="flex flex-row items-center text-sm gap-2">
-      <MapPinnedIcon className="w-4 h-4 flex-shrink-0" />
-      <span className="line-clamp-2">{booking.location}</span>
+    <div className="space-y-2">
+      <div className="flex flex-row items-center text-sm gap-2">
+        <MapPinnedIcon className="w-4 h-4 flex-shrink-0" />
+        <span className="line-clamp-2">{booking.location}</span>
+      </div>
+      <p className="font-semibold text-gubenAccent">{booking.price}</p>
     </div>
   );
 

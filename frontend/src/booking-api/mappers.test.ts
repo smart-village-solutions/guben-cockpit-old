@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { mapBookableToBooking, mapOccupancyToAvailability } from "./mappers";
+import { publicBookableSchema } from "./schemas";
 
 describe("booking api mappers", () => {
   beforeEach(() => {
@@ -40,7 +41,8 @@ describe("booking api mappers", () => {
       category: "room",
       bkid: "bookable-1",
       bookingUrl: expect.stringContaining("/admin/checkout?id=bookable-1&tenant=tenant-1&amount=1"),
-      prices: [{ price: "12,50 EUR", interval: "hour" }],
+      price: "12,50 € pro Stunde",
+      prices: [{ price: "12,50 €", interval: "pro Stunde" }],
     });
     expect(booking.tickets).toHaveLength(1);
     expect(booking.tickets?.[0]).toMatchObject({
@@ -48,6 +50,49 @@ describe("booking api mappers", () => {
       title: "Smart City Buero",
       bkid: "bookable-1",
     });
+  });
+
+  it("preserves Biletado hourly tiers from the parsed public payload", () => {
+    const bookable = publicBookableSchema.parse({
+      id: "reading-room",
+      tenantId: "library",
+      type: "room",
+      title: "Lesesaal Bibliothek",
+      priceType: "per-hour",
+      priceCategories: [
+        { priceEur: 15, interval: { start: "0", end: "1" }, fixedPrice: true },
+        { priceEur: 30, interval: { start: "1", end: "2" }, fixedPrice: true },
+        { priceEur: 45, interval: { start: "3", end: "10" }, fixedPrice: true },
+      ],
+    });
+
+    const booking = mapBookableToBooking(bookable);
+    expect(booking.price).toBe("ab 15,00 € pro Stunde");
+    expect(booking.prices).toEqual([
+      { price: "15,00 €", interval: "0 - 1 Std.", category: undefined },
+      { price: "30,00 €", interval: "1 - 2 Std.", category: undefined },
+      { price: "45,00 €", interval: "3 - 10 Std.", category: undefined },
+    ]);
+  });
+
+  it("does not invent a duration for absent or invalid intervals", () => {
+    const bookable = publicBookableSchema.parse({
+      id: "bookable-3",
+      tenantId: "tenant-3",
+      type: "room",
+      title: "Raum",
+      priceType: "per-hour",
+      priceCategories: [
+        { priceEur: 20, interval: { start: "", end: "2" } },
+        { priceEur: 30, interval: { start: "3", end: "1" } },
+        { priceEur: 40, interval: { start: 1, end: 2 } },
+        { priceEur: null },
+      ],
+    });
+
+    expect(mapBookableToBooking(bookable).prices.map((price) => price.interval)).toEqual([
+      undefined, undefined, undefined, undefined,
+    ]);
   });
 
   it("applies deterministic safe defaults for optional fields", () => {
