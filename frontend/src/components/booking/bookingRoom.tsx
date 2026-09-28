@@ -7,6 +7,8 @@ import { useBookingDetailHydration } from "./useBookingDetailHydration";
 import { DetailPageLayout } from "../ui/DetailPageLayout";
 import { DetailMediaSection } from "../ui/detailMediaSection";
 import { TranslatedHtml } from "@/utilities/translateUtils";
+import { bookingPath } from "./bookingPath";
+import { useCanonicalBookingPath } from "./useCanonicalBookingPath";
 
 export default function BookingRoom() {
   const { t } = useTranslation("booking");
@@ -15,6 +17,7 @@ export default function BookingRoom() {
   const { title } = useParams({ from: '/booking/room/$title' });
   const { booking, isHydrating, hydrationError, retry } = useBookingDetailHydration(title);
   const rooms = booking?.bookings;
+  useCanonicalBookingPath(booking, title, true);
 
   if (isHydrating && !booking) {
     return (
@@ -36,15 +39,16 @@ export default function BookingRoom() {
     );
   }
 
-  const images = booking.imgUrl ? [{ src: booking.imgUrl, alt: title }] : [];
+  const displayTitle = booking.title.trim();
+  const images = booking.imgUrl ? [{ src: booking.imgUrl, alt: displayTitle }] : [];
 
   return (
     <DetailPageLayout
-      title={title}
+      title={displayTitle}
       breadcrumbItems={[
         { label: "Startseite", href: "/" },
         { label: "Buchungen", href: "/booking" },
-        { label: title, href: `/booking/room/${title}` },
+        { label: displayTitle, href: bookingPath(booking, true) },
       ]}
       onBack={() => navigate({ to: "/booking" })}
       backLabel={t("AllBookings")}

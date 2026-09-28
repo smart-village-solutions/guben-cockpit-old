@@ -13,9 +13,9 @@ export function hexToRgb(hexValue: string): Option<[number, number, number]> {
   //regex to define the r,g,b parts of the hex color string
   const result = /^#?([a-fA-F\d]{2})([a-fA-F\d]{2})([a-fA-F\d]{2})$/.exec(hexValue);
   return result ? [
-    parseInt(result[1],16),
-    parseInt(result[2], 16),
-    parseInt(result[3], 16)
+    Number.parseInt(result[1],16),
+    Number.parseInt(result[2], 16),
+    Number.parseInt(result[3], 16)
   ] : null;
 }
 

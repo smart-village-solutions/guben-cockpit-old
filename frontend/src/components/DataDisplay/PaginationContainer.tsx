@@ -39,7 +39,7 @@ export const PaginationContainer = ({
 
       <Pagination>
         <PageIndicator>{t("PaginationText", {page: page, pageCount: pageCount, total: total})}</PageIndicator>
-        <PageSizePicker value={pageSize} onChange={(value: string) => setPageSize(parseInt(value))}/>
+        <PageSizePicker value={pageSize} onChange={(value: string) => setPageSize(Number.parseInt(value, 10))}/>
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious onClick={() => previousPage()}/>

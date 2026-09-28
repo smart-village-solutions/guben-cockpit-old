@@ -7,12 +7,12 @@ export function getEnumKeyByEnumValue<T extends { [index: string]: string }>(myE
 
 export function tryGetEnumValue<T extends HashMap<unknown>>(value: Option<string> | undefined, enumObject: T, defaultValue?: Option<string>): T[keyof T] {
   if (value !== null && value !== undefined) { // if a value has been passed, check whether it is a valid enum value as either string or number
-    if (isNaN(+value)) {
+    if (Number.isNaN(+value)) {
       if (Object.values(enumObject).includes(value)) {
         return value as T[keyof T]
       }
-    } else if (parseInt(value, 10) in enumObject) {
-      return parseInt(value, 10) as T[keyof T]
+    } else if (Number.parseInt(value, 10) in enumObject) {
+      return Number.parseInt(value, 10) as T[keyof T]
     }
   }
 
@@ -21,7 +21,7 @@ export function tryGetEnumValue<T extends HashMap<unknown>>(value: Option<string
   }
 
   // when no value has been passed, check if there are any numeric values in the enum, if so use the first one
-  const numericEnumValues = Object.values(enumObject).filter((x: any) => !isNaN(+x));
+  const numericEnumValues = Object.values(enumObject).filter((x: any) => !Number.isNaN(+x));
   if (numericEnumValues.length > 0) {
     return numericEnumValues[0] as T[keyof T];
   }
@@ -29,7 +29,7 @@ export function tryGetEnumValue<T extends HashMap<unknown>>(value: Option<string
   // when no value has been passed and no numeric values are present, use the first string value
   const first = enumObject[Object.keys(enumObject)[0]];
   if (first !== null && first !== undefined) {
-    if (isNaN(+first)){
+    if (Number.isNaN(+first)){
       if (Object.values(enumObject).includes(first)) {
         return first as T[keyof T]
       }

@@ -102,6 +102,11 @@ describe("bookingRoom", () => {
 
     render(<BookingRoom />);
 
+    expect(navigateMock).toHaveBeenCalledWith({
+      to: "/booking/room/rathaus",
+      replace: true,
+    });
+
     expect(screen.getByText("Raumbeschreibung")).toBeTruthy();
     expect(screen.getByText("our_rooms")).toBeTruthy();
     expect(screen.getByText("room-card:Saal 1")).toBeTruthy();

@@ -33,7 +33,15 @@ const toHttpUrl = (value: string | null | undefined): string | null => {
 
 const toEmail = (value: string | null | undefined): string | null => {
   const email = nonEmptyString(value);
-  return email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+  if (!email || /\s/.test(email)) {
+    return null;
+  }
+
+  const atIndex = email.indexOf("@");
+  const domain = email.slice(atIndex + 1);
+  const dotIndex = domain.indexOf(".", 1);
+  return atIndex > 0 && atIndex === email.lastIndexOf("@") &&
+    dotIndex > 0 && dotIndex < domain.length - 1 ? email : null;
 };
 
 const toPhone = (value: string | null | undefined): string | null => {

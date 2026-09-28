@@ -48,4 +48,25 @@ describe("SmartVillageEventMapper", () => {
     expect(event).not.toHaveProperty("registrationRequired");
     expect(event).not.toHaveProperty("maximumAttendees");
   });
+
+  it("rejects malformed contact emails without losing valid dotted domains", () => {
+    const mapper = new SmartVillageEventMapper();
+    const baseRecord = {
+      id: "event-1",
+      title: "Sommerfest",
+      visible: true,
+      date: { dateStart: "2026-06-01", dateEnd: null, timeStart: "10:00", timeEnd: null },
+    };
+
+    for (const email of ["missing-at.example", "a@@example.test", "a@example.", `a@${"a".repeat(10_000)}`]) {
+      const [event] = mapper.eventsFromRecord({ ...baseRecord, contacts: [{ email, phone: null, webUrls: [] }] });
+      expect(event.contact).toBeUndefined();
+    }
+
+    const [event] = mapper.eventsFromRecord({
+      ...baseRecord,
+      contacts: [{ email: "a@example.test.", phone: null, webUrls: [] }],
+    });
+    expect(event.contact?.email).toBe("a@example.test.");
+  });
 });

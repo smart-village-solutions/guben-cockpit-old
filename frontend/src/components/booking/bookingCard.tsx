@@ -4,6 +4,7 @@ import { Booking } from "@/stores/bookingStore";
 import { TranslatedHtml } from "@/utilities/translateUtils";
 import { GenericCard } from "@/components/ui/GenericCard";
 import { ReactNode } from "react";
+import { bookingPath } from "./bookingPath";
 
 type BookingCardProps = {
   booking: Booking;
@@ -13,9 +14,7 @@ type BookingCardProps = {
 export default function BookingCard({booking, columns = 'three'}: BookingCardProps) {
   const navigate = useNavigate();
 
-  const to = (booking.bookings?.length ?? 0) > 0
-    ? `/booking/room/${booking.title}`
-    : `/booking/${booking.title}`;
+  const to = bookingPath(booking, (booking.bookings?.length ?? 0) > 0);
 
   const columnClasses = columns === 'two'
     ? 'w-full sm:w-1/2 md:w-1/2 lg:w-1/2'
