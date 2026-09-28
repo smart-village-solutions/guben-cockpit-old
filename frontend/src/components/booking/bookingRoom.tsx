@@ -7,8 +7,8 @@ import { useBookingDetailHydration } from "./useBookingDetailHydration";
 import { DetailPageLayout } from "../ui/DetailPageLayout";
 import { DetailMediaSection } from "../ui/detailMediaSection";
 import { TranslatedHtml } from "@/utilities/translateUtils";
-import { useEffect } from "react";
-import { bookingPath, bookingSegment } from "./bookingPath";
+import { bookingPath } from "./bookingPath";
+import { useCanonicalBookingPath } from "./useCanonicalBookingPath";
 
 export default function BookingRoom() {
   const { t } = useTranslation("booking");
@@ -17,12 +17,7 @@ export default function BookingRoom() {
   const { title } = useParams({ from: '/booking/room/$title' });
   const { booking, isHydrating, hydrationError, retry } = useBookingDetailHydration(title);
   const rooms = booking?.bookings;
-
-  useEffect(() => {
-    if (booking && title !== bookingSegment(booking)) {
-      void navigate({ to: bookingPath(booking, true), replace: true });
-    }
-  }, [booking, navigate, title]);
+  useCanonicalBookingPath(booking, title, true);
 
   if (isHydrating && !booking) {
     return (

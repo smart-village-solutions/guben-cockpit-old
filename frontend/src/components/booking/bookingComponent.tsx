@@ -7,8 +7,8 @@ import { MapPinIcon } from "lucide-react";
 import { BookingErrorState } from "./BookingErrorState";
 import { useBookingDetailHydration } from "./useBookingDetailHydration";
 import { DetailMediaSection } from "../ui/detailMediaSection";
-import { useEffect } from "react";
-import { bookingPath, bookingSegment } from "./bookingPath";
+import { bookingPath } from "./bookingPath";
+import { useCanonicalBookingPath } from "./useCanonicalBookingPath";
 
 export default function BookingComponent() {
   const { t } = useTranslation("booking");
@@ -16,12 +16,7 @@ export default function BookingComponent() {
   const navigate = useNavigate();
   const { title } = useParams({ from: '/booking/$title' });
   const { booking, isHydrating, hydrationError, retry } = useBookingDetailHydration(title);
-
-  useEffect(() => {
-    if (booking && title !== bookingSegment(booking)) {
-      void navigate({ to: bookingPath(booking), replace: true });
-    }
-  }, [booking, navigate, title]);
+  useCanonicalBookingPath(booking, title);
 
   if (isHydrating && !booking) {
     return (
