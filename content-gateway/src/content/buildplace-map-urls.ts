@@ -1,5 +1,5 @@
 export const buildplaceMapUrl = (geodataview: string) =>
-  `https://public.buildplace.io/_/stadt-guben/portfolio/9SwckJpXpc812vR0Vm39R/overview/map?mapview=12.11/51.951378/14.684505/0.00/0.00&sidemode=portfolioGeoData&geodataview=${geodataview}`;
+  `https://public.buildplace.io/_/stadt-guben/portfolio/-/overview/map?activeLocation=no-location&geodataview=${geodataview}&mapview=11.77/51.943175/14.683025/0.00/0.00&sidemode=portfolioGeoData`;
 
 export const buildplaceMapOverviewUrl = buildplaceMapUrl("VCLRxcYi93GPjoPP9DFKL");
 
