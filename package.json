@@ -2,6 +2,7 @@
   "name": "guben-cockpit",
   "version": "0.0.0",
   "private": true,
+  "license": "EUPL-1.2",
   "description": "Monorepo for Guben Cockpit",
   "engines": {
     "node": ">=22"
