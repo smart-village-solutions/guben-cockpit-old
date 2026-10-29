@@ -152,3 +152,13 @@ The deployed `content-gateway` image also needs `SV_GRAPHQL_URL`, `SV_OAUTH_TOKE
 - [Content-Gateway-API](./docs/content-gateway-api.md)
 - [Gateway-Rollout](./docs/public-content-gateway-rollout.md)
 - [Deploy-Runbook](./docs/deploy-runbook.md)
+
+## License
+
+Guben Cockpit is licensed under the European Union Public Licence, version 1.2
+(SPDX: `EUPL-1.2`). See [LICENSE](./LICENSE) for the full licence text.
+
+Third-party dependencies and assets retain their respective licences.
+
+The official licence text and translations are available from the
+[European Commission](https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12).
