@@ -56,6 +56,39 @@ describe("requestJson", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("does not retry a non-retryable HTTP failure", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 404,
+    } as Response);
+
+    await expect(requestJson({
+      url: "http://postgrest.test/missing",
+      timeoutMs: 100,
+      retryAttempts: 2,
+      retryBackoffMs: 0,
+      upstream: "postgrest",
+    })).rejects.toMatchObject({
+      code: "UPSTREAM_UNAVAILABLE",
+      message: "postgrest request failed with status 404",
+      retryable: false,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries network failures before returning their final gateway error", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("socket hang up"));
+
+    await expect(requestJson({
+      url: "http://postgrest.test/fail",
+      timeoutMs: 100,
+      retryAttempts: 1,
+      retryBackoffMs: 0,
+      upstream: "postgrest",
+    })).rejects.toMatchObject({ code: "UPSTREAM_UNAVAILABLE", retryable: true });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("raises a timeout gateway error after the final abort", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(
       new DOMException("The operation was aborted.", "AbortError"),

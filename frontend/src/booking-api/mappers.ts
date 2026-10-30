@@ -59,8 +59,9 @@ const formatPrice = (
 const formatStartingPrice = (bookable: BookingApiBookable) => {
   const tariffs = bookable.priceCategories.filter((price) => price.unit?.trim().toLowerCase() !== "service-fee");
   const fees = bookable.priceCategories.filter((price) => price.unit?.trim().toLowerCase() === "service-fee");
+  const feeLabels = fees.map((fee) => `${formatPrice(fee, bookable.priceType).price} Servicegebühr`);
   const feeNote = fees.length > 0
-    ? ` zzgl. ${fees.map((fee) => `${formatPrice(fee, bookable.priceType).price} Servicegebühr`).join(" + ")}`
+    ? ` zzgl. ${feeLabels.join(" + ")}`
     : "";
   const amounts = tariffs
     .map((category) => category.priceEur)
@@ -73,7 +74,8 @@ const formatStartingPrice = (bookable: BookingApiBookable) => {
     .map((category) => formatUnit(category.unit));
   const sharedUnit = units[0] && units.every((value) => value === units[0]) ? units[0] : undefined;
   const unit = bookable.priceType === "per-hour" ? "pro Stunde" : sharedUnit;
-  return `${prefix}${amount}${unit ? ` ${unit}` : ""}${feeNote}`;
+  const unitLabel = unit ? ` ${unit}` : "";
+  return `${prefix}${amount}${unitLabel}${feeNote}`;
 };
 
 const deriveCategory = (bookable: BookingApiBookable, privateTenant: boolean) => {

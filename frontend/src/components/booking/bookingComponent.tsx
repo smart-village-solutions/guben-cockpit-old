@@ -10,6 +10,12 @@ import { DetailMediaSection } from "../ui/detailMediaSection";
 import { bookingPath } from "./bookingPath";
 import { useCanonicalBookingPath } from "./useCanonicalBookingPath";
 
+const bookingCategoryLabel = (category: string) => {
+  if (category === "room") return "Raum";
+  if (category === "sport") return "Sportanlage";
+  return "Ressource";
+};
+
 export default function BookingComponent() {
   const { t } = useTranslation("booking");
 
@@ -55,7 +61,7 @@ export default function BookingComponent() {
           {booking.category && (
             <div className="flex gap-2 flex-wrap">
               <p className="px-4 border-neutral-300 border rounded-full text-sm capitalize">
-                {booking.category === 'room' ? 'Raum' : booking.category === 'sport' ? 'Sportanlage' : 'Ressource'}
+                {bookingCategoryLabel(booking.category)}
               </p>
             </div>
           )}

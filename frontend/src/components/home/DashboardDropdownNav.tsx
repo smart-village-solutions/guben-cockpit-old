@@ -178,8 +178,8 @@ export const DashboardDropdownTabs = ({
           />
           <div className={"flex-1 h-full px-0 pt-2 lg:px-4"}>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 auto-rows-fr">
-              {tab?.informationCards?.map((card, index) => {
-                return <InfoCard key={index} card={card} />;
+              {tab?.informationCards?.map((card) => {
+                return <InfoCard key={card.id} card={card} />;
               })}
             </div>
           </div>

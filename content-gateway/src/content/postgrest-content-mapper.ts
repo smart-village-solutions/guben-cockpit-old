@@ -395,37 +395,35 @@ export class PostgrestContentMapper {
       tabsByDropdown.set(tabRow.dropdown_id, entry);
     }
 
-    const dropdowns = rows.dropdownRows
-      .sort((left, right) => left.rank - right.rank)
-      .map((row) =>
-        dashboardDropdownSchema.parse({
-          id: row.id,
-          title: requiredString(
-            localizedField(row.translations, language, this.config.FALLBACK_LANGUAGE, "Title"),
-            `dashboard_dropdown.${row.id}.title`,
-          ),
-          rank: row.rank,
-          isLink: row.is_link,
-          tabs: (tabsByDropdown.get(row.id) ?? []).sort((left, right) => left.sequence - right.sequence),
-          links: (linksByDropdown.get(row.id) ?? [])
-            .sort((left, right) => left.sequence - right.sequence)
-            .map((linkRow) => ({
-              id: linkRow.id,
-              title: requiredString(
-                localizedField(
-                  linkRow.translations,
-                  language,
-                  this.config.FALLBACK_LANGUAGE,
-                  "Title",
-                ),
-                `dropdown_link.${linkRow.id}.title`,
+    rows.dropdownRows.sort((left, right) => left.rank - right.rank);
+    const dropdowns = rows.dropdownRows.map((row) =>
+      dashboardDropdownSchema.parse({
+        id: row.id,
+        title: requiredString(
+          localizedField(row.translations, language, this.config.FALLBACK_LANGUAGE, "Title"),
+          `dashboard_dropdown.${row.id}.title`,
+        ),
+        rank: row.rank,
+        isLink: row.is_link,
+        tabs: (tabsByDropdown.get(row.id) ?? []).sort((left, right) => left.sequence - right.sequence),
+        links: (linksByDropdown.get(row.id) ?? [])
+          .sort((left, right) => left.sequence - right.sequence)
+          .map((linkRow) => ({
+            id: linkRow.id,
+            title: requiredString(
+              localizedField(
+                linkRow.translations,
+                language,
+                this.config.FALLBACK_LANGUAGE,
+                "Title",
               ),
-              link: linkRow.link,
-              sequence: linkRow.sequence,
-            })),
-        }),
-      );
-
+              `dropdown_link.${linkRow.id}.title`,
+            ),
+            link: linkRow.link,
+            sequence: linkRow.sequence,
+          })),
+      }),
+    );
     return dashboardContentSchema.parse({
       dropdowns,
       seo: createSeo(

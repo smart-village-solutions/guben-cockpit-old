@@ -18,6 +18,26 @@ const delay = (ms: number) =>
     setTimeout(resolve, ms);
   });
 
+const toGatewayError = (error: unknown, upstream: RequestJsonUpstream): GatewayError => {
+  if (error instanceof GatewayError) return error;
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return new GatewayError({
+      code: "UPSTREAM_TIMEOUT",
+      message: `${upstream} request timed out`,
+      statusCode: 503,
+      upstream,
+      retryable: true,
+    });
+  }
+  return new GatewayError({
+    code: "UPSTREAM_UNAVAILABLE",
+    message: `${upstream} request failed`,
+    statusCode: 503,
+    upstream,
+    retryable: true,
+  });
+};
+
 export async function requestJson<T>(options: RequestJsonOptions): Promise<T> {
   let lastError: unknown;
 
@@ -46,28 +66,9 @@ export async function requestJson<T>(options: RequestJsonOptions): Promise<T> {
       return (await response.json()) as T;
     } catch (error) {
       lastError = error;
-      if (error instanceof GatewayError) {
-        if (!error.retryable || attempt === options.retryAttempts) {
-          throw error;
-        }
-      } else if (error instanceof DOMException && error.name === "AbortError") {
-        if (attempt === options.retryAttempts) {
-          throw new GatewayError({
-            code: "UPSTREAM_TIMEOUT",
-            message: `${options.upstream} request timed out`,
-            statusCode: 503,
-            upstream: options.upstream,
-            retryable: true,
-          });
-        }
-      } else if (attempt === options.retryAttempts) {
-        throw new GatewayError({
-          code: "UPSTREAM_UNAVAILABLE",
-          message: `${options.upstream} request failed`,
-          statusCode: 503,
-          upstream: options.upstream,
-          retryable: true,
-        });
+      const gatewayError = toGatewayError(error, options.upstream);
+      if (!gatewayError.retryable || attempt === options.retryAttempts) {
+        throw gatewayError;
       }
     } finally {
       clearTimeout(timeout);

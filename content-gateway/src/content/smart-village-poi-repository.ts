@@ -80,7 +80,7 @@ export const POINT_OF_INTEREST_QUERY = `
   }
 `;
 
-type OptionalString = string | null | undefined;
+type OptionalString = string | null;
 type GeoLocation = { latitude?: number | null; longitude?: number | null } | null;
 type SmartVillagePoi = {
   id?: OptionalString;

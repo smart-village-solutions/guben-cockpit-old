@@ -60,7 +60,7 @@ export function createApp(options: {
   const metrics = options.metrics ?? new MetricsRegistry();
   const readinessProbe =
     options.readinessProbe ??
-    (async () => ({
+    (() => Promise.resolve({
       ready: true,
       checks: {},
     }));
@@ -75,11 +75,12 @@ export function createApp(options: {
     methods: ["GET", "OPTIONS"],
   });
 
-  app.addHook("onRequest", async (request) => {
+  app.addHook("onRequest", (request, _reply, done) => {
     request.headers["x-request-start"] = String(Date.now());
+    done();
   });
 
-  app.addHook("onResponse", async (request, reply) => {
+  app.addHook("onResponse", (request, reply, done) => {
     const startedAt = Number(request.headers["x-request-start"] ?? Date.now());
     const route = request.routeOptions.url ?? request.url;
     metrics.recordRequest(route, reply.statusCode, Date.now() - startedAt);
@@ -91,14 +92,15 @@ export function createApp(options: {
       },
       "request completed",
     );
+    done();
   });
 
-  app.get("/health", async () => ({
+  app.get("/health", () => ({
     status: "ok",
     contentSourceMode: options.config.CONTENT_SOURCE_MODE,
   }));
 
-  app.get("/health/live", async () => ({
+  app.get("/health/live", () => ({
     status: "ok",
   }));
 
@@ -113,7 +115,7 @@ export function createApp(options: {
     };
   });
 
-  app.get("/metrics", async (_request, reply) => {
+  app.get("/metrics", (_request, reply) => {
     reply.type("text/plain; version=0.0.4");
     return metrics.renderPrometheus();
   });

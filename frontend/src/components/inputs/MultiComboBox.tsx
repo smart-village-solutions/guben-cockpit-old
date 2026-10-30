@@ -87,7 +87,7 @@ export const MultiComboBox = ({
 
   const handleItemSelect = useCallback((selectedValue: string) => {
     setSelectedValues(curr => {
-      const index = curr?.findIndex(i => i === selectedValue);
+      const index = curr.indexOf(selectedValue);
       if (index > -1) curr.splice(index, 1);
       else curr.push(selectedValue);
       onSelect([...curr]);

@@ -119,7 +119,7 @@ export function Booking() {
   }, [currentLang, shouldShowIntegration, bookables, bookingError]);
 
   return (
-    <main className="w-full h-full flex flex-col">
+    <main className="w-full h-full flex flex-col" aria-busy={loading || !translationsReady}>
       <Breadcrumb items={[
         { label: 'Startseite', href: '/' },
         { label: 'Buchungen', href: '/booking' }
@@ -153,7 +153,7 @@ export function Booking() {
           <div id="rooms">
             <div className="flex flex-wrap">
               {rooms.length > 0
-                ? rooms.map((room, index) => <BookingCard key={index} booking={room} />)
+                ? rooms.map((room) => <BookingCard key={`${room.tenantId}:${room.bkid}`} booking={room} />)
                 : <p className="text-neutral-500">{t("noResults")}</p>
               }
             </div>
@@ -162,7 +162,7 @@ export function Booking() {
           <div id="sport_facilities">
             <div className="flex flex-wrap">
               {sports.length > 0
-                ? sports.map((bookable, index) => <BookingCard key={`sport-${index}`} booking={bookable} />)
+                ? sports.map((bookable) => <BookingCard key={`${bookable.tenantId}:${bookable.bkid}`} booking={bookable} />)
                 : <p className="text-neutral-500">{t("noResults")}</p>
               }
             </div>
@@ -171,7 +171,7 @@ export function Booking() {
           <div id="resources">
             <div className="flex flex-wrap">
               {resources.length > 0
-                ? resources.map((bookable, index) => <BookingCard key={`res-${index}`} booking={bookable} />)
+                ? resources.map((bookable) => <BookingCard key={`${bookable.tenantId}:${bookable.bkid}`} booking={bookable} />)
                 : <p className="text-neutral-500">{t("noResults")}</p>
               }
             </div>

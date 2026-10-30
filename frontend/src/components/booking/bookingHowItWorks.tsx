@@ -14,7 +14,7 @@ export default function() {
       <div className="m-5 flex flex-row justify-center">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 place-items-center">
           {steps.map((step, index) => (
-            <div key={index} className="flex items-center">
+            <div key={step.number} className="flex items-center">
               <div>
                 <div className="flex flex-col justify-start items-center max-w-xs min-h-72 text-center">
                   <div className="font-bold text-7xl text-gray-500">{step.number}</div>

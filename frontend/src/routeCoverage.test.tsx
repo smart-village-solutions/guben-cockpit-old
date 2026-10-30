@@ -299,13 +299,18 @@ describe("route coverage", () => {
   }, 10000);
 
   it("imports route shell modules so their route declarations are covered", async () => {
-    await import("@/routes/map");
-    await import("@/routes/events");
-    await import("@/routes/events/index");
-    await import("@/routes/events/$eventId");
-    await import("@/routes/booking/index");
-    await import("@/routes/booking/$title");
-    await import("@/routes/booking/room/$title");
-    await import("@/routes/projects/$projectId");
+    const modules = await Promise.all([
+      import("@/routes/map"),
+      import("@/routes/events"),
+      import("@/routes/events/index"),
+      import("@/routes/events/$eventId"),
+      import("@/routes/booking/index"),
+      import("@/routes/booking/$title"),
+      import("@/routes/booking/room/$title"),
+      import("@/routes/projects/$projectId"),
+    ]);
+    for (const module of modules) {
+      expect(module.Route).toBeDefined();
+    }
   }, 15_000);
 });

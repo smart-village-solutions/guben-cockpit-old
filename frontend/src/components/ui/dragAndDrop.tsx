@@ -74,7 +74,7 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
     pick(e.target.files?.[0] ?? null);
   };
 
-  const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const onDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
     if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
@@ -85,14 +85,14 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
     }
   };
 
-  const onDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+  const onDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
     if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
     setIsOver(false);
   };
 
-  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const onDrop = (e: React.DragEvent<HTMLButtonElement>) => {
     if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
@@ -106,48 +106,43 @@ const DragAndDrop: React.FC<DragAndDropProps> = ({
 
   return (
     <div className={className}>
-      <div
+      <button
+        type="button"
         ref={setNodeRef}
-        role="button"
-        tabIndex={0}
+        disabled={disabled}
         aria-label="File dropzone"
         onClick={onBrowse}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onBrowse()}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         className={[
-          "rounded-2xl border-2 border-dashed p-8 text-center transition select-none",
+          "block w-full rounded-2xl border-2 border-dashed p-8 text-center transition select-none",
           disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
           isOver ? "border-gubenAccent bg-gubenAccent/5" : "border-gray-300",
         ].join(" ")}
       >
-        <p className="font-medium">{label ?? t('common:DragAndDrop.Label')}</p>
-        <p className="text-sm text-gray-500 mt-1">{hint ?? t('common:DragAndDrop.Hint')}</p>
+        <span className="block font-medium">{label ?? t('common:DragAndDrop.Label')}</span>
+        <span className="block text-sm text-gray-500 mt-1">{hint ?? t('common:DragAndDrop.Hint')}</span>
 
         {acceptExtensions.length > 0 && (
-          <p className="text-xs text-gray-500 mt-1">
+          <span className="block text-xs text-gray-500 mt-1">
             {t("common:DragAndDrop.Accepted", { extensions: acceptExtensions.join(", ") })}
-          </p>
+          </span>
         )}
 
-        <button
-          type="button"
-          className="mt-3 rounded-lg bg-gubenAccent text-white px-4 py-2 hover:opacity-90"
-          disabled={disabled}
-        >
+        <span className="inline-block mt-3 rounded-lg bg-gubenAccent text-white px-4 py-2 hover:opacity-90">
           {t("common:DragAndDrop.Browse")}
-        </button>
+        </span>
+      </button>
 
-        <input
-          ref={inputRef}
-          type="file"
-          className="hidden"
-          accept={acceptExtensions.length ? acceptExtensions.join(",") : undefined}
-          onChange={onInputChange}
-          disabled={disabled}
-        />
-      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        className="hidden"
+        accept={acceptExtensions.length ? acceptExtensions.join(",") : undefined}
+        onChange={onInputChange}
+        disabled={disabled}
+      />
 
       {file && (
         <div className="rounded-lg border px-4 py-3 text-sm flex items-center justify-between mt-3">

@@ -18,6 +18,9 @@ const localeMap: Record<string, Locale> = {
   pl: pl,
 };
 
+const CalendarIconLeft = () => <ChevronLeftIcon className="h-4 w-4" />;
+const CalendarIconRight = () => <ChevronRightIcon className="h-4 w-4" />;
+
 function Calendar({
   className,
   classNames,
@@ -74,8 +77,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeftIcon className="h-4 w-4" />,
-        IconRight: ({ ...props }) => <ChevronRightIcon className="h-4 w-4" />,
+        IconLeft: CalendarIconLeft,
+        IconRight: CalendarIconRight,
       }}
       {...props}
     />

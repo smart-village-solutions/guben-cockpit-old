@@ -23,9 +23,9 @@ export function getEventImage(category?: string | null): string | null {
       .replace(/[äÄ]/g, 'ae')
       .replace(/[öÖ]/g, 'oe')
       .replace(/[üÜ]/g, 'ue')
-      .replace(/[ß]/g, 'ss')
+      .replace(/ß/g, 'ss')
       // Remove spaces, slashes and other special characters
-      .replace(/[\s\/\\]+/g, '')
+      .replace(/[\s/\\]+/g, '')
       .replace(',', '')
       // Remove any remaining non-alphanumeric characters
       .replace(/[^a-z0-9-]/g, '');

@@ -223,22 +223,7 @@ const GatewayEventsPageContent = () => {
           page={pagination.page}
         >
           <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
-            {/* Show events immediately if available, otherwise show skeleton */}
-            {allEvents.length > 0
-              ? allEvents.map((event) => (
-                  <div key={event.id} className="flex w-full">
-                    <EventCard event={event} />
-                  </div>
-                ))
-              : // Show loading skeletons only if no events yet and query is pending
-                query.isPending
-                ? Array.from({ length: pagination.pageSize }).map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      className="w-full h-96 rounded-lg"
-                    />
-                  ))
-                : <p className="col-span-full text-center py-12 text-muted-foreground">{t("NoMatchingEvents", { ns: "events" })}</p>}
+            <EventResults events={allEvents} isPending={query.isPending} pageSize={pagination.pageSize} emptyLabel={t("NoMatchingEvents", { ns: "events" })} />
           </div>
         </PaginationContainer>
       </section>
@@ -252,4 +237,19 @@ export const GatewayEventsPage = () => {
   }
 
   return <GatewayEventsPageContent />;
+};
+
+
+const EventResults = ({ events, isPending, pageSize, emptyLabel }: {
+  events: Parameters<typeof EventCard>[0]["event"][];
+  isPending: boolean;
+  pageSize: number;
+  emptyLabel: string;
+}) => {
+  if (events.length > 0) return events.map((event) => <div key={event.id} className="flex w-full"><EventCard event={event} /></div>);
+  if (isPending) {
+    const slots = Array.from({ length: pageSize }, (_, slot) => `event-loading-slot-${slot}`);
+    return slots.map((slot) => <Skeleton key={slot} className="w-full h-96 rounded-lg" />);
+  }
+  return <p className="col-span-full text-center py-12 text-muted-foreground">{emptyLabel}</p>;
 };

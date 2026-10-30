@@ -1,7 +1,8 @@
+import { withContentKeys } from "@/utilities/contentKeys";
 import { ClockIcon, ExternalLinkIcon, MailIcon, MapPinIcon, PhoneIcon } from "lucide-react";
-import { useMemo, ReactNode } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import sanitizeHtml from "sanitize-html";
 
 import PriceCard from "@/components/booking/priceCard";
@@ -34,9 +35,8 @@ const formatPrice = (amount: number | null | undefined) => {
 
 export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
   const { t } = useTranslation("common");
-  const navigate = useNavigate();
   const router = useRouter();
-  const eventFromState = (router.state.location.state as { event?: any } | undefined)?.event;
+  const eventFromState = (router.state.location.state as { event?: EventDetailContent["event"] } | undefined)?.event;
   const query = useGatewayEventDetailContent(eventId);
   const data = eventFromState ?? query.data?.event;
   useRouteMetadata(query.data?.seo);
@@ -48,7 +48,6 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
     [data],
   );
   const detailImages = useMemo(() => (data ? buildDetailImages(data) : []), [data]);
-  const hasContact = Boolean(data?.contact?.email || data?.contact?.phone || data?.contact?.website);
 
   if (!isGatewayPublicContentEnabled) {
     return <PublicContentDisabledState />;
@@ -70,10 +69,60 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
     return <PublicContentErrorState error={query.error} />;
   }
 
-  const locationLabel = formatEventLocation(data.location);
 
-  // Build metadata card content
-  const metadata: ReactNode = (
+  return (
+    <DetailPageLayout
+      heroAlt={data.title}
+      title={isBookingEvent(data) ? <TranslatedText text={data.title} /> : data.title}
+      metadata={<EventMetadata data={data} startDate={startDate} endDate={endDate} />}
+      breadcrumbItems={[
+        { label: 'Startseite', href: '/' },
+        { label: 'Veranstaltungen', href: '/events' },
+        { label: data.title, href: `/events/${eventId}` }
+      ]}
+    >
+      <div className="space-y-8">
+        <DetailMediaSection
+          heading={t("EventDetails")}
+          body={<EventDescription data={data} />}
+          images={detailImages}
+        />
+
+        <EventAdditionalInformation data={data} />
+
+        {/* Price Cards */}
+        {tickets.length > 0 && (
+          <div className="space-y-4">
+            {tickets.map((ticket) => (
+              <PriceCard
+                key={ticket.bkid || ticket.bookingUrl}
+                bookingUrl={ticket.bookingUrl}
+                prices={ticket.prices}
+                title={ticket.title}
+                flags={ticket.flags}
+                location={ticket.location}
+                autoCommitNote={ticket.autoCommitNote}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </DetailPageLayout>
+  );
+};
+
+type DetailEvent = EventDetailContent["event"];
+
+const EventDescription = ({ data }: { data: DetailEvent }) => {
+  if (isBookingEvent(data)) return <TranslatedHtml className="prose max-w-none" text={data.description} />;
+  if (containsHtmlMarkup(data.description)) return <div className="prose max-w-none text-neutral-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.description) }} />;
+  return <p className="text-neutral-600 leading-relaxed">{data.description}</p>;
+};
+
+const EventMetadata = ({ data, startDate, endDate }: { data: DetailEvent; startDate?: Date; endDate?: Date }) => {
+  const { t } = useTranslation("common");
+  const locationLabel = formatEventLocation(data.location);
+  return (
     <div className="space-y-4">
       {/* Categories */}
       {data.categories.length > 0 ? (
@@ -107,106 +156,74 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
       ) : null}
     </div>
   );
+};
 
+const EventAdditionalInformation = ({ data }: { data: DetailEvent }) => {
+  const hasContact = Boolean(data.contact?.email || data.contact?.phone || data.contact?.website);
+  const hasParticipation = typeof data.registrationRequired === "boolean" || Boolean(data.maximumAttendees);
+  const hasPrices = Boolean(data.priceInformations?.length);
+  const hasInformation = hasParticipation || data.organizerName || hasContact || data.urls.length > 0 || hasPrices || data.dataProviderName;
+  if (!hasInformation) return null;
   return (
-    <DetailPageLayout
-      heroAlt={data.title}
-      title={isBookingEvent(data) ? <TranslatedText text={data.title} /> : data.title}
-      metadata={metadata}
-      breadcrumbItems={[
-        { label: 'Startseite', href: '/' },
-        { label: 'Veranstaltungen', href: '/events' },
-        { label: data.title, href: `/events/${eventId}` }
-      ]}
-    >
-      <div className="space-y-8">
-        <DetailMediaSection
-          heading={t("EventDetails")}
-          body={(
-            isBookingEvent(data) ? (
-              <TranslatedHtml className="prose max-w-none" text={data.description} />
-            ) : containsHtmlMarkup(data.description) ? (
-              <div
-                className="prose max-w-none text-neutral-600 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.description) }}
-              />
-            ) : (
-              <p className="text-neutral-600 leading-relaxed">{data.description}</p>
-            )
-          )}
-          images={detailImages}
-        />
-
-        {(typeof data.registrationRequired === "boolean" || data.maximumAttendees || data.organizerName || hasContact || data.urls.length > 0 || (data.priceInformations?.length ?? 0) > 0 || data.dataProviderName) ? (
-          <section className="grid gap-6 md:grid-cols-2" aria-label="Weitere Veranstaltungsinformationen">
-            {(typeof data.registrationRequired === "boolean" || data.maximumAttendees) ? (
-              <div>
-                <h2 className="text-lg font-semibold">Teilnahme</h2>
-                <div className="mt-2 space-y-1 text-neutral-700">
-                  {typeof data.registrationRequired === "boolean" ? (
-                    <p>{data.registrationRequired ? "Anmeldung erforderlich" : "Keine Anmeldung erforderlich"}</p>
-                  ) : null}
-                  {data.maximumAttendees ? <p>Maximale Teilnehmerzahl: {data.maximumAttendees}</p> : null}
-                </div>
-              </div>
-            ) : null}
-            {data.organizerName ? (
-              <div>
-                <h2 className="text-lg font-semibold">Veranstaltet von</h2>
-                <p className="text-neutral-700">{data.organizerName}</p>
-              </div>
-            ) : null}
-            {hasContact ? (
-              <div>
-                <h2 className="text-lg font-semibold">Kontakt</h2>
-                <div className="mt-2 flex flex-col items-start gap-2">
-                  {data.contact?.email ? <a className="inline-flex items-center gap-2 underline" href={`mailto:${data.contact.email}`}><MailIcon className="size-4" />{data.contact.email}</a> : null}
-                  {data.contact?.phone ? <a className="inline-flex items-center gap-2 underline" href={`tel:${data.contact.phone}`}><PhoneIcon className="size-4" />{data.contact.phone}</a> : null}
-                  {data.contact?.website ? <a className="inline-flex items-center gap-2 underline" href={data.contact.website} target="_blank" rel="noreferrer"><ExternalLinkIcon className="size-4" />Website</a> : null}
-                </div>
-              </div>
-            ) : null}
-            {data.priceInformations && data.priceInformations.length > 0 ? (
-              <div>
-                <h2 className="text-lg font-semibold">Preise</h2>
-                <ul className="mt-2 space-y-1 text-neutral-700">
-                  {data.priceInformations.map((price: NonNullable<EventDetailContent["event"]["priceInformations"]>[number], index: number) => (
-                    <li key={`${price.name ?? "price"}-${index}`}>
-                      {[price.name, formatPrice(price.amount), price.description].filter(Boolean).join(" · ")}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {data.urls.length > 0 ? (
-              <div>
-                <h2 className="text-lg font-semibold">Weiterführende Links</h2>
-                <ul className="mt-2 space-y-2">
-                  {data.urls.map((url: EventDetailContent["event"]["urls"][number]) => <li key={url.link}><a className="inline-flex items-center gap-2 underline" href={url.link} target="_blank" rel="noreferrer"><ExternalLinkIcon className="size-4" />{url.description || url.link}</a></li>)}
-                </ul>
-              </div>
-            ) : null}
-            {data.dataProviderName ? <p className="text-sm text-neutral-500 md:col-span-2">Quelle: {data.dataProviderName}</p> : null}
-          </section>
-        ) : null}
-
-        {/* Price Cards */}
-        {tickets.length > 0 && (
-          <div className="space-y-4">
-            {tickets.map((ticket, index) => (
-              <PriceCard
-                key={index}
-                bookingUrl={ticket.bookingUrl}
-                prices={ticket.prices}
-                title={ticket.title}
-                flags={ticket.flags}
-                location={ticket.location}
-                autoCommitNote={ticket.autoCommitNote}
-              />
+    <section className="grid gap-6 md:grid-cols-2" aria-label="Weitere Veranstaltungsinformationen">
+      <EventParticipation data={data} />
+      {data.organizerName ? (
+        <div>
+          <h2 className="text-lg font-semibold">Veranstaltet von</h2>
+          <p className="text-neutral-700">{data.organizerName}</p>
+        </div>
+      ) : null}
+      <EventContact data={data} />
+      {data.priceInformations && data.priceInformations.length > 0 ? (
+        <div>
+          <h2 className="text-lg font-semibold">Preise</h2>
+          <ul className="mt-2 space-y-1 text-neutral-700">
+            {withContentKeys(data.priceInformations, (price) => JSON.stringify([price.name, price.amount, price.description])).map(({ item: price, key }) => (
+              <li key={key}>
+                {[price.name, formatPrice(price.amount), price.description].filter(Boolean).join(" · ")}
+              </li>
             ))}
-          </div>
-        )}
+          </ul>
+        </div>
+      ) : null}
+      {data.urls.length > 0 ? (
+        <div>
+          <h2 className="text-lg font-semibold">Weiterführende Links</h2>
+          <ul className="mt-2 space-y-2">
+            {data.urls.map((url: EventDetailContent["event"]["urls"][number]) => <li key={url.link}><a className="inline-flex items-center gap-2 underline" href={url.link} target="_blank" rel="noreferrer"><ExternalLinkIcon className="size-4" />{url.description || url.link}</a></li>)}
+          </ul>
+        </div>
+      ) : null}
+      {data.dataProviderName ? <p className="text-sm text-neutral-500 md:col-span-2">Quelle: {data.dataProviderName}</p> : null}
+    </section>
+  );
+};
+
+const EventParticipation = ({ data }: { data: DetailEvent }) => {
+  if (typeof data.registrationRequired !== "boolean" && !data.maximumAttendees) return null;
+  return (
+    <div>
+      <h2 className="text-lg font-semibold">Teilnahme</h2>
+      <div className="mt-2 space-y-1 text-neutral-700">
+        {typeof data.registrationRequired === "boolean" ? (
+          <p>{data.registrationRequired ? "Anmeldung erforderlich" : "Keine Anmeldung erforderlich"}</p>
+        ) : null}
+        {data.maximumAttendees ? <p>Maximale Teilnehmerzahl: {data.maximumAttendees}</p> : null}
       </div>
-    </DetailPageLayout>
+    </div>
+  );
+};
+
+const EventContact = ({ data }: { data: DetailEvent }) => {
+  if (!data.contact?.email && !data.contact?.phone && !data.contact?.website) return null;
+  return (
+    <div>
+      <h2 className="text-lg font-semibold">Kontakt</h2>
+      <div className="mt-2 flex flex-col items-start gap-2">
+        {data.contact?.email ? <a className="inline-flex items-center gap-2 underline" href={`mailto:${data.contact.email}`}><MailIcon className="size-4" />{data.contact.email}</a> : null}
+        {data.contact?.phone ? <a className="inline-flex items-center gap-2 underline" href={`tel:${data.contact.phone}`}><PhoneIcon className="size-4" />{data.contact.phone}</a> : null}
+        {data.contact?.website ? <a className="inline-flex items-center gap-2 underline" href={data.contact.website} target="_blank" rel="noreferrer"><ExternalLinkIcon className="size-4" />Website</a> : null}
+      </div>
+    </div>
   );
 };

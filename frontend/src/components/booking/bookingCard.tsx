@@ -39,7 +39,7 @@ export default function BookingCard({booking, columns = 'three'}: BookingCardPro
 
   const handleButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate({ to });
+    void navigate({ to });
   };
 
   return (

@@ -1,3 +1,4 @@
+import type { FeaturedProjectsContent, PoisContent } from "@shared/public-content/contracts";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -62,7 +63,6 @@ export const GatewayProjectsPage = ({
 
   if (!isGatewayPublicContentEnabled) return <PublicContentDisabledState />;
 
-  const featuredProjects = featuredQuery.data?.featuredProjects ?? [];
   const poiContent = poiQuery.data;
   const duplicateCategoryNames = new Map<string, number>();
   for (const category of poiContent?.categories ?? []) {
@@ -71,25 +71,12 @@ export const GatewayProjectsPage = ({
 
   return (
     <main className="w-full h-full flex flex-1 flex-col items-center gap-8 pb-8">
-      {featuredQuery.isPending ? (
-        <div className="max-w-7xl mx-auto px-4 w-full"><Skeleton className="h-80 w-full rounded-lg" /></div>
-      ) : featuredQuery.error && !featuredQuery.data ? (
-        <div className="max-w-7xl mx-auto px-4 w-full">
-          <PublicContentErrorState error={featuredQuery.error} onRetry={() => void featuredQuery.refetch()} />
-        </div>
-      ) : featuredProjects.length > 0 ? (
-        <FeaturedCarousel
-          slides={featuredProjects.map((project) => ({
-            id: project.id,
-            image: project.imageUrl ?? "",
-            icon: "/images/guben-logo.jpg",
-            iconColor: "66a120",
-            title: project.title,
-            description: stripHtml(project.description),
-            link: `/projects/${project.id}`,
-          }))}
-        />
-      ) : null}
+      <FeaturedProjectsSection
+        isPending={featuredQuery.isPending}
+        error={featuredQuery.error}
+        data={featuredQuery.data}
+        onRetry={() => void featuredQuery.refetch()}
+      />
 
       <section aria-label={t("PoiFilters")} className="max-w-7xl mx-auto px-4 w-full">
         <div className="rounded-lg bg-gubenAccent p-4 text-gubenAccent-foreground shadow-md">
@@ -116,11 +103,7 @@ export const GatewayProjectsPage = ({
               <Label className="text-gubenAccent-foreground">{t("PoiCategories")}</Label>
               <MultiComboBox
                 options={(poiContent?.categories ?? []).map((category) => ({
-                  label: category.parentName
-                    ? `${category.parentName} / ${category.name}`
-                    : duplicateCategoryNames.get(category.name)! > 1
-                      ? `${category.name} (${category.id})`
-                      : category.name,
+                  label: categoryLabel(category, duplicateCategoryNames),
                   value: category.id,
                 }))}
                 defaultValues={search.categoryIds}
@@ -173,18 +156,51 @@ export const GatewayProjectsPage = ({
             pageSize={search.pageSize}
             page={search.page}
           >
-            {poiQuery.isPending && !poiContent ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">{Array.from({ length: search.pageSize }).map((_, index) => <Skeleton key={index} className="h-72 rounded-lg" />)}</div>
-            ) : poiContent && poiContent.results.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 auto-rows-fr sm:grid-cols-3">
-                {poiContent.results.map((poi) => <PoiCard key={poi.id} poi={poi} />)}
-              </div>
-            ) : (
-              <p className="py-8 text-center text-gray-500">{t("PoiEmpty")}</p>
-            )}
+            <PoiResults isPending={poiQuery.isPending} content={poiContent} pageSize={search.pageSize} emptyLabel={t("PoiEmpty")} />
           </PaginationContainer>
         )}
       </section>
     </main>
   );
+};
+
+
+const categoryLabel = (category: { id: string; name: string; parentName?: string | null }, duplicateNames: Map<string, number>) => {
+  if (category.parentName) return `${category.parentName} / ${category.name}`;
+  if ((duplicateNames.get(category.name) ?? 0) > 1) return `${category.name} (${category.id})`;
+  return category.name;
+};
+
+const FeaturedProjectsSection = ({ isPending, error, data, onRetry }: {
+  isPending: boolean;
+  error: unknown;
+  data?: FeaturedProjectsContent;
+  onRetry: () => void;
+}) => {
+  if (isPending) return <div className="max-w-7xl mx-auto px-4 w-full"><Skeleton className="h-80 w-full rounded-lg" /></div>;
+  if (error && !data) return <div className="max-w-7xl mx-auto px-4 w-full"><PublicContentErrorState error={error} onRetry={onRetry} /></div>;
+  if (!data?.featuredProjects.length) return null;
+  return <FeaturedCarousel slides={data.featuredProjects.map((project) => ({
+    id: project.id,
+    image: project.imageUrl ?? "",
+    icon: "/images/guben-logo.jpg",
+    iconColor: "66a120",
+    title: project.title,
+    description: stripHtml(project.description),
+    link: `/projects/${project.id}`,
+  }))} />;
+};
+
+const PoiResults = ({ isPending, content, pageSize, emptyLabel }: {
+  isPending: boolean;
+  content?: PoisContent;
+  pageSize: number;
+  emptyLabel: string;
+}) => {
+  if (isPending && !content) {
+    const slots = Array.from({ length: pageSize }, (_, slot) => `poi-loading-slot-${slot}`);
+    return <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">{slots.map((slot) => <Skeleton key={slot} className="h-72 rounded-lg" />)}</div>;
+  }
+  if (content && content.results.length > 0) return <div className="grid grid-cols-1 gap-4 auto-rows-fr sm:grid-cols-3">{content.results.map((poi) => <PoiCard key={poi.id} poi={poi} />)}</div>;
+  return <p className="py-8 text-center text-gray-500">{emptyLabel}</p>;
 };

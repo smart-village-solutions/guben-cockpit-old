@@ -54,6 +54,20 @@ export const GenericCard = ({
   className,
   isLoading = false,
 }: GenericCardProps) => {
+  let imageContent: ReactNode = null;
+  if (customImageElement) {
+    imageContent = customImageElement;
+  } else if (imageUrl) {
+    imageContent = (
+      <BaseImgTag
+        src={imageUrl}
+        alt={imageAlt || title}
+        className="w-full h-full object-contain"
+        loading="lazy"
+      />
+    );
+  }
+
   return (
     <Card
       onClick={onClick}
@@ -64,20 +78,11 @@ export const GenericCard = ({
       )}
     >
       {/* Image Section */}
-      {customImageElement ? (
+      {imageContent && (
         <div className="w-full h-48 bg-[#808080] overflow-hidden flex shrink-0 items-center justify-center rounded-t-lg">
-          {customImageElement}
+          {imageContent}
         </div>
-      ) : imageUrl ? (
-        <div className="w-full h-48 bg-[#808080] overflow-hidden flex shrink-0 items-center justify-center rounded-t-lg">
-          <BaseImgTag
-            src={imageUrl}
-            alt={imageAlt || title}
-            className="w-full h-full object-contain"
-            loading="lazy"
-          />
-        </div>
-      ) : null}
+      )}
 
       {/* Content Section */}
       <div className="flex flex-col flex-1 p-4">

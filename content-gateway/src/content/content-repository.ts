@@ -35,33 +35,38 @@ import { PostgrestContentRepository as PostgrestRepository } from "./postgrest-c
 export type { EventFilters, PublicContentRepository } from "./content-repository-contract.js";
 export { SmartVillagePostgrestContentRepository } from "./smart-village-postgrest-content-repository.js";
 
+// Parse inside the promise so invalid mock data rejects through the repository contract.
 export class MockContentRepository implements PublicContentRepository {
-  public async getHome(): Promise<HomeContent> {
-    return homeContentSchema.parse(mockHomeContent);
+  public getHome(): Promise<HomeContent> {
+    return Promise.resolve().then(() => homeContentSchema.parse(mockHomeContent));
   }
 
-  public async getProjects(): Promise<ProjectsContent> {
-    return projectsContentSchema.parse(mockProjectsContent);
+  public getProjects(): Promise<ProjectsContent> {
+    return Promise.resolve().then(() => projectsContentSchema.parse(mockProjectsContent));
   }
 
-  public async getFeaturedProjects(): Promise<FeaturedProjectsContent> {
-    const projects = projectsContentSchema.parse(mockProjectsContent);
-    return featuredProjectsContentSchema.parse({
-      page: projects.page,
-      featuredProjects: projects.featuredProjects,
-      seo: projects.seo,
+  public getFeaturedProjects(): Promise<FeaturedProjectsContent> {
+    return Promise.resolve().then(() => {
+      const projects = projectsContentSchema.parse(mockProjectsContent);
+      return featuredProjectsContentSchema.parse({
+        page: projects.page,
+        featuredProjects: projects.featuredProjects,
+        seo: projects.seo,
+      });
     });
   }
 
-  public async getFeaturedProjectById(_language: string, id: string): Promise<FeaturedProjectDetailContent> {
-    const projects = projectsContentSchema.parse(mockProjectsContent);
-    const project = projects.featuredProjects.find((entry) => entry.id === id);
-    if (!project) throw new Error("Mock Featured Project not found");
-    return featuredProjectDetailContentSchema.parse({ project, seo: projects.seo });
+  public getFeaturedProjectById(_language: string, id: string): Promise<FeaturedProjectDetailContent> {
+    return Promise.resolve().then(() => {
+      const projects = projectsContentSchema.parse(mockProjectsContent);
+      const project = projects.featuredProjects.find((entry) => entry.id === id);
+      if (!project) throw new Error("Mock Featured Project not found");
+      return featuredProjectDetailContentSchema.parse({ project, seo: projects.seo });
+    });
   }
 
-  public async getPois(_language: string, filters: PoiFilters): Promise<PoisContent> {
-    return {
+  public getPois(_language: string, filters: PoiFilters): Promise<PoisContent> {
+    return Promise.resolve({
       pageNumber: filters.pageNumber,
       pageSize: filters.pageSize,
       totalCount: 0,
@@ -69,45 +74,47 @@ export class MockContentRepository implements PublicContentRepository {
       results: [],
       categories: [],
       locations: [],
-    };
-  }
-
-  public async getPoiById(): Promise<PoiDetailContent> {
-    throw new Error("Mock POI not found");
-  }
-
-  public async getPublicContent(): Promise<PublicContentBundle> {
-    return publicContentBundleSchema.parse(mockPublicContentBundle);
-  }
-
-  public async getEvents(): Promise<EventsContent> {
-    return eventsContentSchema.parse(mockEventsContent);
-  }
-
-  public async getEventById(): Promise<EventDetailContent> {
-    return eventDetailContentSchema.parse(mockEventDetail);
-  }
-
-  public async getDashboard(): Promise<DashboardContent> {
-    return dashboardContentSchema.parse(mockDashboardContent);
-  }
-
-  public async getMap(): Promise<MapContent> {
-    return mapContentSchema.parse(mockMapContent);
-  }
-
-  public async getFooter(): Promise<FooterContent> {
-    return footerContentSchema.parse(mockFooterContent);
-  }
-
-  public async getBookingTenants(): Promise<BookingTenantsContent> {
-    return bookingTenantsContentSchema.parse({
-      tenants: mockEventsContent.events.bookingTenants,
     });
   }
 
-  public async getBookingFaqs(): Promise<BookingFaqsContent> {
-    return bookingFaqsContentSchema.parse({ items: [] });
+  public getPoiById(): Promise<PoiDetailContent> {
+    return Promise.reject(new Error("Mock POI not found"));
+  }
+
+  public getPublicContent(): Promise<PublicContentBundle> {
+    return Promise.resolve().then(() => publicContentBundleSchema.parse(mockPublicContentBundle));
+  }
+
+  public getEvents(): Promise<EventsContent> {
+    return Promise.resolve().then(() => eventsContentSchema.parse(mockEventsContent));
+  }
+
+  public getEventById(): Promise<EventDetailContent> {
+    return Promise.resolve().then(() => eventDetailContentSchema.parse(mockEventDetail));
+  }
+
+  public getDashboard(): Promise<DashboardContent> {
+    return Promise.resolve().then(() => dashboardContentSchema.parse(mockDashboardContent));
+  }
+
+  public getMap(): Promise<MapContent> {
+    return Promise.resolve().then(() => mapContentSchema.parse(mockMapContent));
+  }
+
+  public getFooter(): Promise<FooterContent> {
+    return Promise.resolve().then(() => footerContentSchema.parse(mockFooterContent));
+  }
+
+  public getBookingTenants(): Promise<BookingTenantsContent> {
+    return Promise.resolve().then(() => {
+      return bookingTenantsContentSchema.parse({
+        tenants: mockEventsContent.events.bookingTenants,
+      });
+    });
+  }
+
+  public getBookingFaqs(): Promise<BookingFaqsContent> {
+    return Promise.resolve().then(() => bookingFaqsContentSchema.parse({ items: [] }));
   }
 }
 

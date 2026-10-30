@@ -48,13 +48,13 @@ export function App() {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     if (!isLocalhost && import.meta.env.VITE_MATOMO_JS) {
-      var _mtm = window._mtm = window._mtm || [];
+      const _mtm = window._mtm = window._mtm || [];
       _mtm.push({
         'mtm.startTime': (new Date().getTime()),
         'event': 'mtm.Start'
       });
 
-      var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+      const d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
       g.async = true;
       g.src = import.meta.env.VITE_MATOMO_JS;
 

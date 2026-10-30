@@ -26,11 +26,9 @@ const optionalLocation = (value: unknown) =>
   optionalText(value)?.normalize("NFKC").replace(/\s+/g, " ").toLocaleLowerCase("de");
 
 export const validateProjectsSearch = (search: Record<string, unknown>): ProjectsSearch => {
-  const rawCategories = Array.isArray(search.categoryIds)
-    ? search.categoryIds
-    : typeof search.categoryIds === "string"
-      ? search.categoryIds.split(",")
-      : [];
+  let rawCategories: unknown[] = [];
+  if (Array.isArray(search.categoryIds)) rawCategories = search.categoryIds;
+  else if (typeof search.categoryIds === "string") rawCategories = search.categoryIds.split(",");
   const categoryIds = Array.from(new Set(rawCategories.map(String).map((value) => value.trim()).filter(Boolean)));
   const radiusNumber = Number(search.radius);
   const radius = [1, 5, 10, 20, 30, 40].includes(radiusNumber) ? radiusNumber : undefined;

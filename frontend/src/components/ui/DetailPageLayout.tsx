@@ -43,21 +43,26 @@ export const DetailPageLayout = ({
 }: DetailPageLayoutProps) => {
   const fallbackHeroAlt = typeof title === "string" ? title : "Detailbild";
 
+  let navigation: ReactNode = null;
+  if (breadcrumbItems) {
+    navigation = <Breadcrumb items={breadcrumbItems} />;
+  } else if (onBack) {
+    navigation = (
+      <div className="max-w-7xl mx-auto px-4 w-full pt-4 pb-2">
+        <button
+          onClick={onBack}
+          className="text-gubenAccent hover:underline flex items-center gap-1 text-sm font-medium"
+        >
+          ← {backLabel}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <main className={cn("relative w-full", className)}>
       {/* Breadcrumb Navigation */}
-      {breadcrumbItems ? (
-        <Breadcrumb items={breadcrumbItems} />
-      ) : onBack ? (
-        <div className="max-w-7xl mx-auto px-4 w-full pt-4 pb-2">
-          <button
-            onClick={onBack}
-            className="text-gubenAccent hover:underline flex items-center gap-1 text-sm font-medium"
-          >
-            ← {backLabel}
-          </button>
-        </div>
-      ) : null}
+      {navigation}
 
       {/* Content Section */}
       <section className="max-w-7xl mx-auto px-4 w-full space-y-8">

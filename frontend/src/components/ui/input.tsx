@@ -9,7 +9,7 @@ export const isValidFloatInput = (value: string) => {
   let index = 0;
   let seenDecimalPoint = false;
 
-  if (value[0] === "-") {
+  if (value.startsWith("-")) {
     if (value.length === 1) {
       return true;
     }
