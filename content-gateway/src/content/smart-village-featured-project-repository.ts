@@ -105,8 +105,7 @@ export const fromPublicFeaturedProjectId = (id: string) => {
 export class SmartVillageFeaturedProjectRepository {
   public constructor(private readonly options: Options) {}
 
-  public async getFeaturedProjects(language: string): Promise<Project[]> {
-    void language;
+  public async getFeaturedProjects(_language: string): Promise<Project[]> {
     const response = await requestCached(this.options.client, {
       contractId: "featured-projects.collection.v1",
       query: FEATURED_PROJECTS_QUERY,
@@ -118,8 +117,7 @@ export class SmartVillageFeaturedProjectRepository {
     return response.genericItems.flatMap((item) => this.mapItemOrWarn(item));
   }
 
-  public async getFeaturedProjectById(language: string, publicId: string): Promise<FeaturedProjectDetailContent> {
-    void language;
+  public async getFeaturedProjectById(_language: string, publicId: string): Promise<FeaturedProjectDetailContent> {
     const normalizedId = nonEmpty(publicId);
     if (!normalizedId) throw notFoundError();
     const internalId = fromPublicFeaturedProjectId(normalizedId);

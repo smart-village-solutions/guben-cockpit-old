@@ -13,6 +13,39 @@ type EventIntegrationProps = {
   onDone?: () => void;
 };
 
+const parseTicket = (ticketEl: Element): Ticket => {
+  let ticketDescription = "";
+  const descriptionElement = ticketEl.querySelector(".description");
+  if (descriptionElement) {
+    let currentElement = descriptionElement.nextElementSibling;
+    const paragraphs: string[] = [];
+
+    while (currentElement && currentElement.tagName === "P" && !currentElement.classList.length && currentElement.textContent?.trim() !== "") {
+      paragraphs.push(currentElement.outerHTML);
+      currentElement = currentElement.nextElementSibling;
+    }
+
+    ticketDescription = [descriptionElement.outerHTML, ...paragraphs].join("\n");
+  }
+
+  return {
+    title: ticketEl.querySelector("h4")?.textContent?.trim() || "",
+    description: ticketDescription,
+    location: ticketEl.querySelector(".location")?.textContent?.trim() || "",
+    type: ticketEl.querySelector(".type")?.textContent?.trim() || "",
+    flags: Array.from(ticketEl.querySelectorAll(".flag")).map(f => f.textContent?.trim() || ""),
+    autoCommitNote: ticketEl.querySelector(".autoCommitBooking")?.textContent?.trim() || "",
+    prices: Array.from(ticketEl.querySelectorAll(".price-category-list li")).map(li => ({
+      price: li.querySelector(".price-category-item-price")?.textContent?.trim() || "",
+      interval: li.querySelector(".price-category-interval")?.textContent?.trim() || "",
+      category: li.querySelector(".price-category")?.textContent?.trim() || ""
+    })),
+    bookingUrl: ticketEl.querySelector("a.btn-booking")?.getAttribute("href") || "",
+    bkid: ticketEl.querySelector("a.btn-detail")?.getAttribute("href") || "",
+    imgUrl: ticketEl.querySelector("img")?.getAttribute("src") || "/images/guben-city-booking-card-placeholder.png",
+  };
+};
+
 export default function EventIntegration({ tenantId, setLoading, onDone }: EventIntegrationProps) {
   const addEvent = useEventStore((state) => state.addEvents);
 
@@ -84,38 +117,7 @@ export default function EventIntegration({ tenantId, setLoading, onDone }: Event
 
               const ticketElements = eventDiv?.querySelectorAll(".related-tickets .booking-manager-list li.bt-ticket") ?? [];
 
-              const tickets: Ticket[] = Array.from(ticketElements).map(ticketEl => {
-                let ticketDescription = "";
-                const descriptionElement = ticketEl.querySelector(".description");
-                if (descriptionElement) {
-                  let currentElement = descriptionElement.nextElementSibling;
-                  const paragraphs: string[] = [];
-
-                  while (currentElement && currentElement.tagName === "P" && !currentElement.classList.length && currentElement.textContent?.trim() !== "") {
-                    paragraphs.push(currentElement.outerHTML);
-                    currentElement = currentElement.nextElementSibling;
-                  }
-
-                  ticketDescription = [descriptionElement.outerHTML, ...paragraphs].join("\n");
-                }
-
-                return {
-                  title: ticketEl.querySelector("h4")?.textContent?.trim() || "",
-                  description: ticketDescription,
-                  location: ticketEl.querySelector(".location")?.textContent?.trim() || "",
-                  type: ticketEl.querySelector(".type")?.textContent?.trim() || "",
-                  flags: Array.from(ticketEl.querySelectorAll(".flag")).map(f => f.textContent?.trim() || ""),
-                  autoCommitNote: ticketEl.querySelector(".autoCommitBooking")?.textContent?.trim() || "",
-                  prices: Array.from(ticketEl.querySelectorAll(".price-category-list li")).map(li => ({
-                    price: li.querySelector(".price-category-item-price")?.textContent?.trim() || "",
-                    interval: li.querySelector(".price-category-interval")?.textContent?.trim() || "",
-                    category: li.querySelector(".price-category")?.textContent?.trim() || ""
-                  })),
-                  bookingUrl: ticketEl.querySelector("a.btn-booking")?.getAttribute("href") || "",
-                  bkid: ticketEl.querySelector("a.btn-detail")?.getAttribute("href") || "",
-                  imgUrl: ticketEl.querySelector("img")?.getAttribute("src") || "/images/guben-city-booking-card-placeholder.png",
-                };
-              });
+              const tickets: Ticket[] = Array.from(ticketElements).map(parseTicket);
               const street = eventDiv?.querySelector(".event-location .street")?.textContent?.trim() || "";
               const houseNumber = eventDiv?.querySelector(".event-location .houseNumber")?.textContent?.trim() || "";
               const fullAddress = street? `${street} ${houseNumber}` : "";
@@ -155,7 +157,7 @@ export default function EventIntegration({ tenantId, setLoading, onDone }: Event
       }
     };
 
-    fetchEvents();
+    void fetchEvents();
   }, [tenantId]);
 
   return null;

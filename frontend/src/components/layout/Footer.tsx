@@ -46,14 +46,14 @@ const GatewayFooter = () => {
         {
           isPending
             ? <LoadingIndicator/>
-            : footerItemResponse?.items?.map((item: FooterItem, index: number) => (
-              <li key={index}>
+            : footerItemResponse?.items?.map((item: FooterItem) => (
+              <li key={item.id}>
                 <FooterItemDialog footerItem={item}/>
               </li>
             ))
         }
-        {footerLinks.map((link, index) => (
-          <li key={`footer-link-${index}`}>
+        {footerLinks.map((link) => (
+          <li key={link.url}>
             <a
               href={link.url}
               target="_blank"

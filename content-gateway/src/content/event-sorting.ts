@@ -13,9 +13,13 @@ const titleCollator = new Intl.Collator("de", {
 });
 const titleKey = (title: string) => title.normalize("NFKC").replace(/^[\p{P}\s]+/u, "");
 
-export const compareEventTitles = (left: Event, right: Event): number =>
-  titleCollator.compare(titleKey(left.title), titleKey(right.title)) ||
-  (left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+export const compareEventTitles = (left: Event, right: Event): number => {
+  const titleOrder = titleCollator.compare(titleKey(left.title), titleKey(right.title));
+  if (titleOrder !== 0) return titleOrder;
+  if (left.id < right.id) return -1;
+  if (left.id > right.id) return 1;
+  return 0;
+};
 
 // Occurrence IDs include date/time; distinct occurrences and equal titles survive.
 // Keep the first matching occurrence after filtering, before sort and pagination.

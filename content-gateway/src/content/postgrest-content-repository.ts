@@ -67,8 +67,8 @@ export class PostgrestContentRepository {
     });
   }
 
-  public async getBookingFaqs(): Promise<BookingFaqsContent> {
-    return { items: [] };
+  public getBookingFaqs(): Promise<BookingFaqsContent> {
+    return Promise.resolve({ items: [] });
   }
 
   public async getProjects(

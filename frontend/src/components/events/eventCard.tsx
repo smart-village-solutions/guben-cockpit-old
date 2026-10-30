@@ -5,7 +5,6 @@ import { CaretLeftIcon, CaretRightIcon } from "@radix-ui/react-icons";
 import { Link } from "@tanstack/react-router";
 import { ClockIcon, MapPinIcon } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import sanitizeHtml from "sanitize-html";
 import { formatEventDateRange } from "@/utilities/eventDateRange";
 import { formatEventLocation } from "@/utilities/location";
@@ -71,26 +70,28 @@ const EventImageCarousel = ({ event, selectedImage, onSelectImage }: EventImageC
   ) : null;
 };
 
+function renderEventDescription(event: Event, bookingEvent: boolean) {
+  if (bookingEvent) return <TranslatedHtml className="text-sm text-gray-600 line-clamp-3" text={event.description} />;
+  if (containsHtmlMarkup(event.description)) return sanitizeHtml(event.description);
+  return <p className="text-sm text-gray-600 line-clamp-3">{event.description}</p>;
+}
+
+function formatEventPrice(amount: number | null | undefined) {
+  if (amount === 0) return "Kostenlos";
+  if (typeof amount === "number") return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(amount);
+  return null;
+}
+
 function EventCard({ event }: EventCardProps) {
   const bookingEvent = isBookingEvent(event);
   const [selectedImage, setSelectedImage] = useState(0);
-  const { t } = useTranslation("common");
 
   const categoryTags = event.categories.map((c) => ({
     id: c.id,
     name: c.name,
   }));
 
-  const description = bookingEvent ? (
-    <TranslatedHtml
-      className="text-sm text-gray-600 line-clamp-3"
-      text={event.description}
-    />
-  ) : containsHtmlMarkup(event.description) ? (
-    sanitizeHtml(event.description)
-  ) : (
-    <p className="text-sm text-gray-600 line-clamp-3">{event.description}</p>
-  );
+  const description = renderEventDescription(event, bookingEvent);
 
   const [startDate, endDate] = useMemo(
     () => [new Date(event.startDate), new Date(event.endDate)],
@@ -100,11 +101,7 @@ function EventCard({ event }: EventCardProps) {
   const priceLabel = firstPrice
     ? [
         firstPrice.name,
-        firstPrice.amount === 0
-          ? "Kostenlos"
-          : typeof firstPrice.amount === "number"
-            ? `${new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(firstPrice.amount)}`
-            : null,
+        formatEventPrice(firstPrice.amount),
       ].filter(Boolean).join(" · ")
     : null;
 

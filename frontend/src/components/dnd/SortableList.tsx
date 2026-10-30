@@ -109,18 +109,16 @@ export function SortableList<T>({
     });
   };
 
+  let modifiers: React.ComponentProps<typeof DndContext>["modifiers"] = [];
+  if (axis === "x") modifiers = [restrictToHorizontalAxis];
+  if (axis === "y") modifiers = [restrictToVerticalAxis];
+
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
-      modifiers={
-        axis === "x"
-          ? [restrictToHorizontalAxis]
-          : axis === "y"
-            ? [restrictToVerticalAxis]
-            : []
-      }
+      modifiers={modifiers}
     >
       <SortableContext
         items={orderedIds}

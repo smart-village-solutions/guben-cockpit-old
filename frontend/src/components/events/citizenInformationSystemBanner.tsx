@@ -13,9 +13,7 @@ export default function CitizenInformationSystemBanner() {
         <MessageSquareWarningIcon className="mt-0.5 shrink-0" />
         <p>{t("CitizenInformationText")}</p>
         <Dialog>
-          <DialogTrigger>
-            <a className={"underline"}>{t("ClickHere")}</a>
-          </DialogTrigger>
+          <DialogTrigger className="underline">{t("ClickHere")}</DialogTrigger>
           <DialogContent className="w-5/6 max-w-full h-5/6 p-1 pt-12">
             <VisuallyHidden>
               <DialogTitle>Bürgerbeteiligungssystem</DialogTitle>

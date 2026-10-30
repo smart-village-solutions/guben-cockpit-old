@@ -66,8 +66,8 @@ export default function BookingRoom() {
         />
         <BookingDivider text={t("our_rooms")} />
         <div id="rooms" className="flex flex-wrap">
-          {rooms?.map((room, index) => (
-            <BookingCard key={index} booking={room} />
+          {rooms?.map((room) => (
+            <BookingCard key={`${room.tenantId}:${room.bkid}`} booking={room} />
           ))}
         </div>
       </div>

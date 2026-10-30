@@ -18,7 +18,7 @@ const loadLocaleModule = async (language: string, namespace: string) => {
   return module.default;
 };
 
-i18next
+void i18next
   .use(initReactI18next)
   .use(LanguageDetector)
   .use(resourcesToBackend(loadLocaleModule))

@@ -32,23 +32,29 @@ const TableBody = React.forwardRef<
 >(({ className, data, isLoading, children, ...props }, ref) => {
   const {t} = useTranslation();
   const isEmpty = data?.length === 0;
+  let statusRow: React.ReactNode = null;
+  if (isEmpty) {
+    statusRow = (
+      <TableRow>
+        <TableCell colSpan={100} className="text-center text-muted-foreground">
+          {t("NoResults")}
+        </TableCell>
+      </TableRow>
+    );
+  } else if (isLoading) {
+    statusRow = (
+      <TableRow key="loading">
+        <TableCell className="font-medium"><LoadingIndicator /></TableCell>
+      </TableRow>
+    );
+  }
   return (
     <tbody
       ref={ref}
       className={cn("[&_tr:last-child]:border-0", className)}
       {...props}
     >
-    {isEmpty ? (
-      <TableRow>
-        <TableCell colSpan={100} className="text-center text-muted-foreground">
-          {t("NoResults")}
-        </TableCell>
-      </TableRow>
-    ) : isLoading ? (
-      <TableRow key={"loading"}>
-        <TableCell className="font-medium"><LoadingIndicator/></TableCell>
-      </TableRow>
-    ) : null}
+    {statusRow}
 
     {children}
 

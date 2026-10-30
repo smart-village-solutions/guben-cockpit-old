@@ -1,3 +1,4 @@
+import { withContentKeys } from "@/utilities/contentKeys";
 import { CircleCheckIcon } from "lucide-react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
@@ -95,8 +96,8 @@ export default function ({
                     {prices.length > 1 && price && <p className="font-semibold">{price}</p>}
                     <h3 className="font-semibold">{t("priceCard.priceInfo")}</h3>
                     <dl className="space-y-1">
-                      {prices.map((p, idx) => (
-                        <div key={idx} className="flex justify-between gap-4">
+                      {withContentKeys(prices, (p) => JSON.stringify([p.interval, p.category, p.price])).map(({ item: p, key }) => (
+                        <div key={key} className="flex justify-between gap-4">
                           <dt>{[p.interval, p.category].filter(Boolean).join(" - ") || t("priceCard.price")}</dt>
                           <dd className="text-right whitespace-nowrap">{p.price}</dd>
                         </div>

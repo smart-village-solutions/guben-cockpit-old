@@ -5,7 +5,6 @@ import sanitizeHtml from "sanitize-html";
 import { BaseImgTag } from "../ui/BaseImgTag";
 import { DialogHeader } from "../ui/dialog";
 import { cn } from "@/lib/utils";
-import { Image, ImageCarousel } from "../Images/ImageCarousel";
 
 interface IProps {
   project: Project;
@@ -15,7 +14,6 @@ interface IProps {
 }
 
 export default function ProjectDialog({ project, children, className }: IProps) {
-  const imageObjects: Image[] = [];
 
   return (
     <>
@@ -39,21 +37,7 @@ export default function ProjectDialog({ project, children, className }: IProps) 
           <DialogHeader className="gap-4">
             <DialogTitle className="text-4xl">{project.title}</DialogTitle>
 
-            {imageObjects?.length > 0 ? (
-              <div className="max-w-[768px] w-full mx-auto">
-                <ImageCarousel
-                  images={[
-                    ...(project.imageUrl
-                      ? [{
-                        filename: project.imageUrl,
-                        external: true
-                      }]
-                      : []),
-                    ...imageObjects,
-                  ]}
-                />
-              </div>
-            ) : project.imageUrl ? (
+            {project.imageUrl ? (
               <div className="flex flex-col max-w-[512px] rounded-lg overflow-hidden">
                 <BaseImgTag
                   className="w-full"

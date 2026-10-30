@@ -88,6 +88,17 @@ export const normalizeBookingEvent = (event: BookingEvent): BookingCalendarEvent
   } as BookingCalendarEvent;
 };
 
+const matchesBookingDistance = (event: BookingCalendarEvent, radius?: number) => {
+  if (!radius || radius <= 0) return true;
+  if (!event.coordinates?.latitude || !event.coordinates?.longitude) return false;
+  return calculateDistanceInKm(
+    GUBEN_COORDINATES.latitude,
+    GUBEN_COORDINATES.longitude,
+    event.coordinates.latitude,
+    event.coordinates.longitude,
+  ) <= radius;
+};
+
 export const filterBookingEvents = (
   events: BookingCalendarEvent[],
   activeFilters: EventPageFilters,
@@ -101,21 +112,7 @@ export const filterBookingEvents = (
       return false;
     }
 
-    if (activeFilters.distance && activeFilters.distance > 0) {
-      if (!event.coordinates?.latitude || !event.coordinates?.longitude) {
-        return false;
-      }
-
-      const distance = calculateDistanceInKm(
-        GUBEN_COORDINATES.latitude,
-        GUBEN_COORDINATES.longitude,
-        event.coordinates.latitude,
-        event.coordinates.longitude,
-      );
-      if (distance > activeFilters.distance) {
-        return false;
-      }
-    }
+    if (!matchesBookingDistance(event, activeFilters.distance)) return false;
 
     if (activeFilters.dateRange?.from || activeFilters.dateRange?.to) {
       const eventStart = new Date(event.startDate);

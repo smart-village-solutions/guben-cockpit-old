@@ -26,7 +26,7 @@ const createSmartVillageWarnHook = () => (message: string, context: Record<strin
   app?.log.warn(context, message);
 };
 
-const mockReadinessProbe = async () => ({
+const mockReadinessProbe = () => Promise.resolve({
   ready: true,
   checks: {},
 });

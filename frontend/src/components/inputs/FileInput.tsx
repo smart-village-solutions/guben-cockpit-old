@@ -2,6 +2,17 @@ import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+const fileKeys = new WeakMap<File, string>();
+
+function getFileKey(file: File): string {
+  let key = fileKeys.get(file);
+  if (!key) {
+    key = crypto.randomUUID();
+    fileKeys.set(file, key);
+  }
+  return key;
+}
+
 interface IProps {
   files: File[];
   setFiles: (files: File[]) => void;
@@ -17,7 +28,7 @@ export function FileInput({ files, setFiles, images }: IProps) {
   return (
     <div className="flex flex-col gap-2">
       {files.map((file, index) => (
-        <div key={index} className="flex gap-2 items-center">
+        <div key={getFileKey(file)} className="flex gap-2 items-center">
           <Input
             className="min-w-20 max-w-56"
             value={file.name}

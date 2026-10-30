@@ -9,9 +9,8 @@ import { cn } from "@/lib/utils";
 import { ButtonProps, buttonVariants } from "@/components/ui/button"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "./select"
 
-const Pagination = ({ className, ...props }: React.ComponentProps<"div">) => (
-  <div
-    role="navigation"
+const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
+  <nav
     aria-label="pagination"
     className={cn("mx-auto flex w-full justify-end p-2 gap-2", className)}
     {...props}

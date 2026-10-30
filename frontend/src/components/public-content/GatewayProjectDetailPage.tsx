@@ -1,3 +1,5 @@
+import { withContentKeys } from "@/utilities/contentKeys";
+import type { FeaturedProjectDetailContent, PoiDetailContent } from "@shared/public-content/contracts";
 import { useNavigate } from "@tanstack/react-router";
 import sanitizeHtml from "sanitize-html";
 
@@ -15,7 +17,6 @@ import { PublicContentErrorState } from "./PublicContentErrorState";
 const safeHtml = (value: string) => ({ __html: sanitizeHtml(value) });
 
 export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) => {
-  const navigate = useNavigate();
   const query = useGatewayProjectDetailContent(projectId);
   useRouteMetadata(query.data?.seo);
 
@@ -23,50 +24,57 @@ export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) =
   if (query.isPending && !query.data) return <div className="max-w-7xl mx-auto px-4"><Skeleton className="h-96 w-full rounded-lg" /></div>;
   if (query.error || !query.data) return <PublicContentErrorState error={query.error} onRetry={() => void query.refetch()} />;
 
-  if (query.data.kind === "featured") {
-    const project = query.data.project;
-    const hasDescription = !isNullOrUndefinedOrWhiteSpace(project.description);
-    const hasFullText = !isNullOrUndefinedOrWhiteSpace(project.fullText);
-    const images = project.imageUrl ? [{ src: project.imageUrl, alt: project.title }] : [];
-    return (
-      <DetailPageLayout
-        heroAlt={project.title}
-        title={project.title}
-        breadcrumbItems={[
-          { label: "Startseite", href: "/" },
-          { label: "Mein Guben", href: "/projects" },
-          { label: project.title, href: `/projects/${projectId}` },
-        ]}
-        onBack={() => navigate({ to: "/projects", search: { categoryIds: [], sort: "name", direction: "asc", page: 1, pageSize: 12 } })}
-        backLabel="Zurück zu Projekten"
-      >
-        <div className="space-y-8">
-          {hasDescription && (
-            <DetailMediaSection
-              heading="Übersicht"
-              body={<div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={safeHtml(project.description)} />}
-              images={images}
-            />
-          )}
-          {hasFullText && !hasDescription && images.length > 0 ? (
-            <DetailMediaSection
-              heading="Projektdetails"
-              body={<div className="prose max-w-none text-neutral-700" dangerouslySetInnerHTML={safeHtml(project.fullText)} />}
-              images={images}
-            />
-          ) : hasFullText && (
-            <section>
-              <h2 className="font-bold text-xl mb-4">Projektdetails</h2>
-              <div className="prose max-w-none text-neutral-700" dangerouslySetInnerHTML={safeHtml(project.fullText)} />
-            </section>
-          )}
-          {!hasDescription && !hasFullText && images.length > 0 && <DetailMediaSection heading={null} body={null} images={images} />}
-        </div>
-      </DetailPageLayout>
-    );
-  }
+  if (query.data.kind === "featured") return <FeaturedProjectDetail project={query.data.project} projectId={projectId} />;
+  return <PoiProjectDetail poi={query.data.poi} projectId={projectId} />;
+};
 
-  const poi = query.data.poi;
+const FeaturedProjectDetail = ({ project, projectId }: { project: FeaturedProjectDetailContent["project"]; projectId: string }) => {
+  const navigate = useNavigate();
+
+  const hasDescription = !isNullOrUndefinedOrWhiteSpace(project.description);
+  const hasFullText = !isNullOrUndefinedOrWhiteSpace(project.fullText);
+  const images = project.imageUrl ? [{ src: project.imageUrl, alt: project.title }] : [];
+  return (
+    <DetailPageLayout
+      heroAlt={project.title}
+      title={project.title}
+      breadcrumbItems={[
+        { label: "Startseite", href: "/" },
+        { label: "Mein Guben", href: "/projects" },
+        { label: project.title, href: `/projects/${projectId}` },
+      ]}
+      onBack={() => navigate({ to: "/projects", search: { categoryIds: [], sort: "name", direction: "asc", page: 1, pageSize: 12 } })}
+      backLabel="Zurück zu Projekten"
+    >
+      <div className="space-y-8">
+        {hasDescription && (
+          <DetailMediaSection
+            heading="Übersicht"
+            body={<div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={safeHtml(project.description)} />}
+            images={images}
+          />
+        )}
+        {hasFullText && !hasDescription && images.length > 0 ? (
+          <DetailMediaSection
+            heading="Projektdetails"
+            body={<div className="prose max-w-none text-neutral-700" dangerouslySetInnerHTML={safeHtml(project.fullText)} />}
+            images={images}
+          />
+        ) : hasFullText && (
+          <section>
+            <h2 className="font-bold text-xl mb-4">Projektdetails</h2>
+            <div className="prose max-w-none text-neutral-700" dangerouslySetInnerHTML={safeHtml(project.fullText)} />
+          </section>
+        )}
+        {!hasDescription && !hasFullText && images.length > 0 && <DetailMediaSection heading={null} body={null} images={images} />}
+      </div>
+    </DetailPageLayout>
+  );
+};
+
+const PoiProjectDetail = ({ poi, projectId }: { poi: PoiDetailContent["poi"]; projectId: string }) => {
+  const navigate = useNavigate();
+
   const images = poi.media.map((media) => ({ src: media.url, alt: media.description ?? poi.title }));
   const address = poi.address
     ? [[poi.address.street, poi.address.addition].filter(Boolean).join(" "), [poi.address.zip, poi.address.city].filter(Boolean).join(" ")].filter(Boolean)
@@ -118,8 +126,8 @@ export const GatewayProjectDetailPage = ({ projectId }: { projectId: string }) =
           <section>
             <h2 className="font-bold text-xl mb-3">Öffnungszeiten</h2>
             <dl className="grid gap-2 sm:grid-cols-[auto_1fr]">
-              {poi.openingHours.map((entry, index) => (
-                <div className="contents" key={`${entry.weekday ?? "day"}-${index}`}>
+              {withContentKeys(poi.openingHours, (entry) => JSON.stringify(entry)).map(({ item: entry, key }) => (
+                <div className="contents" key={key}>
                   <dt className="font-medium">{entry.weekday ?? "Zeitraum"}</dt>
                   <dd>{entry.description ?? (entry.open === false ? "Geschlossen" : [entry.timeFrom, entry.timeTo].filter(Boolean).join(" – "))}</dd>
                 </div>

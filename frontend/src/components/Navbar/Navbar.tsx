@@ -71,9 +71,10 @@ export const Navbar = () => {
   const iconStyle = "icon size-8";
   const { t } = useTranslation("navigation");
   const location = useLocation();
+  const navContext = useMemo(() => ({ location: location.pathname }), [location.pathname]);
 
   return (
-    <NavContext.Provider value={{ location: location.pathname }}>
+    <NavContext.Provider value={navContext}>
       <div className="sticky top-0 z-50 w-full overflow-hidden rounded-b bg-white shadow">
         <div className="lg:hidden">
           <div className="flex items-center justify-between gap-3 px-4 py-3">

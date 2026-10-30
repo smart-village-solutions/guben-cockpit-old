@@ -28,12 +28,8 @@ export function tryGetEnumValue<T extends HashMap<unknown>>(value: Option<string
 
   // when no value has been passed and no numeric values are present, use the first string value
   const first = enumObject[Object.keys(enumObject)[0]];
-  if (first !== null && first !== undefined) {
-    if (Number.isNaN(+first)){
-      if (Object.values(enumObject).includes(first)) {
-        return first as T[keyof T]
-      }
-    }
+  if (first !== null && first !== undefined && Number.isNaN(+first) && Object.values(enumObject).includes(first)) {
+    return first as T[keyof T];
   }
 
   //if no valid value found return the first item of the enum
