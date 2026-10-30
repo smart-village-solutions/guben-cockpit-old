@@ -356,6 +356,7 @@ export const bookingTenantsContentSchema = z.object({
 });
 
 export const bookingFaqItemSchema = z.object({
+  translationKey: z.string().min(1).optional(),
   id: z.string(),
   question: z.string(),
   answer: z.string(),

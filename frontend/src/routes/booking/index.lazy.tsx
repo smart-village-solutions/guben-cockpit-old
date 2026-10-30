@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { HouseIcon, InfoIcon, TrophyIcon } from 'lucide-react'
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useBookingStore } from '@/stores/bookingStore'
 import { useTranslation } from 'react-i18next'
 import { useGatewayBookingTenants } from '@/public-content/hooks'
@@ -81,6 +81,13 @@ export function Booking() {
 
   const [translationsReady, setTranslationsReady] = useState(false);
   const currentLang = i18next.language as Language;
+  const previousLanguage = useRef(currentLang);
+  useEffect(() => {
+    if (previousLanguage.current !== currentLang) {
+      previousLanguage.current = currentLang;
+      handleRetry();
+    }
+  }, [currentLang, handleRetry]);
 
   useEffect(() => {
     if (!shouldShowIntegration && !bookingError && currentLang !== "de" && bookables.length > 0) {
@@ -121,16 +128,16 @@ export function Booking() {
   return (
     <main className="w-full h-full flex flex-col" aria-busy={loading || !translationsReady}>
       <Breadcrumb items={[
-        { label: 'Startseite', href: '/' },
-        { label: 'Buchungen', href: '/booking' }
+        { label: t("Home", { ns: "navigation" }), href: "/" },
+        { label: t("booking"), href: "/booking" }
       ]} />
       <article className="max-w-7xl mx-auto px-4 w-full pb-5">
         <div className="flex gap-3 flex-col">
           <h1 className="text-gubenAccent font-poppins text-h1 font-bold">
-            Willkommen in der Buchungsübersicht
+            {t("overview.title")}
           </h1>
           <p className="text-base text-gray-700">
-            Herzlich willkommen auf unserer Buchungsplattform! Hier können Sie bequem und unkompliziert verschiedene Räume, Sportanlagen, Ressourcen und Events der Stadt Guben buchen. Ob für private Veranstaltungen, Vereinstreffen oder geschäftliche Aktivitäten – nutzen Sie unsere modernen Einrichtungen und Ressourcen. Durch digitale Buchungsprozesse möchten wir Ihnen Zeit sparen und die Auslastung unserer städtischen Infrastruktur optimieren. Lassen Sie uns unter dem Motto „Smarter Wandel mit Beteiligung" Guben gemeinsam gestalten und nutzen.
+            {t("overview.description")}
           </p>
         </div>
       </article>

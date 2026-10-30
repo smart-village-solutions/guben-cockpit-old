@@ -47,3 +47,14 @@ describe("gateway translation integration", () => {
     } finally { await app.close(); }
   });
 });
+
+it("fills local PostgREST gaps before mapping and localizes footer content", async () => {
+  const { PostgrestContentRepository } = await import("../src/content/postgrest-content-repository.js");
+  const repository = new PostgrestContentRepository(loadConfig({}), {
+    select: async (table: string) => table === "pages" ? [{ id: "Projects", translations: { de: { Title: "Projekte", Description: "Beschreibung" }, en: { Title: "Existing title", Description: "" } } }] : [{ id: "footer", name: "Kontakt", content: "Inhalt" }],
+  } as never, translator());
+  const metadata = await repository.getFeaturedProjectsMetadata("en");
+  expect(metadata.page.title).toBe("Existing title");
+  expect(metadata.page.description).toBe("EN Beschreibung");
+  expect((await repository.getFooter("en")).items[0]).toEqual({ id: "footer", name: "EN Kontakt", content: "EN Inhalt" });
+});

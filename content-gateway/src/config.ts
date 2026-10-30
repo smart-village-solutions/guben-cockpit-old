@@ -47,7 +47,7 @@ const createSecureUrlSchema = (
   );
 
 const baseConfigSchema = z.object({
-  TRANSLATE_URL: z.string().url().optional(),
+  TRANSLATE_URL: z.preprocess((value) => value === "" ? undefined : value, z.string().url().optional()),
   TRANSLATE_API_KEY: z.string().optional(),
   TRANSLATE_CACHE_DIR: z.string().optional(),
   TRANSLATE_TIMEOUT_MS: z.coerce.number().int().positive().optional(),

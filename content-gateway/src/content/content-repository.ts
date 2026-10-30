@@ -119,7 +119,7 @@ export class MockContentRepository implements PublicContentRepository {
 }
 
 export class PostgrestContentRepository extends PostgrestRepository {
-  public constructor(config: PostgrestConfig, client: ConstructorParameters<typeof PostgrestRepository>[1]) {
-    super(config, client);
+  public constructor(config: PostgrestConfig, client: ConstructorParameters<typeof PostgrestRepository>[1], translator?: ConstructorParameters<typeof PostgrestRepository>[2]) {
+    super(config, client, translator);
   }
 }

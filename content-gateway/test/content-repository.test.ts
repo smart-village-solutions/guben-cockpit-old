@@ -188,7 +188,7 @@ describe("content repository glue", () => {
     expect(smartVillageEventRepository.getEventById).toHaveBeenCalledWith("de", mockEventDetail.event.id);
     expect(postgrestRepository.getDashboard).toHaveBeenCalledWith("de");
     expect(postgrestRepository.getMap).toHaveBeenCalledWith("de");
-    expect(postgrestRepository.getFooter).toHaveBeenCalledWith();
+    expect(postgrestRepository.getFooter).toHaveBeenCalledWith(undefined);
     expect(postgrestRepository.getBookingTenants).toHaveBeenCalledWith();
     expect(smartVillageCockpitCardRepository.getCockpitCards).toHaveBeenCalledTimes(3);
     expect(events).toMatchObject({

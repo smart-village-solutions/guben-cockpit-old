@@ -22,7 +22,7 @@ export class AutomaticTranslator {
   public async text(text: string, language: string): Promise<string> {
     const target = language.toLowerCase().split("-")[0];
     if (!this.options.url || !["en", "pl"].includes(target) || !text.trim()) return text;
-    const key = createHash("sha256").update(JSON.stringify(["v1", this.options.url, "de", target, text])).digest("hex");
+    const key = createHash("sha256").update(JSON.stringify(["v2", this.options.url, "auto", target, text])).digest("hex");
     const cached = this.cache.get(key);
     if (cached !== undefined) return cached;
     const pending = this.pending.get(key);
@@ -56,7 +56,7 @@ export class AutomaticTranslator {
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(this.options.timeoutMs ?? 3000),
         body: JSON.stringify({
-          q: indexes.map((index) => parts[index].trim()), source: "de", target, format: "text",
+          q: indexes.map((index) => parts[index].trim()), source: "auto", target, format: "text",
           ...(this.options.apiKey ? { api_key: this.options.apiKey } : {}),
         }),
       });
@@ -84,12 +84,50 @@ export class AutomaticTranslator {
     } catch { return text; } // Failed translations are deliberately not cached.
   }
 
+  public async fillMissing<T>(source: T, target: T, language: string): Promise<T> {
+    const fill = async (original: unknown, localized: unknown, field = ""): Promise<unknown> => {
+      if (typeof original === "string" && editorialFields.has(field)) {
+        return typeof localized === "string" && localized.trim() ? localized : this.text(original, language);
+      }
+      if (original && localized && typeof original === "object" && typeof localized === "object" && !Array.isArray(original)) {
+        const result = { ...localized } as Record<string, unknown>;
+        for (const [key, value] of Object.entries(original)) result[key] = await fill(value, result[key], key);
+        return result;
+      }
+      return localized;
+    };
+    return await fill(source, target) as T;
+  }
+
+  /** Fill only missing fields in explicit language dictionaries, without changing upstream rows. */
+  public async translations<T>(value: T, language: string, fallback = "de"): Promise<T> {
+    if (!value || typeof value !== "object") return value;
+    if (Array.isArray(value)) return await Promise.all(value.map((entry) => this.translations(entry, language, fallback))) as T;
+    const entries = await Promise.all(Object.entries(value).map(async ([key, entry]) => {
+      if (["translations", "button_translations"].includes(key) && entry && typeof entry === "object") {
+        const dictionary = entry as Record<string, Record<string, unknown>>;
+        const original = dictionary[fallback] ?? {};
+        const target = { ...dictionary[language] };
+        for (const [field, text] of Object.entries(original)) {
+          const missing = target[field] == null || (typeof target[field] === "string" && !(target[field] as string).trim());
+          if (missing && typeof text === "string") {
+            target[field] = ["Title", "Description", "FullText", "ImageAlt", "ImageCaption"].includes(field)
+              ? await this.text(text, language) : text;
+          }
+        }
+        return [key, { ...dictionary, [language]: target }];
+      }
+      return [key, await this.translations(entry, language, fallback)];
+    }));
+    return Object.fromEntries(entries) as T;
+  }
+
   public async content<T>(content: T, language: string, preserveTitle = false): Promise<T> {
-    const visit = async (value: unknown, field = ""): Promise<unknown> => {
-      if (typeof value === "string") return editorialFields.has(field) && !(preserveTitle && field === "title") ? this.text(value, language) : value;
-      if (Array.isArray(value)) return Promise.all(value.map((entry) => visit(entry)));
+    const visit = async (value: unknown, field = "", parent = ""): Promise<unknown> => {
+      if (typeof value === "string") return (editorialFields.has(field) || (field === "name" && ["categories", "priceInformations"].includes(parent))) && !(preserveTitle && field === "title") ? this.text(value, language) : value;
+      if (Array.isArray(value)) return Promise.all(value.map((entry) => visit(entry, "", field)));
       if (value && typeof value === "object") {
-        const entries = await Promise.all(Object.entries(value).map(async ([key, entry]) => [key, await visit(entry, key)]));
+        const entries = await Promise.all(Object.entries(value).map(async ([key, entry]) => [key, await visit(entry, key, field || parent)]));
         return Object.fromEntries(entries);
       }
       return value;

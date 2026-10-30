@@ -41,7 +41,7 @@ describe("automatic content translation", () => {
     const translated = await translator.text(original, "pl");
     expect(translated).toBe('<p class="intro">Hello &lt;script&gt; <a href="https://guben.de">World</a>&nbsp;https://guben.de kontakt@guben.de</p>');
     const body = JSON.parse(String(fetcher.mock.calls[0][1]?.body));
-    expect(body).toMatchObject({ q: ["Hallo", "Welt"], source: "de", target: "pl", format: "text" });
+    expect(body).toMatchObject({ q: ["Hallo", "Welt"], source: "auto", target: "pl", format: "text" });
   });
 
   it("translates only editorial fields and leaves German and unsupported languages untouched", async () => {
@@ -53,5 +53,31 @@ describe("automatic content translation", () => {
     expect(await translator.content(original, "fr")).toEqual(original);
     expect(original.description).toBe("Beschreibung");
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("translation gaps", () => {
+  it("fills individual language-dictionary fields without translating existing text or link targets", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
+      const { q } = JSON.parse(String(init?.body)) as { q: string[] };
+      return response(q.map((text) => `EN ${text}`));
+    });
+    const translator = new AutomaticTranslator({ url: "https://translation.invalid/translate", fetch: fetcher });
+    const original = {
+      translations: { de: { Title: "Titel", Description: "Beschreibung", FullText: "Inhalt" }, en: { Title: "Existing title", Description: "" } },
+      button_translations: { de: { Title: "Weiter", Url: "https://guben.de" }, en: { Title: "Continue" } },
+    };
+    const result = await translator.translations(original, "en");
+    expect(result.translations.en).toEqual({ Title: "Existing title", Description: "EN Beschreibung", FullText: "EN Inhalt" });
+    expect(result.button_translations.en).toEqual({ Title: "Continue", Url: "https://guben.de" });
+    expect(original.translations.en.Description).toBe("");
+    expect(fetcher.mock.calls.map((call) => JSON.parse(String(call[1]?.body)).q)).toEqual([["Beschreibung"], ["Inhalt"]]);
+  });
+
+  it("translates category and price labels but keeps location and organizer names", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => response(JSON.parse(String(init?.body)).q.map((text: string) => `EN ${text}`)));
+    const translator = new AutomaticTranslator({ url: "https://translation.invalid/translate", fetch: fetcher });
+    const result = await translator.content({ categories: [{ id: "c", name: "Kultur" }], priceInformations: [{ name: "Erwachsene" }], location: { name: "Guben" }, organizerName: "Stadt Guben" }, "en");
+    expect(result).toEqual({ categories: [{ id: "c", name: "EN Kultur" }], priceInformations: [{ name: "EN Erwachsene" }], location: { name: "Guben" }, organizerName: "Stadt Guben" });
   });
 });

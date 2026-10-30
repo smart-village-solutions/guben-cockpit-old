@@ -1,3 +1,4 @@
+import { mergeLanguageRecords } from "../translation/merge-language-records.js";
 import { AutomaticTranslator } from "../translation/automatic-translator.js";
 import type {
   BookingFaqsContent,
@@ -115,8 +116,8 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
     return this.options.postgrestRepository.getMap(language);
   }
 
-  public getFooter(): Promise<FooterContent> {
-    return this.options.postgrestRepository.getFooter();
+  public getFooter(language?: string): Promise<FooterContent> {
+    return this.options.postgrestRepository.getFooter(language);
   }
 
   public getBookingTenants(): Promise<BookingTenantsContent> {
@@ -125,22 +126,38 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
 
   public async getBookingFaqs(language: string): Promise<BookingFaqsContent> {
     const content = await this.options.smartVillageBookingFaqRepository.getBookingFaqs(language);
-    if (content.items.length > 0 || language === "de") return content;
-    // Language-specific FAQ records have no shared translation identity: only fall back
-    // when the entire requested collection is absent, never combine unrelated records.
-    const original = await this.options.smartVillageBookingFaqRepository.getBookingFaqs("de");
-    const translated = await this.translator.content(original, language);
-    return { items: translated.items.map((item) => ({ ...item, languageCode: language })) };
+    if (language === "de") return content;
+    const original = await this.options.smartVillageBookingFaqRepository.getBookingFaqs("de").catch(() => ({ items: [] }));
+    const translate = async (item: typeof original.items[number]) => ({
+      ...await this.translator.content(item, language), languageCode: language,
+    });
+    const items = content.items.length === 0 ? await Promise.all(original.items.map(translate)) : await mergeLanguageRecords({
+      source: original.items, target: content.items, key: (item) => item.translationKey,
+      translate, fill: (source, target) => this.translator.fillMissing(source, target, language),
+    });
+    return { items: items.sort((left, right) => right.sortWeight - left.sortWeight) };
   }
 
   private async enrichDashboard(language: string, dashboard: DashboardContent): Promise<DashboardContent> {
     try {
       let cards = await this.options.smartVillageCockpitCardRepository.getCockpitCards(language);
       if (language !== "de") {
-        const original = await this.options.smartVillageCockpitCardRepository.getCockpitCards("de");
-        const translatedCategories = new Set(cards.map((entry) => entry.categoryName));
-        const missing = original.filter((entry) => !translatedCategories.has(entry.categoryName));
-        cards = [...cards, ...await this.translator.content(missing, language)];
+        const original = await this.options.smartVillageCockpitCardRepository.getCockpitCards("de").catch(() => []);
+        const key = (entry: typeof cards[number]) => entry.translationKey
+          ? `key:${entry.translationKey}` : entry.card.button?.url ? `url:${entry.categoryName}:${entry.card.button.url}` : undefined;
+        const categories = new Set(cards.map((entry) => entry.categoryName));
+        const missingCategories = original.filter((entry) => !categories.has(entry.categoryName));
+        cards = await mergeLanguageRecords({
+          source: original.filter((entry) => categories.has(entry.categoryName)), target: cards, key,
+          translate: (entry) => this.translator.content(entry, language),
+          fill: (source, target) => this.translator.fillMissing(source, target, language),
+        });
+        cards.push(...await this.translator.content(missingCategories, language));
+        // Match against canonical German tab names, then use localized labels for rendering.
+        const canonical = await this.options.postgrestRepository.getDashboard("de").catch(() => dashboard);
+        const tabTitles = new Map(dashboard.dropdowns.flatMap((dropdown) => dropdown.tabs.map((tab) => [tab.id, tab.title])));
+        const localizedCategories = new Map(canonical.dropdowns.flatMap((dropdown) => dropdown.tabs.map((tab) => [tab.title, tabTitles.get(tab.id) ?? tab.title])));
+        cards = cards.map((entry) => ({ ...entry, categoryName: localizedCategories.get(entry.categoryName) ?? entry.categoryName }));
       }
       const enriched = enrichDashboardWithCockpitCards(dashboard, cards, this.options.warn);
       if (!enriched.usedSmartVillageCards) {

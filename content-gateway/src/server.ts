@@ -38,7 +38,7 @@ const mockReadinessProbe = () => Promise.resolve({
 
 const createPostgrestMode = (postgrestConfig: PostgrestConfig) => {
   const postgrestClient = new PostgrestClient(postgrestConfig);
-  const postgrestRepository = new PostgrestContentRepository(postgrestConfig, postgrestClient);
+  const postgrestRepository = new PostgrestContentRepository(postgrestConfig, postgrestClient, translator);
   const smartVillageOAuthClient = new SmartVillageOAuthClient({
     tokenUrl: postgrestConfig.SV_OAUTH_TOKEN_URL,
     clientId: postgrestConfig.SV_CLIENT_ID,

@@ -194,12 +194,14 @@ export const useGatewayMapContent = () => {
   });
 };
 
-export const useGatewayFooterContent = () =>
-  useQuery({
-    queryKey: ["gateway-content", "footer"],
+export const useGatewayFooterContent = () => {
+  const language = useContentLanguage();
+  return useQuery({
+    queryKey: ["gateway-content", "footer", language],
     enabled: isGatewayPublicContentEnabled,
-    queryFn: () => fetchGatewayJson("/api/content/footer", footerContentSchema),
+    queryFn: () => fetchGatewayJson("/api/content/footer", footerContentSchema, { lang: language }),
   });
+};
 
 export const useGatewayBookingTenants = () =>
   useQuery({

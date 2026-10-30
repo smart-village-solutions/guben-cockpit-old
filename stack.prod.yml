@@ -90,7 +90,7 @@ services:
       SV_CLIENT_SECRET: ${SV_CLIENT_SECRET:-}
       DEFAULT_LANGUAGE: de
       FALLBACK_LANGUAGE: de
-      TRANSLATE_URL: ${TRANSLATE_URL:-https://translate.guben.de/translate}
+      TRANSLATE_URL: ${TRANSLATE_URL-https://translate.guben.de/translate}
       TRANSLATE_API_KEY: ${TRANSLATE_API_KEY:-}
       TRANSLATE_TIMEOUT_MS: ${TRANSLATE_TIMEOUT_MS:-3000}
       TRANSLATE_CACHE_DIR: /var/cache/translations

@@ -1,3 +1,5 @@
+import i18next from "i18next";
+import { formatCurrency } from "@/utilities/i18n/formatting";
 import { withContentKeys } from "@/utilities/contentKeys";
 import { ClockIcon, ExternalLinkIcon, MailIcon, MapPinIcon, PhoneIcon } from "lucide-react";
 import { useMemo } from "react";
@@ -27,10 +29,10 @@ const formatPrice = (amount: number | null | undefined) => {
   }
 
   if (amount === 0) {
-    return "Kostenlos";
+    return i18next.t("FreeOfCharge", { defaultValue: "Kostenlos" }) || "Kostenlos";
   }
 
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(amount);
+  return formatCurrency(amount);
 };
 
 export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {

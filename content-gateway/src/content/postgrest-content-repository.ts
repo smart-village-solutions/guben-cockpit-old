@@ -1,3 +1,4 @@
+import { AutomaticTranslator } from "../translation/automatic-translator.js";
 import { createEventTitleMatcher } from "../../../shared/public-content/event-search.js";
 import { compareEventTitles, uniqueEvents } from "./event-sorting.js";
 import {
@@ -47,6 +48,7 @@ export class PostgrestContentRepository {
   public constructor(
     private readonly config: Config,
     client: PostgrestClient,
+    private readonly translator = new AutomaticTranslator({}),
   ) {
     this.mapper = new PostgrestContentMapper(config);
     this.source = new PostgrestContentSource(client);
@@ -54,7 +56,7 @@ export class PostgrestContentRepository {
 
   public async getHome(language: string): Promise<HomeContent> {
     const [pages, dashboard] = await Promise.all([
-      this.source.getPage("Home"),
+      this.source.getPage("Home").then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE)),
       this.getDashboard(language),
     ]);
 
@@ -77,7 +79,7 @@ export class PostgrestContentRepository {
     pageNumber: number,
     pageSize: number,
   ): Promise<ProjectsContent> {
-    const [pages, rows] = await Promise.all([this.source.getPage("Projects"), this.source.getProjects()]);
+    const [pages, rows] = await Promise.all([this.source.getPage("Projects").then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE)), this.source.getProjects().then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE))]);
 
     const filtered = rows.filter((row) => row.published && !row.deleted);
     const featuredProjects = filtered
@@ -108,7 +110,7 @@ export class PostgrestContentRepository {
   }
 
   public async getFeaturedProjects(language: string): Promise<FeaturedProjectsContent> {
-    const [pages, rows] = await Promise.all([this.source.getPage("Projects"), this.source.getProjects()]);
+    const [pages, rows] = await Promise.all([this.source.getPage("Projects").then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE)), this.source.getProjects().then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE))]);
     const page = this.mapper.pageFromRow(this.expectSingle(pages, "Projects"), language);
 
     return featuredProjectsContentSchema.parse({
@@ -121,17 +123,17 @@ export class PostgrestContentRepository {
   }
 
   public async getFeaturedProjectsMetadata(language: string): Promise<Pick<FeaturedProjectsContent, "page" | "seo">> {
-    const pages = await this.source.getPage("Projects");
+    const pages = await this.source.getPage("Projects").then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE));
     const page = this.mapper.pageFromRow(this.expectSingle(pages, "Projects"), language);
     return { page, seo: page.seo };
   }
 
   public async getPublicContent(language: string): Promise<PublicContentBundle> {
     const [homePages, dashboard, projectPages, rows] = await Promise.all([
-      this.source.getPage("Home"),
+      this.source.getPage("Home").then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE)),
       this.getDashboard(language),
-      this.source.getPage("Projects"),
-      this.source.getProjects(),
+      this.source.getPage("Projects").then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE)),
+      this.source.getProjects().then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE)),
     ]);
 
     const homePage = this.mapper.pageFromRow(this.expectSingle(homePages, "Home"), language);
@@ -159,7 +161,7 @@ export class PostgrestContentRepository {
   // composed through SmartVillagePostgrestContentRepository so the remaining
   // PostgREST event assumptions stay isolated here for maintenance and fallback use.
   public async getEvents(language: string, filters: EventFilters): Promise<EventsContent> {
-    const [pages, bundle] = await Promise.all([this.source.getPage("Events"), this.source.getEventsBundle()]);
+    const [pages, bundle] = await Promise.all([this.source.getPage("Events").then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE)), this.source.getEventsBundle().then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE))]);
     const locations = new Map(bundle.locationRows.map((row) => [row.id, row]));
     const categoriesByEvent = this.groupRowsByEvent(bundle.categoryRows);
     const urlsByEvent = this.groupRowsByEvent(bundle.urlRows);
@@ -206,7 +208,7 @@ export class PostgrestContentRepository {
   }
 
   public async getEventById(language: string, id: string): Promise<EventDetailContent> {
-    const detailBundle = await this.source.getEventDetailBundle(id);
+    const detailBundle = await this.source.getEventDetailBundle(id).then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE));
     if (!detailBundle) {
       throw new GatewayError({
         code: "NOT_FOUND",
@@ -231,17 +233,19 @@ export class PostgrestContentRepository {
   }
 
   public async getDashboard(language: string): Promise<DashboardContent> {
-    return this.mapper.dashboardFromRows(language, await this.source.getDashboardRows());
+    return this.mapper.dashboardFromRows(language, await this.source.getDashboardRows().then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE)));
   }
 
   public async getMap(language: string): Promise<MapContent> {
-    const pages = await this.source.getPage("Map");
+    const pages = await this.source.getPage("Map").then((rows) => this.translator.translations(rows, language, this.config.FALLBACK_LANGUAGE));
     return this.mapper.mapContent(language, pages[0]);
   }
 
-  public async getFooter(): Promise<FooterContent> {
+  public async getFooter(language = "de"): Promise<FooterContent> {
     return footerContentSchema.parse({
-      items: await this.source.getFooterRows(),
+      items: await Promise.all((await this.source.getFooterRows()).map(async (item) => ({
+        ...item, name: await this.translator.text(item.name, language), content: await this.translator.text(item.content, language),
+      }))),
     });
   }
 

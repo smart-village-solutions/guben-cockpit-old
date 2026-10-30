@@ -216,7 +216,10 @@ export function createApp(options: {
     return options.repository.getMap(resolveLanguage(query.lang, request.headers["accept-language"], options.config));
   });
 
-  app.get("/api/content/footer", async () => options.repository.getFooter());
+  app.get("/api/content/footer", async (request) => {
+    const query = pageQuerySchema.parse(request.query);
+    return options.repository.getFooter(resolveLanguage(query.lang, request.headers["accept-language"], options.config));
+  });
 
   app.get("/api/content/booking-tenants", async () => options.repository.getBookingTenants());
 

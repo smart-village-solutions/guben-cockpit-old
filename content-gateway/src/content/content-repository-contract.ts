@@ -33,7 +33,7 @@ export interface PublicContentRepository {
   getEventById(language: string, id: string): Promise<EventDetailContent>;
   getDashboard(language: string): Promise<DashboardContent>;
   getMap(language: string): Promise<MapContent>;
-  getFooter(): Promise<FooterContent>;
+  getFooter(language?: string): Promise<FooterContent>;
   getBookingTenants(): Promise<BookingTenantsContent>;
   getBookingFaqs(language: string): Promise<BookingFaqsContent>;
 }
