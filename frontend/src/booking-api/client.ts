@@ -66,7 +66,7 @@ const fetchBookingJson = async <TOutput>(
 };
 
 export const loadPublicBookings = async (tenantId: string, options?: { privateTenant?: boolean }) => {
-  const bookables = await fetchBookingJson(`/api/${tenantId}/bookables/public`, publicBookablesSchema);
+  const bookables = await fetchBookingJson(`/json/${encodeURIComponent(tenantId)}/bookables`, publicBookablesSchema);
   return bookables
     .filter((bookable) => bookable.isPublic)
     .map((bookable) => mapBookableToBooking(bookable, options));

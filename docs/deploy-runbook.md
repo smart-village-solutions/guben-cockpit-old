@@ -74,7 +74,7 @@ curl -fsS -o /tmp/content-events.json -w "content/events: %{http_code}\n" "https
 EVENT_ID="$(jq -r '.events.results[0].id' /tmp/content-events.json)"
 test "$EVENT_ID" != "null"
 curl -fsS -o /dev/null -w "content/event-detail: %{http_code}\n" "https://cockpit.guben.de/api/content/events/$EVENT_ID"
-curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/api/default/bookables/public
+curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/json/default/bookables
 ```
 
 Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schritte 3-6 wiederholen.
@@ -210,7 +210,7 @@ curl -fsS -o /tmp/content-events.json -w "content/events: %{http_code}\n" "https
 EVENT_ID="$(jq -r '.events.results[0].id' /tmp/content-events.json)"
 test "$EVENT_ID" != "null"
 curl -fsS -o /dev/null -w "content/event-detail: %{http_code}\n" "https://cockpit.guben.de/api/content/events/$EVENT_ID"
-curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/api/default/bookables/public
+curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/json/default/bookables
 ```
 
 Erwartung: jeweils `200`.
@@ -222,7 +222,7 @@ Hinweis zum Event-Detail-Smoke-Test:
 Browser-/CORS-Check fuer den Booking-Rollout:
 
 ```js
-await fetch("https://guben-api.smart-city-booking.de/api/default/bookables/public", {
+await fetch("https://guben-api.smart-city-booking.de/json/default/bookables", {
   headers: { Accept: "application/json" },
 }).then((response) => response.ok)
 ```
@@ -230,8 +230,9 @@ await fetch("https://guben-api.smart-city-booking.de/api/default/bookables/publi
 Diesen Check vor Rollout einmal aus einer lokalen Frontend-Origin und einmal aus einer deployten Zielumgebung im Browser ausfuehren.
 
 Hinweis zum Booking-Link:
-- Die Smart-City-Booking-API liefert fuer Bookables aktuell keinen fertigen `bookingUrl`.
-- Das Frontend konstruiert deshalb den Portal-Link deterministisch aus `VITE_BOOKING_API_URL`, indem der API-Host auf den User-Host abgebildet und `tenantId` plus `bookableId` als Query-Parameter uebergeben werden.
+- Angebote werden aus `/json/:tenant/bookables` geladen; die Belegungsabfrage bleibt unter `/api/:tenant/bookables/:id/occupancy`.
+- Das Frontend uebernimmt `checkoutUrl` aus dem oeffentlichen JSON-Angebot. Ohne gueltigen HTTP(S)-Link wird kein Buchungsbutton angeboten.
+- Miettarife und `service-fee` werden getrennt angezeigt; die Servicegebuehr wird nicht als Einstiegspreis verwendet und im Preiszusatz ausgewiesen.
 
 Zusatzcheck Container:
 

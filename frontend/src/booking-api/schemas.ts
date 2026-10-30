@@ -35,6 +35,7 @@ export const publicBookableSchema = z.object({
   tenantId: z.string(),
   type: z.string(),
   title: z.string(),
+  checkoutUrl: z.string().url().regex(/^https?:\/\//i).catch("").optional(),
   description: z.string().optional().default(""),
   imgUrl: z.string().optional().default(""),
   flags: z.array(z.string()).optional().default([]),

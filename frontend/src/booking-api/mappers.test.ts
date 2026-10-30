@@ -14,6 +14,7 @@ describe("booking api mappers", () => {
       tenantId: "tenant-1",
       type: "room",
       title: "Smart City Buero",
+      checkoutUrl: "https://booking.guben.de/checkout/bookable-1/?tenantId=tenant-1",
       description: "<p>Beschreibung</p>",
       imgUrl: "",
       flags: ["Whiteboard"],
@@ -40,7 +41,7 @@ describe("booking api mappers", () => {
       type: "room",
       category: "room",
       bkid: "bookable-1",
-      bookingUrl: expect.stringContaining("/admin/checkout?id=bookable-1&tenant=tenant-1&amount=1"),
+      bookingUrl: "https://booking.guben.de/checkout/bookable-1/?tenantId=tenant-1",
       price: "12,50 € pro Stunde",
       prices: [{ price: "12,50 €", interval: "pro Stunde" }],
     });
@@ -144,5 +145,36 @@ describe("booking api mappers", () => {
       booked: null,
       remaining: null,
     });
+  });
+
+  it("shows rental tariffs separately from the service fee without using the fee as the starting price", () => {
+    const booking = mapBookableToBooking(publicBookableSchema.parse({
+      id: "bike-box", tenantId: "bikes", type: "resource", title: "Fahrradbox",
+      checkoutUrl: "https://booking.guben.de//checkout/bike-box/?tenantId=bikes",
+      priceCategories: [
+        { priceEur: 2.35, unit: "day", external: true },
+        { priceEur: 40, unit: "month", external: true },
+        { priceEur: 300, unit: "year", external: true },
+        { priceEur: 0.15, unit: "service-fee", external: true },
+      ],
+    }));
+    expect(booking.bookingUrl).toBe("https://booking.guben.de//checkout/bike-box/?tenantId=bikes");
+    expect(booking.tickets?.[0].bookingUrl).toBe(booking.bookingUrl);
+    expect(booking.price).toBe("ab 2,35 € zzgl. 0,15 € Servicegebühr");
+    expect(booking.prices).toEqual([
+      { price: "2,35 €", interval: "pro Tag" },
+      { price: "40,00 €", interval: "pro Monat" },
+      { price: "300,00 €", interval: "pro Jahr" },
+      { price: "0,15 €", interval: "Servicegebühr" },
+    ]);
+  });
+
+  it("does not invent a legacy checkout when checkoutUrl is missing or unsafe", () => {
+    for (const checkoutUrl of [undefined, "", "javascript:alert(1)", "not a url"]) {
+      const booking = mapBookableToBooking(publicBookableSchema.parse({
+        id: "box", tenantId: "bikes", type: "resource", title: "Fahrradbox", checkoutUrl,
+      }));
+      expect(booking.bookingUrl).toBe("");
+    }
   });
 });

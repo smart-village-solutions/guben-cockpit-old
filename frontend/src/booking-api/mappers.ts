@@ -1,6 +1,5 @@
 import type { Booking, BookingPrice, BookingAvailability, Ticket } from "@/stores/bookingStore";
 import type { BookingApiBookable, BookingApiOccupancy } from "./schemas";
-import { buildBookingPortalUrl } from "./config";
 
 const FALLBACK_IMAGE_URL = "/images/guben-city-booking-card-placeholder.png";
 
@@ -21,6 +20,11 @@ const formatUnit = (unit: string | null | undefined) => {
     case "month":
     case "per-month":
       return "pro Monat";
+    case "year":
+    case "per-year":
+      return "pro Jahr";
+    case "service-fee":
+      return "Servicegebühr";
     default:
       return value || undefined;
   }
@@ -50,22 +54,26 @@ const formatPrice = (
       ? formatAmount(price.priceEur)
       : "Auf Anfrage",
   interval: formatInterval(price, priceType),
-  category: price.external ? "extern" : undefined,
 });
 
 const formatStartingPrice = (bookable: BookingApiBookable) => {
-  const amounts = bookable.priceCategories
+  const tariffs = bookable.priceCategories.filter((price) => price.unit?.trim().toLowerCase() !== "service-fee");
+  const fees = bookable.priceCategories.filter((price) => price.unit?.trim().toLowerCase() === "service-fee");
+  const feeNote = fees.length > 0
+    ? ` zzgl. ${fees.map((fee) => `${formatPrice(fee, bookable.priceType).price} Servicegebühr`).join(" + ")}`
+    : "";
+  const amounts = tariffs
     .map((category) => category.priceEur)
     .filter((amount): amount is number => typeof amount === "number");
-  if (amounts.length === 0) return "Auf Anfrage";
+  if (amounts.length === 0) return `Auf Anfrage${feeNote}`;
   const amount = formatAmount(Math.min(...amounts));
   const prefix = amounts.length > 1 ? "ab " : "";
-  const units = bookable.priceCategories
+  const units = tariffs
     .filter((category) => typeof category.priceEur === "number")
     .map((category) => formatUnit(category.unit));
   const sharedUnit = units[0] && units.every((value) => value === units[0]) ? units[0] : undefined;
   const unit = bookable.priceType === "per-hour" ? "pro Stunde" : sharedUnit;
-  return `${prefix}${amount}${unit ? ` ${unit}` : ""}`;
+  return `${prefix}${amount}${unit ? ` ${unit}` : ""}${feeNote}`;
 };
 
 const deriveCategory = (bookable: BookingApiBookable, privateTenant: boolean) => {
@@ -94,7 +102,7 @@ const createDefaultTicket = (bookable: BookingApiBookable): Ticket => ({
   autoCommitNote: bookable.bookingNotes || (bookable.autoCommitBooking ? "Automatische Bestätigung" : ""),
   price: formatStartingPrice(bookable),
   prices: bookable.priceCategories.map((price) => formatPrice(price, bookable.priceType)),
-  bookingUrl: buildBookingPortalUrl(bookable.tenantId, bookable.id),
+  bookingUrl: bookable.checkoutUrl ?? "",
   bkid: bookable.id,
   imgUrl: bookable.imgUrl || FALLBACK_IMAGE_URL,
 });
