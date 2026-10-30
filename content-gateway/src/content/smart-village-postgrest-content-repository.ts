@@ -1,3 +1,4 @@
+import { AutomaticTranslator } from "../translation/automatic-translator.js";
 import type {
   BookingFaqsContent,
   BookingTenantsContent,
@@ -29,6 +30,7 @@ import {
 } from "./cockpit-card-dashboard-enrichment.js";
 
 type SmartVillagePostgrestContentRepositoryOptions = {
+  translator?: AutomaticTranslator;
   postgrestRepository: PostgrestContentRepository;
   smartVillageEventRepository: SmartVillageEventRepository;
   smartVillageBookingFaqRepository: SmartVillageBookingFaqRepository;
@@ -39,9 +41,11 @@ type SmartVillagePostgrestContentRepositoryOptions = {
 };
 
 export class SmartVillagePostgrestContentRepository implements PublicContentRepository {
+  private readonly translator: AutomaticTranslator;
+
   public constructor(
     private readonly options: SmartVillagePostgrestContentRepositoryOptions,
-  ) {}
+  ) { this.translator = options.translator ?? new AutomaticTranslator({}); }
 
   public async getHome(language: string): Promise<HomeContent> {
     const home = await this.options.postgrestRepository.getHome(language);
@@ -59,21 +63,21 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
   public async getFeaturedProjects(language: string): Promise<FeaturedProjectsContent> {
     const [metadata, featuredProjects] = await Promise.all([
       this.options.postgrestRepository.getFeaturedProjectsMetadata(language),
-      this.options.smartVillageFeaturedProjectRepository.getFeaturedProjects(language),
+      this.options.smartVillageFeaturedProjectRepository.getFeaturedProjects(language).then((content) => this.translator.content(content, language, true)),
     ]);
     return featuredProjectsContentSchema.parse({ ...metadata, featuredProjects });
   }
 
   public getFeaturedProjectById(language: string, id: string): Promise<FeaturedProjectDetailContent> {
-    return this.options.smartVillageFeaturedProjectRepository.getFeaturedProjectById(language, id);
+    return this.options.smartVillageFeaturedProjectRepository.getFeaturedProjectById(language, id).then((content) => this.translator.content(content, language, true));
   }
 
   public getPois(language: string, filters: PoiFilters): Promise<PoisContent> {
-    return this.options.smartVillagePoiRepository.getPois(language, filters);
+    return this.options.smartVillagePoiRepository.getPois(language, filters).then((content) => this.translator.content(content, language, true));
   }
 
   public getPoiById(language: string, id: string): Promise<PoiDetailContent> {
-    return this.options.smartVillagePoiRepository.getPoiById(language, id);
+    return this.options.smartVillagePoiRepository.getPoiById(language, id).then((content) => this.translator.content(content, language, true));
   }
 
   public async getPublicContent(language: string): Promise<PublicContentBundle> {
@@ -93,11 +97,13 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
   }
 
   public getEvents(language: string, filters: EventFilters): Promise<EventsContent> {
-    return this.options.smartVillageEventRepository.getEvents(language, filters);
+    return this.options.smartVillageEventRepository.getEvents(language, filters).then(async (content) => ({
+      ...content, events: await this.translator.content(content.events, language),
+    }));
   }
 
   public getEventById(language: string, id: string): Promise<EventDetailContent> {
-    return this.options.smartVillageEventRepository.getEventById(language, id);
+    return this.options.smartVillageEventRepository.getEventById(language, id).then((content) => this.translator.content(content, language));
   }
 
   public async getDashboard(language: string): Promise<DashboardContent> {
@@ -117,13 +123,25 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
     return this.options.postgrestRepository.getBookingTenants();
   }
 
-  public getBookingFaqs(language: string): Promise<BookingFaqsContent> {
-    return this.options.smartVillageBookingFaqRepository.getBookingFaqs(language);
+  public async getBookingFaqs(language: string): Promise<BookingFaqsContent> {
+    const content = await this.options.smartVillageBookingFaqRepository.getBookingFaqs(language);
+    if (content.items.length > 0 || language === "de") return content;
+    // Language-specific FAQ records have no shared translation identity: only fall back
+    // when the entire requested collection is absent, never combine unrelated records.
+    const original = await this.options.smartVillageBookingFaqRepository.getBookingFaqs("de");
+    const translated = await this.translator.content(original, language);
+    return { items: translated.items.map((item) => ({ ...item, languageCode: language })) };
   }
 
   private async enrichDashboard(language: string, dashboard: DashboardContent): Promise<DashboardContent> {
     try {
-      const cards = await this.options.smartVillageCockpitCardRepository.getCockpitCards(language);
+      let cards = await this.options.smartVillageCockpitCardRepository.getCockpitCards(language);
+      if (language !== "de") {
+        const original = await this.options.smartVillageCockpitCardRepository.getCockpitCards("de");
+        const translatedCategories = new Set(cards.map((entry) => entry.categoryName));
+        const missing = original.filter((entry) => !translatedCategories.has(entry.categoryName));
+        cards = [...cards, ...await this.translator.content(missing, language)];
+      }
       const enriched = enrichDashboardWithCockpitCards(dashboard, cards, this.options.warn);
       if (!enriched.usedSmartVillageCards) {
         this.options.warn?.("Using local Cockpit Cards because Smart Village returned no assignable cards", {

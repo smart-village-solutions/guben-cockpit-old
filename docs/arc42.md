@@ -76,7 +76,7 @@ flowchart LR
 
   Citizen --> Booking["Booking / Biletado"]
   Citizen --> Masterportal["Masterportal"]
-  Citizen --> Translate["LibreTranslate"]
+  Gateway --> Translate["LibreTranslate"]
   Citizen --> Matomo["Matomo"]
 ```
 
@@ -85,7 +85,7 @@ flowchart LR
 | Browser-Nutzer | Ruft die oeffentlichen Seiten und interaktiven Inhalte ab. |
 | Booking / Biletado | Wird fuer buchbare Inhalte direkt aus dem Browser genutzt. |
 | Masterportal | Liefert Karten- und Geodaten fuer Kartenseiten und Einbettungen. |
-| LibreTranslate | Wird fuer Uebersetzungsfunktionen aus dem Frontend genutzt. |
+| LibreTranslate | Wird serverseitig vom Content-Gateway zur Ergänzung fehlender Inhaltsübersetzungen genutzt. |
 | Matomo | Wird fuer Tracking im Browser eingebunden. |
 | PostgreSQL | Ist die fachliche Quelle fuer das read-only `public_content`-Schema. |
 
@@ -131,7 +131,7 @@ flowchart LR
   PostgREST --> DB["PostgreSQL"]
   Frontend --> Shared["shared/public-content/contracts.ts"]
   Gateway --> Shared
-  Browser --> External["Booking / Masterportal / LibreTranslate / Matomo"]
+  Browser --> External["Booking / Masterportal / Matomo"]
 ```
 
 | Baustein | Verantwortung |
@@ -384,7 +384,7 @@ Das Gateway liefert ein einheitliches Fehlerformat:
 
 - PostgREST bleibt interne Infrastruktur und ist keine Browser-API.
 - Die Datenbank wird nur lesend ueber das Schema `public_content` exponiert.
-- Browser-seitige Integrationen zu Booking, Masterportal, LibreTranslate und Matomo bleiben bewusst extern.
+- Browser-seitige Integrationen zu Booking, Masterportal und Matomo bleiben extern. LibreTranslate wird über das Content-Gateway angebunden; siehe [automatische Inhaltsübersetzung](automatic-content-translation.md).
 - Historische Admin-Pfade gehoeren nicht zur aktiven Zielarchitektur dieses Branches.
 
 ## 9. Architekturentscheidungen

@@ -82,8 +82,10 @@ const proxyToGateway = async (request, response) => {
   const targetUrl = new URL(request.url ?? "/", gatewayProxyBaseUrl).toString();
   const upstreamResponse = await fetch(targetUrl, {
     method: request.method,
+    ...(request.method === "POST" ? { body: request, duplex: "half" } : {}),
     headers: {
       accept: request.headers.accept ?? "application/json",
+      ...(request.headers["content-type"] ? { "content-type": request.headers["content-type"] } : {}),
       "accept-language": request.headers["accept-language"] ?? "",
       "x-forwarded-host": request.headers.host ?? "",
       "x-forwarded-proto": "https",
@@ -131,7 +133,8 @@ const proxyToBooking = async (request, response) => {
 
 const server = createServer(async (request, response) => {
   const method = request.method ?? "GET";
-  if (method !== "GET" && method !== "HEAD") {
+  const translationPost = method === "POST" && (request.url ?? "").split("?")[0] === "/api/content/translate";
+  if (method !== "GET" && method !== "HEAD" && !translationPost) {
     response.writeHead(405, { "content-type": "text/plain; charset=utf-8" });
     response.end("Method Not Allowed");
     return;

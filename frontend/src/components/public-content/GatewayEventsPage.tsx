@@ -116,40 +116,31 @@ const GatewayEventsPageContent = ({ search, onSearchChange }: Props) => {
   const filteredNormalizedEvents = filterBookingEvents(normalizedEvents, filters);
   const allEvents = mergeEventsWithBookingEvents(query.data?.events.results ?? [], filteredNormalizedEvents);
 
-  // Progressive loading: show content immediately, load translations in background
+  const translationPayload = JSON.stringify((allEvents as BookingCalendarEvent[])
+    .filter((event) => event.isBookingEvent)
+    .map((event) => ({ title: event.title, description: event.description })));
+
   useEffect(() => {
-    // Only set to true if not already loaded and not a booking integration
-    if (translationsReady || shouldShowIntegration) return;
-
-    setTranslationsReady(true);
-
-    if (currentLang !== "de") {
-      const customEvents = (allEvents as BookingCalendarEvent[]).filter(
-        (event) => event.isBookingEvent,
-      );
-      const translateAll = async () => {
-        const descriptions = customEvents
-          .map((event) => event.description)
-          .filter((description) => description?.trim());
-        if (descriptions.length > 0) {
-          await translateHtmlBatchedMultiple(descriptions, currentLang);
-        }
-
-        const titles = customEvents
-          .map((event) => event.title)
-          .filter((title) => title && title.trim() !== "");
-        if (titles.length > 0) {
-          await translateBatchedMultiple([...new Set(titles)], currentLang);
-        }
-
-        setTranslationsReady(true);
-      };
-
-      void translateAll();
-    } else {
+    let cancelled = false;
+    if (shouldShowIntegration || currentLang === "de") {
       setTranslationsReady(true);
+      return;
     }
-  }, [allEvents, currentLang, shouldShowIntegration]);
+    const events = JSON.parse(translationPayload) as Array<{ title: string; description: string }>;
+    setTranslationsReady(false);
+    const translateAll = async () => {
+      try {
+        await Promise.all([
+          translateHtmlBatchedMultiple([...new Set(events.map((event) => event.description).filter(Boolean))], currentLang),
+          translateBatchedMultiple([...new Set(events.map((event) => event.title).filter(Boolean))], currentLang),
+        ]);
+      } finally {
+        if (!cancelled) setTranslationsReady(true);
+      }
+    };
+    void translateAll();
+    return () => { cancelled = true; };
+  }, [translationPayload, currentLang, shouldShowIntegration]);
 
   // Show error only if query has failed, not just loading
   if (query.error && !query.data) {

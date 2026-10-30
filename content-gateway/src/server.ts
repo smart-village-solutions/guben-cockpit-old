@@ -1,3 +1,4 @@
+import { AutomaticTranslator } from "./translation/automatic-translator.js";
 import { loadConfig, type PostgrestConfig } from "./config.js";
 import { createApp } from "./app.js";
 import {
@@ -15,6 +16,10 @@ import { SmartVillageGraphQLClient } from "./upstream/smart-village-graphql-clie
 import { SmartVillageOAuthClient } from "./upstream/smart-village-oauth-client.js";
 
 const config = loadConfig();
+const translator = new AutomaticTranslator({
+  url: config.TRANSLATE_URL, apiKey: config.TRANSLATE_API_KEY,
+  cacheDir: config.TRANSLATE_CACHE_DIR, timeoutMs: config.TRANSLATE_TIMEOUT_MS,
+});
 const smartVillageReadinessQuery = `
   query ContentGatewayReadiness {
     eventRecords(limit: 1) {
@@ -69,6 +74,7 @@ const createPostgrestMode = (postgrestConfig: PostgrestConfig) => {
 
   return {
     repository: new SmartVillagePostgrestContentRepository({
+      translator,
       postgrestRepository,
       smartVillageEventRepository,
       smartVillageBookingFaqRepository,
@@ -112,6 +118,7 @@ const { repository, readinessProbe } =
 
 const app = createApp({
   config,
+  translator,
   repository,
   readinessProbe,
 });

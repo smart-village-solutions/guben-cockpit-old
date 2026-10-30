@@ -1,3 +1,4 @@
+import { AutomaticTranslator } from "./translation/automatic-translator.js";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { z } from "zod";
@@ -51,12 +52,14 @@ const poisQuerySchema = z.object({
 export function createApp(options: {
   config: Config;
   repository: PublicContentRepository;
+  translator?: AutomaticTranslator;
   metrics?: MetricsRegistry;
   readinessProbe?: () => Promise<{
     ready: boolean;
     checks: Record<string, { ready: boolean }>;
   }>;
 }) {
+  const translator = options.translator ?? new AutomaticTranslator({});
   const metrics = options.metrics ?? new MetricsRegistry();
   const readinessProbe =
     options.readinessProbe ??
@@ -72,7 +75,7 @@ export function createApp(options: {
 
   void app.register(cors, {
     origin: true,
-    methods: ["GET", "OPTIONS"],
+    methods: ["GET", "POST", "OPTIONS"],
   });
 
   app.addHook("onRequest", (request, _reply, done) => {
@@ -118,6 +121,16 @@ export function createApp(options: {
   app.get("/metrics", (_request, reply) => {
     reply.type("text/plain; version=0.0.4");
     return metrics.renderPrometheus();
+  });
+
+  app.post("/api/content/translate", async (request, reply) => {
+    const parsed = z.object({
+      q: z.array(z.string().max(20000)).max(100),
+      target: z.enum(["de", "en", "pl"]),
+    }).strict().safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: "Invalid translation request" });
+    const body = parsed.data;
+    return { translatedText: await Promise.all(body.q.map((text) => translator.text(text, body.target))) };
   });
 
   app.get("/api/content/home", async (request) => {
