@@ -1,3 +1,4 @@
+import { compareEventTitles, uniqueEvents } from "./event-sorting.js";
 import {
   BookingTenantsContent,
   BookingFaqsContent,
@@ -178,7 +179,7 @@ export class PostgrestContentRepository {
         left.name.localeCompare(right.name, language) || left.id.localeCompare(right.id),
     );
 
-    const results = this.filterEvents(allEvents, filters);
+    const results = uniqueEvents(this.filterEvents(allEvents, filters));
     this.sortEvents(results, filters);
 
     const page = this.mapper.pageFromRow(this.expectSingle(pages, "Events"), language);
@@ -331,7 +332,7 @@ export class PostgrestContentRepository {
   private sortEvents(events: EventsContent["events"]["results"], filters: EventFilters) {
     if (filters.sortBy === "title") {
       events.sort(
-        (left, right) => (filters.ordering === "desc" ? -1 : 1) * left.title.localeCompare(right.title),
+        (left, right) => (filters.ordering === "desc" ? -1 : 1) * compareEventTitles(left, right),
       );
       return;
     }

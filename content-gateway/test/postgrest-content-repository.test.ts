@@ -247,7 +247,7 @@ describe("PostgrestContentRepository", () => {
             deleted: false,
             location_id: "location-a",
             coordinates: "51.95042;14.7143",
-            translations: { de: { Title: "Fest A", Description: "Beschreibung A" } },
+            translations: { de: { Title: "„Fest A“", Description: "Beschreibung A" } },
           },
           {
             id: "event-b",

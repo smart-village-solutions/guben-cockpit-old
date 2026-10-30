@@ -600,3 +600,42 @@ describe("SmartVillageEventRepository", () => {
     );
   });
 });
+
+
+describe("event title collation", () => {
+  it.each(["de", "en", "pl"])("sorts the complete filtered, deduplicated collection in %s", async (language) => {
+    const titles = [
+      ["z", "Zebra"], ["b", '"Berta"'], ["a2", "„Äpfel“"],
+      ["a1", "„A\u0308pfel“"], ["a0", "„äpfel“"], ["c", "'Clara'"],
+      ["d", "‚Dora‘"], ["e", "«Emil»"], ["n10", "10 Konzerte"],
+      ["n2", "２ Konzerte"], ["f", "— Foyer"],
+    ];
+    const records = titles.map(([id, title]) => makeRecord({ id, title }));
+    const client = { request: vi.fn(async () => ({
+      categories: categoryCatalog,
+      eventRecords: [records[0], records[0], ...records.slice(1),
+        makeRecord({ id: "excluded", title: "0 Sport", categories: [{ id: "sport", name: "Sport" }] }),
+        makeRecord({ id: "hidden", title: "0 Hidden", visible: false })],
+    })) };
+    const expected = ["n2", "n10", "a0", "a1", "a2", "b", "c", "d", "e", "f", "z"];
+    const repository = createRepository(client);
+    for (const ordering of ["asc", "desc"] as const) {
+      const ids: string[] = [];
+      for (let pageNumber = 1; pageNumber <= 4; pageNumber++) {
+        const { events } = await repository.getEvents(language, {
+          pageNumber, pageSize: 3, category: "culture", sortBy: "title", ordering,
+        });
+        expect(events.totalCount).toBe(expected.length);
+        expect(events.pageCount).toBe(4);
+        ids.push(...events.results.map((event) => event.id.split(":")[0]));
+      }
+      expect(ids).toEqual(ordering === "asc" ? expected : [...expected].reverse());
+    }
+    // Equal collation keys use IDs even if the source order changes.
+    const reversed = createRepository({ request: vi.fn(async () => ({
+      categories: categoryCatalog, eventRecords: [...records].reverse(),
+    })) });
+    const result = await reversed.getEvents(language, { ...defaultFilters, sortBy: "title" });
+    expect(result.events.results.map((event) => event.id.split(":")[0])).toEqual(expected);
+  });
+});
