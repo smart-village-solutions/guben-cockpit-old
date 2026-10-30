@@ -79,7 +79,7 @@ export function Booking() {
     }
   }, [shouldShowIntegration, tenantIds]);
 
-  const [, setTranslationsReady] = useState(false);
+  const [translationsReady, setTranslationsReady] = useState(false);
   const currentLang = i18next.language as Language;
 
   useEffect(() => {
@@ -119,7 +119,7 @@ export function Booking() {
   }, [currentLang, shouldShowIntegration, bookables, bookingError]);
 
   return (
-    <main className="w-full h-full flex flex-col">
+    <main className="w-full h-full flex flex-col" aria-busy={loading || !translationsReady}>
       <Breadcrumb items={[
         { label: 'Startseite', href: '/' },
         { label: 'Buchungen', href: '/booking' }

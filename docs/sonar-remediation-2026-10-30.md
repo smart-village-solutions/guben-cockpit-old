@@ -3,7 +3,13 @@
 Projekt: `smart-village-solutions_guben-cockpit-old`, Statusfilter OPEN/CONFIRMED.
 Der vollständig geladene API-Snapshot enthielt 234 Issues. Bearbeitet wurden alle 144 Issues mit höchstem Impact BLOCKER (1), HIGH (12) oder MEDIUM (131).
 
-Die Änderungen liegen auf `fix/sonar-blocker-high-medium`. Drei Subagenten bearbeiteten getrennte Dateibereiche. Keine Regeln wurden abgeschaltet und keine Findings unterdrückt. Es erfolgten kein Push, kein Deployment und keine Änderung von SonarCloud-Statuswerten. Die endgültige Auflösung muss ein neuer SonarCloud-Scan bestätigen.
+Die Änderungen liegen auf `fix/sonar-blocker-high-medium`. Drei Subagenten bearbeiteten getrennte Dateibereiche. Keine Regeln wurden abgeschaltet und keine Findings unterdrückt. Die Änderungen werden in PR #67 gegen `dev` geprüft. Es erfolgten kein Deployment und keine Änderung von SonarCloud-Statuswerten. Die endgültige Auflösung muss ein neuer SonarCloud-Scan bestätigen.
+
+## Nachbesserung nach erstem CI-Lauf von PR #67
+
+Der erste Build scheiterte an `@typescript-eslint/no-unused-vars`: Der ungenutzte Locale-Parameter von `getFeaturedProjects` wird nun nur in der öffentlichen Overload-Signatur geführt; die Implementierung benötigt keinen Parameter. Der tatsächliche Gateway-Lintcheck, Typecheck und alle 144 Gateway-Tests bestanden danach.
+
+Das erste Sonar-Gate meldete 69,5 % Coverage für neuen Code bei geforderten 80 %. Ergänzende Verhaltenstests prüfen Ticket-Parsing mit realistischen HTML-Fixtures, Übersetzungsbereitschaft, Dialogzustände, Tabellenzustände, Datei-Identität nach Entfernen/Umsortieren und Carousel-Bedienung. Das zusätzliche React-Finding `S6754` wird durch die tatsächlich verwendete Übersetzungsbereitschaft in `aria-busy` behoben. Coverage-Grenzen und Analyseumfang bleiben unverändert. Frontend-Typecheck, Gateway-Lint/Typecheck und der CI-konfigurierte Frontend-Build samt Gateway-Vertragsprüfung und Prerendering sind lokal erfolgreich. Der vollständige lokale CI-Coverage-Lauf besteht mit 351 Tests (Shared 12, Gateway 144, Frontend 194, PostgREST 1).
 
 ## Gemeinsame Validierung
 

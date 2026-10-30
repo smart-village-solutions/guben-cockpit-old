@@ -105,7 +105,8 @@ export const fromPublicFeaturedProjectId = (id: string) => {
 export class SmartVillageFeaturedProjectRepository {
   public constructor(private readonly options: Options) {}
 
-  public async getFeaturedProjects(_language: string): Promise<Project[]> {
+  public getFeaturedProjects(language: string): Promise<Project[]>;
+  public async getFeaturedProjects(): Promise<Project[]> {
     const response = await requestCached(this.options.client, {
       contractId: "featured-projects.collection.v1",
       query: FEATURED_PROJECTS_QUERY,

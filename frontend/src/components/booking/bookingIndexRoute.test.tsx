@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const bookingState = vi.hoisted(() => ({
-  bookings: [] as Array<{ category: string; title: string }>,
+  bookings: [] as Array<{ category: string; title: string; description?: string; autoCommitNote?: string; flags?: string[]; tenantId?: string; bkid?: string }>,
   processedTenants: new Set<string>(),
   markProcessedTenants: vi.fn(),
   reset: vi.fn(),
@@ -85,9 +85,12 @@ vi.mock("@/components/booking/bookingIntegration", () => ({
 }));
 
 import { Booking } from "@/routes/booking/index.lazy";
+import i18next from "i18next";
+import { translateHtmlBatchedMultiple } from "@/utilities/translateUtils";
 
 describe("bookingIndexRoute", () => {
   beforeEach(() => {
+    i18next.language = "de";
     bookingState.bookings = [];
     bookingState.processedTenants = new Set<string>();
     bookingState.markProcessedTenants.mockReset();
@@ -103,6 +106,7 @@ describe("bookingIndexRoute", () => {
 
     expect(screen.getByText("overview.loading")).toBeTruthy();
     expect(screen.getByText("integration")).toBeTruthy();
+    expect(screen.getByRole("main").getAttribute("aria-busy")).toBe("true");
   });
 
   it("renders the booking error state when tenant integration fails", () => {
@@ -112,4 +116,26 @@ describe("bookingIndexRoute", () => {
 
     expect(screen.getByText("error:overview")).toBeTruthy();
   });
+
+  it("announces translation work as busy until booking descriptions finish translating", async () => {
+    i18next.language = "en";
+    bookingTenantQuery.data = { tenants: [] };
+    bookingState.bookings = [{
+      category: "room", title: "Meeting room", description: "Besprechungsraum",
+      tenantId: "tenant-1", bkid: "room-1",
+    }];
+    let finishTranslation!: (value: string[]) => void;
+    vi.mocked(translateHtmlBatchedMultiple).mockImplementationOnce(() => new Promise((resolve) => {
+      finishTranslation = resolve;
+    }));
+
+    render(<Booking />);
+    expect(screen.getByRole("main").getAttribute("aria-busy")).toBe("true");
+    expect(translateHtmlBatchedMultiple).toHaveBeenCalledWith(["Besprechungsraum"], "en");
+
+    finishTranslation(["Meeting room"]);
+    await waitFor(() => expect(screen.getByRole("main").getAttribute("aria-busy")).toBe("false"));
+    expect(screen.getByText("Meeting room")).toBeTruthy();
+  });
+
 });
