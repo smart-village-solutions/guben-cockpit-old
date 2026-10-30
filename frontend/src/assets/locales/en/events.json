@@ -24,5 +24,7 @@
   "NoMatchingEvents": "No events found for this selection.",
   "Location": "Address",
   "Save": "Save",
-  "Cancel": "Cancel"
+  "Cancel": "Cancel",
+  "ActiveFilters": "Active filters",
+  "ResetFilters": "Reset all filters"
 }

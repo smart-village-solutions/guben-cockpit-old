@@ -639,3 +639,25 @@ describe("event title collation", () => {
     expect(result.events.results.map((event) => event.id.split(":")[0])).toEqual(expected);
   });
 });
+
+describe("normalized event search and stable pagination", () => {
+  it("filters before counting and pagination, with stable date ties", async () => {
+    const records = [
+      makeRecord({ id: "z", title: "„Trödel–Markt in Guben“" }),
+      makeRecord({ id: "excluded", title: "Trödelmarkt in Berlin" }),
+      makeRecord({ id: "a", title: "Guben: Troedel-Markt" }),
+    ];
+    const repository = createRepository({ request: vi.fn().mockResolvedValue({
+      eventRecords: records, categories: categoryCatalog,
+    }) });
+    const filters = { pageNumber: 1, pageSize: 1, title: "  GUBEN troedel markt " };
+    const first = await repository.getEvents("de", filters);
+    const second = await repository.getEvents("de", { ...filters, pageNumber: 2 });
+    expect(first.events.totalCount).toBe(2);
+    expect(first.events.pageCount).toBe(2);
+    expect(first.events.results[0].id).toMatch(/^a:/);
+    expect(second.events.results[0].id).toMatch(/^z:/);
+    const descending = await repository.getEvents("de", { ...filters, ordering: "desc" });
+    expect(descending.events.results[0].id).toMatch(/^z:/);
+  });
+});

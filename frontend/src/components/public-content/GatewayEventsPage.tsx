@@ -15,7 +15,8 @@ import { DateRangeFilter } from "@/components/filters/dateRangeFilter";
 import { DistanceFilter } from "@/components/filters/DistanceFilter";
 import { SearchFilter } from "@/components/filters/searchFilter";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePagination } from "@/hooks/usePagination";
+import { Button } from "@/components/ui/button";
+import { eventsSearchToFilters, formatEventSearchDate, validateEventsSearch, type EventsSearch } from "@/components/events/eventSearchState";
 import { useGatewayEventsContent } from "@/public-content/hooks";
 import { isGatewayPublicContentEnabled } from "@/public-content/source";
 import { useRouteMetadata } from "@/public-content/useRouteMetadata";
@@ -23,33 +24,19 @@ import { useEventStore } from "@/stores/eventStore";
 import { Language } from "@/utilities/i18n/Languages";
 import { translateBatchedMultiple, translateHtmlBatchedMultiple } from "@/utilities/translateUtils";
 import i18next from "i18next";
-import { startTransition, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
 
 import { PublicContentErrorState } from "./PublicContentErrorState";
 import { PublicContentDisabledState } from "./PublicContentDisabledState";
 import type { EventsContent } from "@shared/public-content/contracts";
 
-const filtersSchema = z
-  .object({
-    distance: z.number().optional(),
-    search: z.string().optional(),
-    category: z.string().optional(),
-    dateRange: z
-      .object({
-        from: z.date(),
-        to: z.date().optional(),
-      })
-      .optional(),
-    sortBy: z.nativeEnum(SortOption).optional(),
-    ordering: z.nativeEnum(SortOrder).optional(),
-  })
-  .default({});
+type Props = {
+  search: EventsSearch;
+  onSearchChange: (search: EventsSearch) => void;
+};
 
-type FiltersType = z.infer<typeof filtersSchema>;
-
-const GatewayEventsPageContent = () => {
+const GatewayEventsPageContent = ({ search, onSearchChange }: Props) => {
   const { t } = useTranslation(["common", "events"]);
   const bookingEvents = useEventStore((state) => state.events);
   const processedTenants = useEventStore((state) => state.processedTenants);
@@ -57,12 +44,22 @@ const GatewayEventsPageContent = () => {
 
   const [currentTenantIndex, setCurrentTenantIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState(() => filtersSchema.parse({}));
+  const filters = eventsSearchToFilters(search);
+  const [inputSearch, setInputSearch] = useState(search.search ?? "");
 
-  const pagination = usePagination();
+  // Navigation (including Back/Forward) restores the input and cancels pending typing.
+  useEffect(() => { setInputSearch(search.search ?? ""); }, [search]);
+  useEffect(() => {
+    if (inputSearch.trim() === (search.search ?? "")) return;
+    const timer = window.setTimeout(() => {
+      onSearchChange(validateEventsSearch({ ...search, search: inputSearch, page: 1 }));
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [inputSearch, search, onSearchChange]);
+
   const query = useGatewayEventsContent({
-    pageNumber: pagination.page,
-    pageSize: pagination.pageSize,
+    pageNumber: search.page,
+    pageSize: search.pageSize,
     ...buildEventsQueryFilters(filters),
   });
   useRouteMetadata(query.data?.seo);
@@ -100,30 +97,24 @@ const GatewayEventsPageContent = () => {
     }
   }, [shouldShowIntegration, tenantIds.length]);
 
-  const handleFilterChange = (newFilters: Partial<{ [key in keyof FiltersType]: unknown }>) => {
-    const updated = { ...filters, ...newFilters };
-    const parsed = filtersSchema.safeParse(updated);
-    if (parsed.success) {
-      startTransition(() => {
-        setFilters(parsed.data);
-        pagination.setPageIndex(1);
-      });
-    } else {
-      startTransition(() => {
-        setFilters(filtersSchema.parse(undefined));
-        pagination.setPageIndex(1);
-      });
-    }
+  const handleFilterChange = (changes: Partial<EventsSearch>) => {
+    onSearchChange(validateEventsSearch({ ...search, search: inputSearch, ...changes, page: 1 }));
   };
+  const resetFilters = () => onSearchChange(validateEventsSearch({ pageSize: search.pageSize }));
+  const pageCount = query.data?.events.pageCount ?? 1;
+  const setPageIndex = (page: number) => {
+    if (page >= 1 && page <= pageCount) onSearchChange({ ...search, page });
+  };
+  const activeFilters = [
+    filters.search ? `${t("Search")}: ${filters.search}` : undefined,
+    filters.category ? `${t("Category", { ns: "events" })}: ${query.data?.events.categories.find((category) => category.id === filters.category)?.name ?? filters.category}` : undefined,
+    filters.distance ? `${t("Radius")}: ${filters.distance} km` : undefined,
+    search.from ? `${t("Date")}: ${search.from}${search.to ? ` – ${search.to}` : ""}` : undefined,
+  ].filter((value): value is string => Boolean(value));
 
   const normalizedEvents = bookingEvents.map((event) => normalizeBookingEvent(event));
   const filteredNormalizedEvents = filterBookingEvents(normalizedEvents, filters);
   const allEvents = mergeEventsWithBookingEvents(query.data?.events.results ?? [], filteredNormalizedEvents);
-
-  useEffect(() => {
-    pagination.setTotal(query.data?.events.totalCount ?? 0);
-    pagination.setPageCount(query.data?.events.pageCount ?? 1);
-  }, [query.data]);
 
   // Progressive loading: show content immediately, load translations in background
   useEffect(() => {
@@ -183,12 +174,12 @@ const GatewayEventsPageContent = () => {
           <div className="flex-1 grid grid-cols-5 gap-2">
             <SearchFilter
               className="col-span-2"
-              value={filters.search ?? null}
-              onChange={(value) => handleFilterChange({ search: value })}
+              value={inputSearch}
+              onChange={(value) => setInputSearch(value ?? "")}
             />
             <CategoryFilter
               value={filters.category ?? null}
-              onChange={(value) => handleFilterChange({ category: value })}
+              onChange={(value) => handleFilterChange({ category: value ?? undefined })}
               categories={query.data?.events.categories ?? []}
             />
             <DistanceFilter
@@ -199,31 +190,41 @@ const GatewayEventsPageContent = () => {
             />
             <DateRangeFilter
               value={filters.dateRange}
-              onChange={(range) => handleFilterChange({ dateRange: range })}
+              onChange={(range) => handleFilterChange({ from: range?.from ? formatEventSearchDate(range.from) : undefined, to: range?.to ? formatEventSearchDate(range.to) : undefined })}
             />
           </div>
 
           <SortFilter
             option={filters.sortBy}
             order={filters.ordering}
-            onChange={(option, order) => handleFilterChange({ sortBy: option, ordering: order })}
+            onChange={(option, order) => handleFilterChange({ sortBy: option as SortOption, ordering: order as SortOrder })}
           />
         </div>
       </section>
 
       <section className="max-w-7xl mx-auto px-4">
         <PaginationContainer
-          nextPage={pagination.nextPage}
-          previousPage={pagination.previousPage}
-          setPageIndex={pagination.setPageIndex}
-          setPageSize={pagination.setPageSize}
-          total={pagination.total}
-          pageCount={pagination.pageCount}
-          pageSize={pagination.pageSize}
-          page={pagination.page}
+          nextPage={() => setPageIndex(search.page + 1)}
+          previousPage={() => setPageIndex(search.page - 1)}
+          setPageIndex={setPageIndex}
+          setPageSize={(pageSize) => onSearchChange({ ...search, pageSize, page: 1 })}
+          total={query.data?.events.totalCount ?? 0}
+          pageCount={pageCount}
+          pageSize={search.pageSize}
+          page={search.page}
         >
           <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
-            <EventResults events={allEvents} isPending={query.isPending} pageSize={pagination.pageSize} emptyLabel={t("NoMatchingEvents", { ns: "events" })} />
+            {!query.isPending && allEvents.length === 0 && (
+              <div className="col-span-full text-center space-y-4 py-8" role="status">
+                <p>{t("NoMatchingEvents", { ns: "events" })}</p>
+                {activeFilters.length > 0 && <>
+                  <p>{t("ActiveFilters", { ns: "events" })}</p>
+                  <ul className="flex flex-wrap justify-center gap-2">{activeFilters.map((label) => <li key={label} className="rounded bg-muted px-3 py-1">{label}</li>)}</ul>
+                  <Button onClick={resetFilters}>{t("ResetFilters", { ns: "events" })}</Button>
+                </>}
+              </div>
+            )}
+            <EventResults events={allEvents} isPending={query.isPending} pageSize={search.pageSize} />
           </div>
         </PaginationContainer>
       </section>
@@ -231,25 +232,24 @@ const GatewayEventsPageContent = () => {
   );
 };
 
-export const GatewayEventsPage = () => {
+export const GatewayEventsPage = (props: Props) => {
   if (!isGatewayPublicContentEnabled) {
     return <PublicContentDisabledState />;
   }
 
-  return <GatewayEventsPageContent />;
+  return <GatewayEventsPageContent {...props} />;
 };
 
 
-const EventResults = ({ events, isPending, pageSize, emptyLabel }: {
+const EventResults = ({ events, isPending, pageSize }: {
   events: Parameters<typeof EventCard>[0]["event"][];
   isPending: boolean;
   pageSize: number;
-  emptyLabel: string;
 }) => {
   if (events.length > 0) return events.map((event) => <div key={event.id} className="flex w-full"><EventCard event={event} /></div>);
   if (isPending) {
     const slots = Array.from({ length: pageSize }, (_, slot) => `event-loading-slot-${slot}`);
     return slots.map((slot) => <Skeleton key={slot} className="w-full h-96 rounded-lg" />);
   }
-  return <p className="col-span-full text-center py-12 text-muted-foreground">{emptyLabel}</p>;
+  return null;
 };

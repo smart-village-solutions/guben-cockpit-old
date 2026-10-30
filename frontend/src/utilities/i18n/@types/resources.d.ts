@@ -349,7 +349,9 @@ interface Resources {
     "NoMatchingEvents": "Keine Veranstaltungen für diese Auswahl gefunden.",
     "Location": "Adresse",
     "Save": "Speichern",
-    "Cancel": "Abbrechen"
+    "Cancel": "Abbrechen",
+    "ActiveFilters": "Aktive Filter",
+    "ResetFilters": "Alle Filter zurücksetzen"
   },
   "footer": {
     "Title": "Fußzeile",

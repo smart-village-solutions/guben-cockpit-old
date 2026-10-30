@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useTranslation } from "react-i18next";
 import { Button } from "../ui/button";
@@ -31,6 +31,8 @@ export const DateRangeFilter = ({
 
   const [range, setRange] = useState<DateRange | undefined>(value);
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => { setRange(value); }, [value?.from?.getTime(), value?.to?.getTime()]);
 
   const handlePresetClick = useCallback((preset: Preset) => {
     let newRange: DateRange | undefined;

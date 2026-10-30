@@ -1,3 +1,4 @@
+import { createEventTitleMatcher } from "../../../shared/public-content/event-search.js";
 import { compareEventTitles, uniqueEvents } from "./event-sorting.js";
 import {
   eventDetailContentSchema,
@@ -467,8 +468,8 @@ export class SmartVillageEventRepository {
     let results = events;
 
     if (filters.title) {
-      const needle = filters.title.toLowerCase();
-      results = results.filter((event) => event.title.toLowerCase().includes(needle));
+      const matchesTitle = createEventTitleMatcher(filters.title);
+      results = results.filter((event) => matchesTitle(event.title));
     }
 
     if (filters.category) {
@@ -522,7 +523,8 @@ export class SmartVillageEventRepository {
 
     events.sort(
       (left, right) =>
-        direction * (new Date(left.startDate).getTime() - new Date(right.startDate).getTime()),
+        direction * ((new Date(left.startDate).getTime() - new Date(right.startDate).getTime()) ||
+          (left.id < right.id ? -1 : left.id > right.id ? 1 : 0)),
     );
   }
 

@@ -24,5 +24,7 @@
   "NoMatchingEvents": "Nie znaleziono wydarzeń dla tego wyboru.",
   "Location": "Adres",
   "Save": "Zapisz",
-  "Cancel": "Anuluj"
+  "Cancel": "Anuluj",
+  "ActiveFilters": "Aktywne filtry",
+  "ResetFilters": "Wyczyść wszystkie filtry"
 }
