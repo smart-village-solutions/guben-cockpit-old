@@ -129,12 +129,13 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
         let changed = false;
         let complete = true;
         nodes.forEach((node) => {
-            const translated = translatedTexts[counter++];
-            if (translated !== node.textContent?.trim()) changed = true;
-            else complete = false;
             const original = node.textContent ?? "";
-            node.textContent = translated === undefined ? original
-                : `${original.match(/^\s*/)?.[0] ?? ""}${translated}${original.match(/\s*$/)?.[0] ?? ""}`;
+            const translated = translatedTexts[counter++] ?? original.trim();
+            if (translated !== original.trim()) changed = true;
+            else complete = false;
+            const leadingWhitespace = original.slice(0, original.length - original.trimStart().length);
+            const trailingWhitespace = original.slice(original.trimEnd().length);
+            node.textContent = `${leadingWhitespace}${translated}${trailingWhitespace}`;
         });
         const translatedHTML = root.innerHTML;
         const cacheKey = `${text}_${targetLang}`;
