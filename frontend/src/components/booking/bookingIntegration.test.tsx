@@ -28,7 +28,7 @@ describe("BookingIntegration", () => {
         type: "room",
         imgUrl: "/room.jpg",
         bookingUrl:
-          "https://guben.smart-city-booking.de/admin/checkout?id=bookable-1&tenant=tenant-1&amount=1",
+          "https://booking.guben.de/checkout/bookable-1/?tenantId=tenant-1",
         price: "0 EUR",
         prices: [],
         category: "room",

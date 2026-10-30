@@ -26,6 +26,7 @@ describe("booking api client", () => {
           tenantId: "tenant-1",
           type: "room",
           title: "Raum",
+          checkoutUrl: "https://booking.guben.de/checkout/bookable-1/?tenantId=tenant-1",
           description: "<p>Beschreibung</p>",
           imgUrl: "",
           flags: [],
@@ -49,13 +50,14 @@ describe("booking api client", () => {
     const result = await loadPublicBookings("tenant-1");
 
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/tenant-1/bookables/public"),
+      "https://guben-api.smart-city-booking.de/json/tenant-1/bookables",
       expect.objectContaining({
         headers: { Accept: "application/json" },
       }),
     );
     expect(result).toHaveLength(1);
     expect(result[0]?.title).toBe("Raum");
+    expect(result[0]?.bookingUrl).toBe("https://booking.guben.de/checkout/bookable-1/?tenantId=tenant-1");
   });
 
   it("filters non-public bookables from the public endpoint payload", async () => {

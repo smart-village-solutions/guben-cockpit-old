@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import PriceCard from "./priceCard";
+import { mapBookableToBooking } from "@/booking-api/mappers";
+import { publicBookableSchema } from "@/booking-api/schemas";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -20,6 +22,25 @@ vi.mock("./BookingAvailability", () => ({
 }));
 
 describe("priceCard", () => {
+  it("renders public JSON rental tariffs and a separate service fee with the supplied checkout link", () => {
+    const booking = mapBookableToBooking(publicBookableSchema.parse({
+      id: "box", tenantId: "bikes", type: "resource", title: "Fahrradbox",
+      checkoutUrl: "https://booking.guben.de/checkout/box/?tenantId=bikes",
+      priceCategories: [
+        { priceEur: 2.35, unit: "day", external: true },
+        { priceEur: 40, unit: "month", external: true },
+        { priceEur: 300, unit: "year", external: true },
+        { priceEur: 0.15, unit: "service-fee", external: true },
+      ],
+    }));
+    render(<PriceCard {...booking} />);
+    expect(screen.getByText("ab 2,35 € zzgl. 0,15 € Servicegebühr")).toBeTruthy();
+    for (const label of ["pro Tag", "pro Monat", "pro Jahr", "Servicegebühr", "2,35 €", "40,00 €", "300,00 €", "0,15 €"]) {
+      expect(screen.getByText(label)).toBeTruthy();
+    }
+    expect(screen.getByRole("link").getAttribute("href")).toBe(booking.bookingUrl);
+  });
+
   it("renders a non-bookable state without a checkout button for invalid booking urls", () => {
     render(
       <PriceCard
@@ -39,7 +60,7 @@ describe("priceCard", () => {
   it("renders price details, availability and checkout link for valid booking urls", () => {
     const { container } = render(
       <PriceCard
-        bookingUrl="https://guben.smart-city-booking.de/admin/checkout?id=box-1"
+        bookingUrl="https://booking.guben.de/checkout/box-1/?tenantId=bikes"
         title="Fahrradbox"
         price="ab 2,35 €"
         imgUrl="/bike-box.jpg"
@@ -64,7 +85,7 @@ describe("priceCard", () => {
     expect(screen.getByText("Online bezahlen")).toBeTruthy();
     expect(screen.getByText("availability:tenant-1:box-1")).toBeTruthy();
     expect((screen.getByRole("link") as HTMLAnchorElement).getAttribute("href")).toBe(
-      "https://guben.smart-city-booking.de/admin/checkout?id=box-1",
+      "https://booking.guben.de/checkout/box-1/?tenantId=bikes",
     );
     expect(screen.getByRole("img", { name: "Fahrradbox" }).className).toContain("object-contain");
     expect(screen.getByRole("img", { name: "Fahrradbox" }).getAttribute("loading")).toBe("lazy");
@@ -74,7 +95,7 @@ describe("priceCard", () => {
   it("renders auto commit notes as HTML instead of escaped text", () => {
     const { container } = render(
       <PriceCard
-        bookingUrl="https://guben.smart-city-booking.de/admin/checkout?id=box-1"
+        bookingUrl="https://booking.guben.de/checkout/box-1/?tenantId=bikes"
         title="Fahrradbox"
         price="0 EUR"
         location="Schulstraße 4, 03172 Guben"

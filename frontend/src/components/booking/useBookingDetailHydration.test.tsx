@@ -47,7 +47,7 @@ describe("useBookingDetailHydration", () => {
         type: "resource",
         imgUrl: "/bike-box.jpg",
         bookingUrl:
-          "https://guben.smart-city-booking.de/admin/checkout?id=bookable-1&tenant=tenant-1&amount=1",
+          "https://booking.guben.de/checkout/bookable-1/?tenantId=tenant-1",
         price: "2,35 EUR",
         prices: [],
         category: "resource",
@@ -111,7 +111,7 @@ describe("useBookingDetailHydration", () => {
           type: "resource",
           imgUrl: "/bike-box.jpg",
           bookingUrl:
-            "https://guben.smart-city-booking.de/admin/checkout?id=bookable-1&tenant=tenant-1&amount=1",
+            "https://booking.guben.de/checkout/bookable-1/?tenantId=tenant-1",
           price: "2,35 EUR",
           prices: [],
           category: "resource",
@@ -154,7 +154,7 @@ describe("useBookingDetailHydration", () => {
           type: "room",
           imgUrl: "/other.jpg",
           bookingUrl:
-            "https://guben.smart-city-booking.de/admin/checkout?id=other&tenant=tenant-1&amount=1",
+            "https://booking.guben.de/checkout/other/?tenantId=tenant-1",
           price: "0 EUR",
           prices: [],
           category: "room",
@@ -177,7 +177,7 @@ describe("useBookingDetailHydration", () => {
           type: "resource",
           imgUrl: "/bike-box.jpg",
           bookingUrl:
-            "https://guben.smart-city-booking.de/admin/checkout?id=bookable-1&tenant=tenant-2&amount=1",
+            "https://booking.guben.de/checkout/bookable-1/?tenantId=tenant-2",
           price: "2,35 EUR",
           prices: [],
           category: "resource",
