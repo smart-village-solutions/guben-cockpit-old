@@ -107,7 +107,9 @@ export class SmartVillageCockpitCardRepository {
     const imageUrl = optionalString(item.mediaContents?.[0]?.sourceUrl?.url);
     const imageAlt = optionalString(item.mediaContents?.[0]?.sourceUrl?.description);
     const buttonUrl = optionalString(item.webUrls?.[0]?.url);
-    const buttonTitle = optionalString(item.webUrls?.[0]?.description) ?? "Mehr erfahren";
+    const buttonTitle = optionalString(item.webUrls?.[0]?.description)
+      ?? ({ en: "Learn more", pl: "Dowiedz się więcej" } as Record<string, string>)[payload.languageCode]
+      ?? "Mehr erfahren";
 
     return [{
       categoryName,
