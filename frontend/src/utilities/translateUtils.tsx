@@ -5,6 +5,7 @@ import DOMPurify from "dompurify";
 
 const cache: Record<string, string> = {};
 const htmlCache: Record<string, string> = {};
+const completeHtmlTranslations = new Set<string>();
 
 function collectTextNodes(node: ChildNode, nodes: Text[] = []) {
     if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
@@ -90,7 +91,7 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
 
     htmls.forEach((html, i) => {
         const cacheKey = `${html}_${targetLang}`;
-        if (htmlCache[cacheKey]) {
+        if (htmlCache[cacheKey] && completeHtmlTranslations.has(cacheKey)) {
             results[i] = htmlCache[cacheKey];
         } else {
             untranslated.push({ index: i, text: html });
@@ -131,10 +132,15 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
             const translated = translatedTexts[counter++];
             if (translated !== node.textContent?.trim()) changed = true;
             else complete = false;
-            node.textContent = translated ?? node.textContent ?? "";
+            const original = node.textContent ?? "";
+            node.textContent = translated === undefined ? original
+                : `${original.match(/^\s*/)?.[0] ?? ""}${translated}${original.match(/\s*$/)?.[0] ?? ""}`;
         });
         const translatedHTML = root.innerHTML;
-        if (complete && changed && translatedHTML !== text) htmlCache[`${text}_${targetLang}`] = translatedHTML;
+        const cacheKey = `${text}_${targetLang}`;
+        if (changed && translatedHTML !== text) htmlCache[cacheKey] = translatedHTML;
+        if (complete) completeHtmlTranslations.add(cacheKey);
+        else completeHtmlTranslations.delete(cacheKey);
         results[index] = translatedHTML;
     });
 

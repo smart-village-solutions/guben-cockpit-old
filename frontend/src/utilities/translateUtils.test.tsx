@@ -46,9 +46,18 @@ it("retries HTML with partially untranslated segments instead of caching the fal
   const fetcher = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ translatedText: ["Hello", "Welt"] }) })
     .mockResolvedValueOnce({ ok: true, json: async () => ({ translatedText: ["Hello", "World"] }) });
   vi.stubGlobal("fetch", fetcher);
-  const { translateHtmlBatchedMultiple } = await import("./translateUtils");
+  const { translateHtmlBatchedMultiple, TranslatedHtml } = await import("./translateUtils");
   const html = "<p>Hallo</p><p>Welt</p>";
   expect(await translateHtmlBatchedMultiple([html], "en")).toEqual(["<p>Hello</p><p>Welt</p>"]);
+  expect(renderToStaticMarkup(<TranslatedHtml text={html} />)).toBe("<div><p>Hello</p><p>Welt</p></div>");
   expect(await translateHtmlBatchedMultiple([html], "en")).toEqual(["<p>Hello</p><p>World</p>"]);
   expect(fetcher).toHaveBeenCalledTimes(2);
+});
+
+it("displays translated prose even when names and numbers stay unchanged, preserving inline spacing", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ translatedText: ["Welcome", "Guben", "8", "."] }) }));
+  const { translateHtmlBatchedMultiple, TranslatedHtml } = await import("./translateUtils");
+  const html = "<p>Willkommen <strong>Guben</strong> <span>8</span>.</p>";
+  await translateHtmlBatchedMultiple([html], "en");
+  expect(renderToStaticMarkup(<TranslatedHtml text={html} />)).toBe("<div><p>Welcome <strong>Guben</strong> <span>8</span>.</p></div>");
 });
