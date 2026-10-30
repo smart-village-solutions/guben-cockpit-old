@@ -523,3 +523,5 @@ frontend/.env
 
 # Database
 dump/
+
+.portainer.env
