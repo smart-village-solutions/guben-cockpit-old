@@ -8,6 +8,8 @@ export const Route = createLazyFileRoute('/events/')({
 })
 
 export function RouteComponent() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
     <div className="w-full h-full flex flex-col">
       <Breadcrumb items={[
@@ -24,7 +26,7 @@ export function RouteComponent() {
           </p>
         </div>
       </article>
-      <GatewayEventsPage />
+      <GatewayEventsPage search={search} onSearchChange={(next) => void navigate({ to: "/events", search: next })} />
     </div>
   );
 }

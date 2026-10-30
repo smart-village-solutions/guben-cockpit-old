@@ -208,3 +208,11 @@ describe("eventPageUtils", () => {
     ]);
   });
 });
+
+describe("normalized booking search", () => {
+  it("matches all normalized title tokens in any order", () => {
+    const event = normalizeBookingEvent(bookingEvent({ title: "„Trödel–Markt in Guben“" }));
+    expect(filterBookingEvents([event], { search: "  GUBEN troedel markt " })).toEqual([event]);
+    expect(filterBookingEvents([event], { search: "Guben Konzert" })).toEqual([]);
+  });
+});

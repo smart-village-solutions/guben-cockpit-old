@@ -55,6 +55,8 @@ vi.mock("@tanstack/react-router", () => {
   const createRoute = () => (_path: string) => (options: Record<string, unknown> = {}) => ({
     options,
     useParams: () => routeParams,
+    useSearch: () => ({ page: 1, pageSize: 25 }),
+    useNavigate: () => vi.fn(),
   });
 
   return {

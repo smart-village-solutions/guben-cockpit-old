@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -14,14 +15,16 @@ export function SearchFilter({
   onChange,
   className
 }: Readonly<Props>) {
+  const inputId = useId();
   const {t} = useTranslation("common");
 
   return (
     <div className={cn("flex flex-col gap-2 flex-1", className ?? "")}>
-      <Label>{t("Search")}</Label>
+      <Label htmlFor={inputId}>{t("Search")}</Label>
       <Input
+        id={inputId}
         placeholder={t("Search")}
-        value={value ?? undefined}
+        value={value ?? ""}
         onChange={e => onChange(e.target.value)}
       />
     </div>

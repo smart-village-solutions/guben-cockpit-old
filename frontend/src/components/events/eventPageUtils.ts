@@ -1,3 +1,4 @@
+import { createEventTitleMatcher } from "@shared/public-content/event-search";
 import type { BookingEvent } from "@/stores/eventStore";
 import type { Category, Event } from "@shared/public-content/contracts";
 
@@ -39,7 +40,7 @@ export const buildEventsQueryFilters = (filters: EventPageFilters) => ({
   ...(filters.dateRange?.from ? { startDate: startOfLocalDay(filters.dateRange.from).toISOString() } : {}),
   ...(filters.dateRange?.to ? { endDate: endOfLocalDay(filters.dateRange.to).toISOString() } : {}),
   ...(filters.sortBy ? { sortBy: filters.sortBy } : {}),
-  ...(filters.ordering ? { ordering: filters.ordering } : {}),
+  ...(filters.ordering ? { ordering: filters.ordering === "descending" ? "desc" : filters.ordering === "ascending" ? "asc" : filters.ordering } : {}),
 });
 
 export const normalizeBookingEvent = (event: BookingEvent): BookingCalendarEvent => {
@@ -102,9 +103,10 @@ const matchesBookingDistance = (event: BookingCalendarEvent, radius?: number) =>
 export const filterBookingEvents = (
   events: BookingCalendarEvent[],
   activeFilters: EventPageFilters,
-) =>
-  events.filter((event) => {
-    if (activeFilters.search && !event.title.toLowerCase().includes(activeFilters.search.toLowerCase())) {
+) => {
+  const matchesTitle = createEventTitleMatcher(activeFilters.search ?? "");
+  return events.filter((event) => {
+    if (!matchesTitle(event.title)) {
       return false;
     }
 
@@ -130,6 +132,7 @@ export const filterBookingEvents = (
 
     return true;
   });
+};
 
 export const mergeEventsWithBookingEvents = (
   backendEvents: Event[],

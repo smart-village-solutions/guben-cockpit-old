@@ -558,7 +558,7 @@ describe("Sonar fix smoke tests", () => {
   });
 
   it("renders public content pages after hook-order fixes", () => {
-    const eventsMarkup = renderToStaticMarkup(<GatewayEventsPage />);
+    const eventsMarkup = renderToStaticMarkup(<GatewayEventsPage search={{ page: 1, pageSize: 25 }} onSearchChange={() => {}} />);
     const eventDetailMarkup = renderToStaticMarkup(<GatewayEventDetailPage eventId="event-1" />);
     const marketplaceMarkup = renderToStaticMarkup(<ProjectsMarketplacePage />);
 
@@ -568,11 +568,11 @@ describe("Sonar fix smoke tests", () => {
   });
 
   it("does not apply default event filters in the standard view", () => {
-    renderToStaticMarkup(<GatewayEventsPage />);
+    renderToStaticMarkup(<GatewayEventsPage search={{ page: 1, pageSize: 25 }} onSearchChange={() => {}} />);
 
     expect(mockState.eventsSearchParams).toMatchObject({
       pageNumber: 1,
-      pageSize: 10,
+      pageSize: 25,
     });
     expect(mockState.eventsSearchParams).not.toHaveProperty("distance");
     expect(mockState.eventsSearchParams).not.toHaveProperty("startDate");
@@ -581,7 +581,7 @@ describe("Sonar fix smoke tests", () => {
   it("renders disabled states for public content pages", () => {
     mockState.isGatewayPublicContentEnabled = false;
 
-    expect(renderToStaticMarkup(<GatewayEventsPage />)).toContain("Public Content Disabled");
+    expect(renderToStaticMarkup(<GatewayEventsPage search={{ page: 1, pageSize: 25 }} onSearchChange={() => {}} />)).toContain("Public Content Disabled");
     expect(renderToStaticMarkup(<ProjectsMarketplacePage />)).toContain("Public Content Disabled");
     expect(renderToStaticMarkup(<GatewayProjectDetailPage projectId="project-1" />)).toContain("Public Content Disabled");
     expect(renderToStaticMarkup(<GatewayEventDetailPage eventId="event-1" />)).toContain("Public Content Disabled");
@@ -631,7 +631,7 @@ describe("Sonar fix smoke tests", () => {
   it("renders the gateway events error and integration paths", () => {
     mockState.eventsQuery.data = null;
     mockState.eventsQuery.error = "events-failed";
-    expect(renderToStaticMarkup(<GatewayEventsPage />)).toContain("Public Content Error: events-failed");
+    expect(renderToStaticMarkup(<GatewayEventsPage search={{ page: 1, pageSize: 25 }} onSearchChange={() => {}} />)).toContain("Public Content Error: events-failed");
 
     mockState.eventsQuery.error = null;
     mockState.eventsQuery.data = {
@@ -643,7 +643,7 @@ describe("Sonar fix smoke tests", () => {
       },
       seo: undefined,
     };
-    expect(renderToStaticMarkup(<GatewayEventsPage />)).toContain("Integration");
+    expect(renderToStaticMarkup(<GatewayEventsPage search={{ page: 1, pageSize: 25 }} onSearchChange={() => {}} />)).toContain("Integration");
   });
 
 });

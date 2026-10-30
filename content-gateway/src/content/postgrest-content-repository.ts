@@ -1,3 +1,4 @@
+import { createEventTitleMatcher } from "../../../shared/public-content/event-search.js";
 import { compareEventTitles, uniqueEvents } from "./event-sorting.js";
 import {
   BookingTenantsContent,
@@ -292,8 +293,8 @@ export class PostgrestContentRepository {
     let results = events;
 
     if (filters.title) {
-      const needle = filters.title.toLowerCase();
-      results = results.filter((event) => event.title.toLowerCase().includes(needle));
+      const matchesTitle = createEventTitleMatcher(filters.title);
+      results = results.filter((event) => matchesTitle(event.title));
     }
 
     if (filters.category) {
@@ -340,7 +341,8 @@ export class PostgrestContentRepository {
     events.sort(
       (left, right) =>
         (filters.ordering === "desc" ? -1 : 1) *
-        (new Date(left.startDate).getTime() - new Date(right.startDate).getTime()),
+        ((new Date(left.startDate).getTime() - new Date(right.startDate).getTime()) ||
+          (left.id < right.id ? -1 : left.id > right.id ? 1 : 0)),
     );
   }
 }
