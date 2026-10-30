@@ -1,3 +1,4 @@
+import { compareEventTitles, uniqueEvents } from "./event-sorting.js";
 import {
   eventDetailContentSchema,
   eventsContentSchema,
@@ -303,7 +304,7 @@ export class SmartVillageEventRepository {
         left.name.localeCompare(right.name, language) || left.id.localeCompare(right.id),
     );
 
-    const results = this.filterEvents(allEvents, filters, categories);
+    const results = uniqueEvents(this.filterEvents(allEvents, filters, categories));
     this.sortEvents(results, filters);
 
     const startIndex = (filters.pageNumber - 1) * filters.pageSize;
@@ -515,7 +516,7 @@ export class SmartVillageEventRepository {
     const direction = filters.ordering === "desc" ? -1 : 1;
 
     if (filters.sortBy === "title") {
-      events.sort((left, right) => direction * left.title.localeCompare(right.title));
+      events.sort((left, right) => direction * compareEventTitles(left, right));
       return;
     }
 
