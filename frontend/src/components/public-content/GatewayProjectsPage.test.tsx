@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 const state = vi.hoisted(() => ({
   query: {
     data: {
+      page: { title: "Welcome to the project overview", description: "Discover current projects in Guben." },
       featuredProjects: [
         {
           id: "featured:100",
@@ -167,4 +168,21 @@ describe("GatewayProjectsPage", () => {
     state.query.error = null;
     state.poisQuery.data = { pageNumber: 1, pageSize: 12, totalCount: 0, pageCount: 1, results: [], categories: [], locations: [] };
   });
+});
+
+
+it("renders the localized project introduction supplied by the gateway", () => {
+  const previous = state.query.data.page;
+  try {
+    for (const page of [
+      { title: "Welcome to the project overview", description: "Discover current projects in Guben." },
+      { title: "Witamy w przeglądzie projektów", description: "Poznaj projekty w Guben." },
+    ]) {
+      state.query.data.page = page;
+      const markup = renderToStaticMarkup(<GatewayProjectsPage />);
+      expect(markup).toContain(page.title);
+      expect(markup).toContain(page.description);
+      expect(markup).not.toContain("Willkommen in der Projektübersicht");
+    }
+  } finally { state.query.data.page = previous; }
 });
