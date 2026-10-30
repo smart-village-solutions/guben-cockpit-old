@@ -65,7 +65,7 @@ async function requestOnce<T>(options: RequestJsonOptions): Promise<T> {
 }
 
 async function requestWithRetry<T>(options: RequestJsonOptions, attempt: number, lastError?: unknown): Promise<T> {
-  if (!(attempt <= options.retryAttempts)) {
+  if (attempt > options.retryAttempts || Number.isNaN(options.retryAttempts)) {
     throw lastError instanceof Error ? lastError : new Error("Unknown upstream error");
   }
 

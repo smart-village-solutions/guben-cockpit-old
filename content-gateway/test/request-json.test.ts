@@ -3,6 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestJson } from "../src/upstream/request-json.js";
 
 describe("requestJson", () => {
+  it.each([-1, Number.NaN])("rejects an invalid retry budget %s without starting a request", async (retryAttempts) => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    await expect(requestJson({
+      url: "http://postgrest.test/retry",
+      timeoutMs: 100,
+      retryAttempts,
+      retryBackoffMs: 0,
+      upstream: "postgrest",
+    })).rejects.toThrow("Unknown upstream error");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     vi.restoreAllMocks();
   });

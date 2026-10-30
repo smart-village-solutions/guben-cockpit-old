@@ -22,6 +22,10 @@ Unter Node 22.19.0 erfolgreich:
 - Ergänzender lokaler Scan der betroffenen Dateien mit acht verfügbaren SonarJS-Regeln plus React-/Promise-/Iframe-Prüfungen ohne Findings.
 - Vollständige Zuordnung aller 90 Issue-Keys und `git diff --check`.
 
+## Nachbesserung nach dem ersten PR-Scan
+
+Der erste Scan von PR #68 bestand das Quality Gate, meldete jedoch zwei zusätzliche Low-Findings: `S1940` am negierten Retry-Grenzvergleich und `S6759` an der neu benannten PriceCard. Beide wurden im Code korrigiert. Die Retry-Grenzprüfung behält das Verhalten für negative Werte und NaN bei; zwei zusätzliche Tests prüfen, dass dabei kein Request startet. PriceCard-Props sind nun readonly.
+
 ## Einzelberichte
 
 # Remaining foundations remediation

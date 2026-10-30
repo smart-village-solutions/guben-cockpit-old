@@ -33,7 +33,7 @@ export default function PriceCard({
   prices,
   tenantId,
   bookableId,
-}: PriceCardProps) {
+}: Readonly<PriceCardProps>) {
   const { t } = useTranslation("booking");
 
   const isValidUrl = bookingUrl?.startsWith("http");
