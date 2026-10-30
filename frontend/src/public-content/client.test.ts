@@ -94,3 +94,18 @@ describe("fetchGatewayJson", () => {
     });
   });
 });
+
+it("preserves translation progress across equal content responses so polling can stop", async () => {
+  const fetcher = vi.spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(new Response(JSON.stringify({ title: "Guben" }), { headers: { "X-Translation-Pending": "1" } }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ title: "Guben" }), { headers: { "X-Translation-Pending": "0" } }));
+  try {
+    const { fetchGatewayJson, hasPendingTranslations } = await import("./client");
+    const schema = { parse: (value: unknown) => value };
+    const pending = await fetchGatewayJson("/api/content/home", schema);
+    const complete = await fetchGatewayJson("/api/content/home", schema);
+    expect(hasPendingTranslations(pending)).toBe(true);
+    expect(hasPendingTranslations(complete)).toBe(false);
+    expect(complete).toEqual({ title: "Guben", translationPending: false });
+  } finally { fetcher.mockRestore(); }
+});

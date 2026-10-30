@@ -61,3 +61,37 @@ it("displays translated prose even when names and numbers stay unchanged, preser
   await translateHtmlBatchedMultiple([html], "en");
   expect(renderToStaticMarkup(<TranslatedHtml text={html} />)).toBe("<div><p>Welcome <strong>Guben</strong> <span>8</span>.</p></div>");
 });
+
+it("automatically reloads a pending browser translation until the cached result is ready", async () => {
+  const fetcher = vi.fn()
+    .mockResolvedValueOnce({ ok: true, headers: new Headers({ "X-Translation-Pending": "1" }), json: async () => ({ translatedText: ["Hallo"] }) })
+    .mockResolvedValueOnce({ ok: true, headers: new Headers({ "X-Translation-Pending": "0" }), json: async () => ({ translatedText: ["Hello"] }) });
+  vi.stubGlobal("fetch", fetcher);
+  const { translateBatchedMultiple } = await import("./translateUtils");
+  expect(await translateBatchedMultiple(["Hallo"], "en")).toEqual(["Hello"]);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});
+
+it.each(["offline", "status", "shape", "empty"])("retains originals on %s and allows a later retry", async (failure) => {
+  const fetcher = vi.fn();
+  if (failure === "offline") fetcher.mockRejectedValueOnce(new Error("offline"));
+  else fetcher.mockResolvedValueOnce({ ok: failure !== "status", json: async () => ({ translatedText: failure === "empty" ? [""] : [] }) });
+  fetcher.mockResolvedValueOnce({ ok: true, json: async () => ({ translatedText: "Hello" }) });
+  vi.stubGlobal("fetch", fetcher);
+  const { translateBatchedMultiple } = await import("./translateUtils");
+  expect(await translateBatchedMultiple(["Hallo"], "en")).toEqual(["Hallo"]);
+  expect(await translateBatchedMultiple(["Hallo"], "en")).toEqual(["Hello"]);
+});
+
+it("bounds repeated pending requests while retaining original text", async () => {
+  vi.useFakeTimers();
+  try {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true, headers: new Headers({ "X-Translation-Pending": "1" }), json: async () => ({ translatedText: ["Hallo"] }) });
+    vi.stubGlobal("fetch", fetcher);
+    const { translateBatchedMultiple } = await import("./translateUtils");
+    const result = translateBatchedMultiple(["Hallo"], "en");
+    await vi.advanceTimersByTimeAsync(15000);
+    expect(await result).toEqual(["Hallo"]);
+    expect(fetcher).toHaveBeenCalledTimes(10);
+  } finally { vi.useRealTimers(); }
+});

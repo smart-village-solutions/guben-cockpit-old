@@ -10,7 +10,7 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ i18n: { language: state.language } }),
 }));
 
-vi.mock("./client", () => ({ fetchGatewayJson }));
+vi.mock("./client", async (importOriginal) => ({ ...await importOriginal<typeof import("./client")>(), fetchGatewayJson }));
 
 import { useGatewayBookingFaqs } from "./hooks";
 
@@ -42,3 +42,16 @@ describe("useGatewayBookingFaqs", () => {
     ));
   });
 });
+
+it("automatically refreshes pending content and stops when unchanged content is complete", async () => {
+  fetchGatewayJson.mockReset().mockResolvedValueOnce({ items: [], translationPending: true }).mockResolvedValue({ items: [], translationPending: false });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const wrapper = ({ children }: PropsWithChildren) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  const hook = renderHook(() => useGatewayBookingFaqs(), { wrapper });
+  try {
+    await waitFor(() => expect(hook.result.current.data).toMatchObject({ translationPending: false }), { timeout: 4000 });
+    expect(fetchGatewayJson).toHaveBeenCalledTimes(2);
+    await new Promise((resolve) => setTimeout(resolve, 1700));
+    expect(fetchGatewayJson).toHaveBeenCalledTimes(2);
+  } finally { hook.unmount(); client.clear(); }
+}, 10000);

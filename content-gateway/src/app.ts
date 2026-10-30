@@ -76,6 +76,20 @@ export function createApp(options: {
   void app.register(cors, {
     origin: true,
     methods: ["GET", "POST", "OPTIONS"],
+    exposedHeaders: ["X-Translation-Pending"],
+  });
+
+  app.addHook("onRoute", (options) => {
+    if (!options.url.startsWith("/api/content/")) return;
+    const handler = options.handler;
+    options.handler = async function (request, reply) {
+      const result = await translator.defer(() => handler.call(this, request, reply));
+      if (!reply.sent) {
+        reply.header("X-Translation-Pending", result.pending ? "1" : "0");
+        if (result.pending) reply.header("Cache-Control", "no-store");
+      }
+      return result.value;
+    };
   });
 
   app.addHook("onRequest", (request, _reply, done) => {

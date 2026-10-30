@@ -33,25 +33,34 @@ function normalizeTranslations(payload: unknown): string[] | null {
     return null;
 }
 
+async function requestBatch(texts: string[], targetLang: string): Promise<string[]> {
+    let results = [...texts];
+    for (let attempt = 0; attempt < 10; attempt++) {
+        try {
+            const response = await fetch(new URL("/api/content/translate", contentGatewayBaseUrl), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ q: texts, target: targetLang.split("-")[0].toLowerCase() }),
+            });
+            if (!response.ok) break;
+            const translated = normalizeTranslations(await response.json());
+            if (!translated || translated.length !== texts.length) break;
+            results = translated.map((text, index) => text.trim() && text !== texts[index] ? text : results[index]);
+            if (response.headers?.get("X-Translation-Pending") !== "1" || attempt === 9) break;
+        } catch { break; }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+    return results;
+}
+
 async function requestTranslations(texts: string[], targetLang: string): Promise<string[]> {
     const results = [...texts];
     for (let start = 0; start < texts.length; start += 20) {
         const batch = texts.slice(start, start + 20);
         const indexes = batch.flatMap((text, index) => text.length <= 20000 ? [index] : []);
         if (indexes.length === 0) continue;
-        try {
-            const response = await fetch(new URL("/api/content/translate", contentGatewayBaseUrl), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ q: indexes.map((index) => batch[index]), target: targetLang.split("-")[0].toLowerCase() }),
-            });
-            if (!response.ok) continue;
-            const translated = normalizeTranslations(await response.json());
-            if (!translated || translated.length !== indexes.length) continue;
-            indexes.forEach((index, offset) => {
-                if (translated[offset].trim()) results[start + index] = translated[offset];
-            });
-        } catch { /* Retain original text and allow a later retry. */ }
+        const translated = await requestBatch(indexes.map((index) => batch[index]), targetLang);
+        indexes.forEach((index, offset) => { results[start + index] = translated[offset]; });
     }
     return results;
 }

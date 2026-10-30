@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -22,8 +22,13 @@ import {
   type Project,
   type ProjectsContent,
 } from "@shared/public-content/contracts";
-import { fetchGatewayJson } from "./client";
+import { fetchGatewayJson, hasPendingTranslations } from "./client";
 import { isGatewayPublicContentEnabled } from "./source";
+
+const useContentQuery = <T,>(options: UseQueryOptions<T>) => useQuery({
+  ...options,
+  refetchInterval: (query) => query.state.status !== "error" && hasPendingTranslations(query.state.data) ? 1500 : false,
+});
 
 const localSchoolImageByTitle: Array<[match: (title: string) => boolean, imageUrl: string]> = [
   [
@@ -76,13 +81,13 @@ export const loadGatewayProjectDetailContent = async (
       poiDetailContentSchema,
       { lang: language },
     ) as PoiDetailContent;
-    return { kind: "poi", poi: detail.poi, seo: detail.seo };
+    return { kind: "poi", ...detail };
   }
 
   const data = await fetcher(`/api/content/featured-projects/${encodeURIComponent(id)}`, featuredProjectDetailContentSchema, {
     lang: language,
   }) as FeaturedProjectDetailContent;
-  return { kind: "featured", project: data.project, seo: data.seo };
+  return { kind: "featured", ...data };
 };
 
 const useContentLanguage = () => {
@@ -92,7 +97,7 @@ const useContentLanguage = () => {
 
 export const useGatewayHomeContent = () => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "home", language],
     enabled: isGatewayPublicContentEnabled,
     queryFn: () =>
@@ -104,7 +109,7 @@ export const useGatewayHomeContent = () => {
 
 export const useGatewayProjectsContent = (pageNumber: number, pageSize: number) => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "projects", language, pageNumber, pageSize],
     enabled: isGatewayPublicContentEnabled,
     queryFn: () =>
@@ -118,7 +123,7 @@ export const useGatewayProjectsContent = (pageNumber: number, pageSize: number) 
 
 export const useGatewayFeaturedProjectsContent = () => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "featured-projects", language],
     enabled: isGatewayPublicContentEnabled,
     queryFn: () => fetchGatewayJson("/api/content/featured-projects", featuredProjectsContentSchema, { lang: language }),
@@ -127,7 +132,7 @@ export const useGatewayFeaturedProjectsContent = () => {
 
 export const useGatewayPoisContent = (filters: PoiFilters) => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "pois", language, filters],
     enabled: isGatewayPublicContentEnabled,
     retry: false,
@@ -147,7 +152,7 @@ export const useGatewayPoisContent = (filters: PoiFilters) => {
 
 export const useGatewayProjectDetailContent = (id: string) => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "projects", "detail", language, id],
     enabled: isGatewayPublicContentEnabled && id.length > 0,
     queryFn: () => loadGatewayProjectDetailContent(language, id),
@@ -158,7 +163,7 @@ export const useGatewayEventsContent = (
   searchParams: Record<string, string | number | undefined>,
 ) => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "events", language, searchParams],
     enabled: isGatewayPublicContentEnabled,
     queryFn: () =>
@@ -172,7 +177,7 @@ export const useGatewayEventsContent = (
 
 export const useGatewayEventDetailContent = (id: string) => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "events", "detail", language, id],
     enabled: isGatewayPublicContentEnabled && id.length > 0,
     queryFn: () =>
@@ -184,7 +189,7 @@ export const useGatewayEventDetailContent = (id: string) => {
 
 export const useGatewayMapContent = () => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "map", language],
     enabled: isGatewayPublicContentEnabled,
     queryFn: () =>
@@ -196,7 +201,7 @@ export const useGatewayMapContent = () => {
 
 export const useGatewayFooterContent = () => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "footer", language],
     enabled: isGatewayPublicContentEnabled,
     queryFn: () => fetchGatewayJson("/api/content/footer", footerContentSchema, { lang: language }),
@@ -204,7 +209,7 @@ export const useGatewayFooterContent = () => {
 };
 
 export const useGatewayBookingTenants = () =>
-  useQuery({
+  useContentQuery({
     queryKey: ["gateway-content", "booking-tenants"],
     enabled: isGatewayPublicContentEnabled,
     queryFn: () =>
@@ -213,7 +218,7 @@ export const useGatewayBookingTenants = () =>
 
 export const useGatewayBookingFaqs = () => {
   const language = useContentLanguage();
-  return useQuery({
+  return useContentQuery({
     queryKey: ["gateway-content", "booking-faqs", language],
     enabled: isGatewayPublicContentEnabled,
     queryFn: () =>
