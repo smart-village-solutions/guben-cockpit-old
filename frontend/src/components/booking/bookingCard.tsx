@@ -11,7 +11,7 @@ type BookingCardProps = {
   columns?: 'two' | 'three';
 };
 
-export default function BookingCard({booking, columns = 'three'}: BookingCardProps) {
+export default function BookingCard({booking, columns = 'three'}: Readonly<BookingCardProps>) {
   const navigate = useNavigate();
 
   const to = bookingPath(booking, (booking.bookings?.length ?? 0) > 0);

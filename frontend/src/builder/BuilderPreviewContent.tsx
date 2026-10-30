@@ -1,5 +1,5 @@
 import { BuilderComponent, builder, useIsPreviewing } from "@builder.io/react";
-import { useEffect, useMemo, useState } from "react";
+import { type ComponentProps, useEffect, useMemo, useState } from "react";
 
 import { builderModel, builderPreviewUrl, builderPublicApiKey } from "@/builder/config";
 
@@ -9,7 +9,7 @@ const localBuilderPreviewExamplePath = "/builder-preview?url=/";
 
 export default function BuilderPreviewContent() {
   const isPreviewingInBuilder = useIsPreviewing();
-  const [content, setContent] = useState<any | null>(null);
+  const [content, setContent] = useState<NonNullable<ComponentProps<typeof BuilderComponent>["content"]> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,7 +115,7 @@ type BuilderPreviewStateProps = {
   body: string;
 };
 
-function BuilderPreviewState({ title, body }: BuilderPreviewStateProps) {
+function BuilderPreviewState({ title, body }: Readonly<BuilderPreviewStateProps>) {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 py-16">
       <section className="rounded-3xl bg-white p-8 shadow-xl">

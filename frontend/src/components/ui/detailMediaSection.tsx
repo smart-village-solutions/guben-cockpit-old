@@ -24,7 +24,7 @@ export function DetailMediaSection({
   body,
   images,
   className,
-}: DetailMediaSectionProps) {
+}: Readonly<DetailMediaSectionProps>) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
 
@@ -128,7 +128,7 @@ function ImageViewer({
   onNext,
   onOpenFullscreen,
   isFullscreen = false,
-}: ImageViewerProps) {
+}: Readonly<ImageViewerProps>) {
   return (
     <div className="relative overflow-hidden">
       {onOpenFullscreen ? (
@@ -197,11 +197,11 @@ function MediaNavButton({
   direction,
   onClick,
   disabled,
-}: {
+}: Readonly<{
   direction: "previous" | "next";
   onClick: () => void;
   disabled: boolean;
-}) {
+}>) {
   const isPrevious = direction === "previous";
 
   return (

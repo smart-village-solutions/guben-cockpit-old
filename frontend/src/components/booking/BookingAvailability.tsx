@@ -18,7 +18,7 @@ const buildOccupancyWindow = () => {
   };
 };
 
-export default function BookingAvailability({ tenantId, bookableId }: BookingAvailabilityProps) {
+export default function BookingAvailability({ tenantId, bookableId }: Readonly<BookingAvailabilityProps>) {
   const { t } = useTranslation("booking");
   const [availability, setAvailability] = useState<BookingAvailabilityModel | null>(null);
   const [error, setError] = useState<unknown>(null);

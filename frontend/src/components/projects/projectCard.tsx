@@ -7,7 +7,7 @@ interface IProps {
   school?: boolean;
 }
 
-export default function ProjectCard({ project, school }: IProps) {
+export default function ProjectCard({ project, school }: Readonly<IProps>) {
   return (
     <Link to={`/projects/${project.id}`} className="h-full">
       <GenericCard

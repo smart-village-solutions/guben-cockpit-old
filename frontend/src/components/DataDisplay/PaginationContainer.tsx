@@ -1,11 +1,10 @@
 import {
   PageIndicator, PageSizePicker,
-  Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink,
+  Pagination, PaginationContent, PaginationItem,
   PaginationNext,
   PaginationPrevious
 } from "@/components/ui/pagination";
 import { ReactNode } from "@tanstack/react-router";
-import { t } from "i18next";
 import { useTranslation } from "react-i18next";
 
 interface Props {

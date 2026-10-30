@@ -23,7 +23,7 @@ function BuilderCallToAction({
   primaryHref,
   secondaryLabel,
   secondaryHref,
-}: BuilderCallToActionProps) {
+}: Readonly<BuilderCallToActionProps>) {
   return (
     <section className="mx-auto flex w-full max-w-[1600px] flex-col gap-5 rounded-3xl bg-gubenAccent px-8 py-10 text-gubenAccent-foreground shadow-lg md:px-12 md:py-14">
       {eyebrow ? <p className="text-sm font-semibold uppercase tracking-[0.2em]">{eyebrow}</p> : null}
@@ -63,7 +63,7 @@ function BuilderFeatureCard({
   imageAlt,
   ctaLabel,
   ctaHref,
-}: BuilderFeatureCardProps) {
+}: Readonly<BuilderFeatureCardProps>) {
   return (
     <Card className="mx-auto w-full max-w-xl overflow-hidden rounded-3xl border-0 shadow-xl">
       {imageUrl ? (

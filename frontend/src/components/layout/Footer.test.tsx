@@ -126,4 +126,27 @@ describe("Footer", () => {
     expect(screen.getByText("Footer content")).toBeTruthy();
     expect(document.querySelector(".p-4")).toBeTruthy();
   });
+  it("preserves footer images, links and inline text formatting while discarding executable content", async () => {
+    const module = await import("./Footer");
+    const { container } = render(<module.default footerItem={{
+      name: "About Guben",
+      content: `<p style="color: #cd1421; background-color: rgb(255, 255, 255); font-weight: bold; position: fixed" onclick="alert(1)">Colored text</p>
+        <img src="/images/footer.jpg" alt="Footer picture" onerror="alert(1)">
+        <a href="https://guben.de">City website</a><a href="javascript:alert(1)">Unsafe link</a>
+        <script>alert(1)</script>`,
+    } as never} />);
+    const text = screen.getByText("Colored text");
+    expect(text.style.color).toBe("rgb(205, 20, 33)");
+    expect(text.style.backgroundColor).toBe("rgb(255, 255, 255)");
+    expect(text.style.fontWeight).toBe("bold");
+    expect(text.style.position).toBe("");
+    expect(text.hasAttribute("onclick")).toBe(false);
+    const image = screen.getByRole("img", { name: "Footer picture" });
+    expect(image.getAttribute("src")).toBe("/images/footer.jpg");
+    expect(image.hasAttribute("onerror")).toBe(false);
+    expect(screen.getByRole("link", { name: "City website" }).getAttribute("href")).toBe("https://guben.de");
+    expect(screen.getByText("Unsafe link").hasAttribute("href")).toBe(false);
+    expect(container.querySelector("script")).toBeNull();
+  });
+
 });

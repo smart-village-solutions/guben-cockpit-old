@@ -49,8 +49,9 @@ export function getContrast(color1: ColorRgb, color2: ColorRgb): number {
 // and extracts a color from that hash in hex notation
 export function getHexColorFromText(value: string) {
   let hash = 0;
+  // Keep hashing UTF-16 units so existing colors, including emoji, stay stable.
   value.split('').forEach(char => {
-    hash = char.charCodeAt(0) + ((hash << 5) - hash);
+    hash = char.codePointAt(0)! + ((hash << 5) - hash);
   });
 
   let color = "#";

@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useBookingStore } from "@/stores/bookingStore";
 import { loadPublicBookings } from "@/booking-api/client";
-import { trimTrailingSlashes } from "@/utilities/urlUtils";
 
 export { trimTrailingSlashes } from "@/utilities/urlUtils";
 

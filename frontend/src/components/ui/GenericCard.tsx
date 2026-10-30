@@ -113,8 +113,8 @@ export const GenericCard = ({
               `line-clamp-${descriptionLines}`,
             )}
           >
-            {descriptionAsHtml ? (
-              <div dangerouslySetInnerHTML={{ __html: String(description) }} />
+            {descriptionAsHtml && typeof description === "string" ? (
+              <div dangerouslySetInnerHTML={{ __html: description }} />
             ) : (
               description
             )}

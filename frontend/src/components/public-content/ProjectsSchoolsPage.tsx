@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import ProjectCard from "@/components/projects/projectCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGatewayProjectsContent } from "@/public-content/hooks";

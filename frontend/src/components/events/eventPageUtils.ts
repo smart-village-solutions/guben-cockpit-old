@@ -140,7 +140,7 @@ export const mergeEventsWithBookingEvents = (
   }
 
   const earliest = new Date(backendEvents[0].startDate).getTime();
-  const latest = new Date(backendEvents[backendEvents.length - 1].startDate).getTime();
+  const latest = new Date(backendEvents.at(-1)!.startDate).getTime();
   const filteredBookingEvents = bookingEvents.filter((event) => {
     if (backendEvents.length < 25) {
       return true;
@@ -186,7 +186,7 @@ const parseBookingDateRange = (value: string) => {
   };
 };
 
-const extractDate = (value: string) => value.match(/(\d{2})\.(\d{2})\.(\d{4})/)?.[0] ?? "";
+const extractDate = (value: string) => /(\d{2})\.(\d{2})\.(\d{4})/.exec(value)?.[0] ?? "";
 
 const toIsoDateTime = (value: string) =>
   value.replace(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/, "$3-$2-$1T$4:$5");

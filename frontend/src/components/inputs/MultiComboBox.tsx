@@ -73,7 +73,7 @@ export const MultiComboBox = ({
 
   const unselectedValues = useMemo(() => {
     const unselected = options.reduce((acc: string[], val) => {
-      if (selectedValues.indexOf(val.value) === -1) acc.push(val.value);
+      if (!selectedValues.includes(val.value)) acc.push(val.value);
       return acc;
     }, []);
 

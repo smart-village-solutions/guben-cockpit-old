@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Project } from "@shared/public-content/contracts";
 import { isNullOrUndefinedOrWhiteSpace } from "@/utilities/nullabilityUtils";
 import sanitizeHtml from "sanitize-html";
@@ -10,10 +10,9 @@ interface IProps {
   project: Project;
   children: React.ReactNode;
   className?: string;
-  school?: boolean;
 }
 
-export default function ProjectDialog({ project, children, className }: IProps) {
+export default function ProjectDialog({ project, children, className }: Readonly<IProps>) {
 
   return (
     <>

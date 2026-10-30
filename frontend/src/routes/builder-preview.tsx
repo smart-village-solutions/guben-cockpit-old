@@ -28,7 +28,7 @@ type BuilderPreviewStateProps = {
   body: string;
 };
 
-export function BuilderPreviewState({ title, body }: BuilderPreviewStateProps) {
+export function BuilderPreviewState({ title, body }: Readonly<BuilderPreviewStateProps>) {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 py-16">
       <section className="rounded-3xl bg-white p-8 shadow-xl">

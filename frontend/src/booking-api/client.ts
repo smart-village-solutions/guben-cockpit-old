@@ -3,7 +3,9 @@ import { getBookingApiBaseUrl } from "./config";
 import { occupancySchema, publicBookablesSchema } from "./schemas";
 import { mapBookableToBooking, mapOccupancyToAvailability } from "./mappers";
 
-const buildBookingApiUrl = (path: string, searchParams?: Record<string, string | number | undefined>) => {
+type BookingSearchParameter = string | number | undefined;
+
+const buildBookingApiUrl = (path: string, searchParams?: Record<string, BookingSearchParameter>) => {
   const url = new URL(path, `${getBookingApiBaseUrl()}/`);
 
   if (searchParams) {
@@ -20,7 +22,7 @@ const buildBookingApiUrl = (path: string, searchParams?: Record<string, string |
 const fetchBookingJson = async <TOutput>(
   path: string,
   schema: { parse(input: unknown): TOutput },
-  searchParams?: Record<string, string | number | undefined>,
+  searchParams?: Record<string, BookingSearchParameter>,
 ): Promise<TOutput> => {
   const response = await fetch(buildBookingApiUrl(path, searchParams), {
     headers: {
@@ -75,7 +77,7 @@ export const loadPublicBookings = async (tenantId: string, options?: { privateTe
 export const loadBookableOccupancy = async (
   tenantId: string,
   bookableId: string,
-  searchParams?: Record<string, string | number | undefined>,
+  searchParams?: Record<string, BookingSearchParameter>,
 ) => {
   const occupancy = await fetchBookingJson(
     `/api/${tenantId}/bookables/${bookableId}/occupancy`,

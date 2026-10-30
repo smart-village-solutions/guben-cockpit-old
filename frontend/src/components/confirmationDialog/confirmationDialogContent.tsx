@@ -11,7 +11,7 @@ interface Props {
 export const ConfirmationDialogContent = ({onConfirm, onClose, confirmationText}: Props) => {
   const {t} = useTranslation();
 
-  const text = confirmationText ? confirmationText : t("PermanentActionConfirmation");
+  const text = confirmationText || t("PermanentActionConfirmation");
   return (
     <>
       <p>{text}</p>

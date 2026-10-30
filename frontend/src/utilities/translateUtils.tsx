@@ -152,7 +152,7 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
     return results;
 }
 
-export function TranslatedText({ text }: { text: string }) {
+export function TranslatedText({ text }: Readonly<{ text: string }>) {
     const currentLang = i18next.language as Language;
     
     if (currentLang === "de") return text;
@@ -163,7 +163,7 @@ export function TranslatedText({ text }: { text: string }) {
     return <>{translation}</>;
 }
 
-export function TranslatedHtml({ text, className }: { text: string; className?: string }) {
+export function TranslatedHtml({ text, className }: Readonly<{ text: string; className?: string }>) {
     const currentLang = i18next.language as Language;
 
     if (currentLang === "de") return <div className={className} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(text) }} />;

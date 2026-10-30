@@ -21,7 +21,7 @@ type PriceCardProps = {
   bookableId?: string;
 }
 
-export default function ({
+export default function PriceCard({
   bookingUrl,
   price,
   title,
@@ -36,7 +36,7 @@ export default function ({
 }: PriceCardProps) {
   const { t } = useTranslation("booking");
 
-  const isValidUrl = bookingUrl && bookingUrl.startsWith("http");
+  const isValidUrl = bookingUrl?.startsWith("http");
 
   return (
     <div className="px-0 py-5">

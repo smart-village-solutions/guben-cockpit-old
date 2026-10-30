@@ -31,4 +31,12 @@ describe("booking paths", () => {
 
     expect(findBookingBySegment([first, second], "saal--room-2")).toBe(second);
   });
+
+  it("transliterates every repeated German special character in booking URLs", () => {
+    const offer = booking("Ää Öö Üü ßß", "offer-umlauts");
+
+    expect(bookingPath(offer)).toBe("/booking/aeae-oeoe-ueue-ssss--offer-umlauts");
+    expect(findBookingBySegment([offer], "aeae-oeoe-ueue-ssss")).toBe(offer);
+  });
+
 });

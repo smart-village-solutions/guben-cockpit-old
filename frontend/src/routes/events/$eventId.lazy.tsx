@@ -6,7 +6,7 @@ export const Route = createLazyFileRoute('/events/$eventId')({
   component: RouteComponent,
 })
 
-export function EventDetailRoute({ eventId }: { eventId: string }) {
+export function EventDetailRoute({ eventId }: Readonly<{ eventId: string }>) {
   return <GatewayEventDetailPage eventId={eventId} />
 }
 

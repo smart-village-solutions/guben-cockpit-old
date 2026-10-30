@@ -108,7 +108,7 @@ describe("Navbar", () => {
 
     const nav = screen.getByLabelText("Main navigation");
     expect(nav).toBeTruthy();
-    expect(container.querySelectorAll("nav ul > li").length).toBe(6);
+    expect(container.querySelectorAll("nav ul > li")).toHaveLength(6);
     expect(container.querySelector("nav ul > li > li")).toBeNull();
   }, 15_000);
 

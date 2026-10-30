@@ -19,7 +19,7 @@ interface DateRangePickerProps {
 
 const dateFormat = "LLL dd, y";
 
-export default function DateRangePicker(props: DateRangePickerProps) {
+export default function DateRangePicker(props: Readonly<DateRangePickerProps>) {
   const [range, setRange] = useState<DateRange | undefined>();
 
   const dateString = useMemo(() => {
