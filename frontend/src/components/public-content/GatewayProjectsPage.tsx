@@ -71,6 +71,14 @@ export const GatewayProjectsPage = ({
 
   return (
     <main className="w-full h-full flex flex-1 flex-col items-center gap-8 pb-8">
+      {featuredQuery.data?.page && (
+        <article className="max-w-7xl px-4 w-full">
+          <div className="flex gap-3 flex-col">
+            <h1 className="text-gubenAccent font-poppins text-h1 font-bold">{featuredQuery.data.page.title}</h1>
+            <p className="text-base text-gray-700">{featuredQuery.data.page.description}</p>
+          </div>
+        </article>
+      )}
       <FeaturedProjectsSection
         isPending={featuredQuery.isPending}
         error={featuredQuery.error}
