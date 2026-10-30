@@ -126,13 +126,15 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
         const root = doc.body.firstElementChild!;
         const nodes = collectTextNodes(root);
         let changed = false;
+        let complete = true;
         nodes.forEach((node) => {
             const translated = translatedTexts[counter++];
             if (translated !== node.textContent?.trim()) changed = true;
+            else complete = false;
             node.textContent = translated ?? node.textContent ?? "";
         });
         const translatedHTML = root.innerHTML;
-        if (changed && translatedHTML !== text) htmlCache[`${text}_${targetLang}`] = translatedHTML;
+        if (complete && changed && translatedHTML !== text) htmlCache[`${text}_${targetLang}`] = translatedHTML;
         results[index] = translatedHTML;
     });
 

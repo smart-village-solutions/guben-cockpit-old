@@ -41,3 +41,14 @@ it("splits large booking text collections into bounded requests and retains orde
   expect(fetcher).toHaveBeenCalledTimes(14);
   expect(fetcher.mock.calls.every((call) => JSON.parse(call[1].body).q.length <= 20)).toBe(true);
 });
+
+it("retries HTML with partially untranslated segments instead of caching the fallback", async () => {
+  const fetcher = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ translatedText: ["Hello", "Welt"] }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ translatedText: ["Hello", "World"] }) });
+  vi.stubGlobal("fetch", fetcher);
+  const { translateHtmlBatchedMultiple } = await import("./translateUtils");
+  const html = "<p>Hallo</p><p>Welt</p>";
+  expect(await translateHtmlBatchedMultiple([html], "en")).toEqual(["<p>Hello</p><p>Welt</p>"]);
+  expect(await translateHtmlBatchedMultiple([html], "en")).toEqual(["<p>Hello</p><p>World</p>"]);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});
