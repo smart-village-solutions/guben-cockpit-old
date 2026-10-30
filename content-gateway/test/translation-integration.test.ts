@@ -40,7 +40,13 @@ describe("gateway translation integration", () => {
     try {
       const response = await app.inject({ method: "POST", url: "/api/content/translate", payload: { q: ["Hallo"], target: "en" } });
       expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual({ translatedText: ["EN Hallo"] });
+      expect(response.json()).toEqual({ translatedText: ["Hallo"] });
+      expect(response.headers["x-translation-pending"]).toBe("1");
+      await vi.waitFor(async () => {
+        const ready = await app.inject({ method: "POST", url: "/api/content/translate", payload: { q: ["Hallo"], target: "en" } });
+        expect(ready.json()).toEqual({ translatedText: ["EN Hallo"] });
+        expect(ready.headers["x-translation-pending"]).toBe("0");
+      });
       for (const payload of [{ q: ["Hallo"], target: "fr" }, { q: Array(101).fill("Hallo"), target: "en" }]) {
         expect((await app.inject({ method: "POST", url: "/api/content/translate", payload })).statusCode).toBe(400);
       }
@@ -72,4 +78,27 @@ it("merges partial card translations by unique link and matches localized tabs b
   const cards = (await repository.getDashboard("en")).dropdowns[0].tabs[0].informationCards;
   expect(cards.map((entry) => entry.title)).toEqual(["EN Zweite Karte", "Existing card"]);
   expect(cards[1]).toMatchObject({ id: "en-one", description: "EN Beschreibung" });
+});
+
+it("serves a content response while its translation engine is still blocked", async () => {
+  let finish!: (response: Response) => void;
+  const automatic = new AutomaticTranslator({ url: "https://translate.invalid/translate", fetch: vi.fn<typeof fetch>().mockImplementation(() => new Promise((resolve) => { finish = resolve; })) });
+  const repository = new MockContentRepository();
+  const originalHome = await repository.getHome();
+  repository.getHome = async (language?: string) => ({ ...originalHome, page: { ...originalHome.page, title: await automatic.text("Startseite", language ?? "de") } });
+  const app = createApp({ config: loadConfig({ LOG_LEVEL: "silent" }), repository, translator: automatic });
+  try {
+    const response = await app.inject({ method: "GET", url: "/api/content/home?lang=en" });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().page.title).toBe("Startseite");
+    expect(response.headers["x-translation-pending"]).toBe("1");
+    const german = await app.inject({ method: "GET", url: "/api/content/home?lang=de" });
+    expect(german.headers["x-translation-pending"]).toBe("0");
+    const completion = automatic.text("Startseite", "en");
+    finish(new Response(JSON.stringify({ translatedText: ["Home"] })));
+    await completion;
+    const ready = await app.inject({ method: "GET", url: "/api/content/home?lang=en" });
+    expect(ready.json().page.title).toBe("Home");
+    expect(ready.headers["x-translation-pending"]).toBe("0");
+  } finally { await app.close(); }
 });

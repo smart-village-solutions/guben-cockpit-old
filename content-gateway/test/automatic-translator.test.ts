@@ -97,3 +97,54 @@ it("serializes distinct network requests without losing results or blocking on f
   expect(await Promise.all(["Eins", "Fehler", "Zwei"].map((text) => translator.text(text, "en")))).toEqual(["EN Eins", "Fehler", "EN Zwei"]);
   expect(peak).toBe(1);
 });
+
+it("returns originals without waiting, deduplicates background work and subsequently returns the cache", async () => {
+  let finish!: (response: Response) => void;
+  const fetcher = vi.fn<typeof fetch>().mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  const translator = new AutomaticTranslator({ url: "https://translation.invalid/translate", fetch: fetcher });
+  expect(await translator.defer(() => translator.text("Hallo", "en"))).toEqual({ value: "Hallo", pending: true });
+  expect(await translator.defer(() => translator.text("Hallo", "en"))).toEqual({ value: "Hallo", pending: true });
+  expect(await translator.defer(() => translator.text("Hallo", "de"))).toEqual({ value: "Hallo", pending: false });
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  const completion = translator.text("Hallo", "en");
+  finish(response(["Hello"]));
+  await completion;
+  expect(await translator.defer(() => translator.text("Hallo", "en"))).toEqual({ value: "Hello", pending: false });
+});
+
+it("does not immediately reschedule failed background translations or keep clients polling on failure", async () => {
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response("unavailable", { status: 503 }));
+  const translator = new AutomaticTranslator({ url: "https://translation.invalid/translate", fetch: fetcher });
+  expect((await translator.defer(() => translator.text("Hallo", "en"))).pending).toBe(true);
+  await vi.waitFor(async () => {
+    expect(await translator.defer(() => translator.text("Hallo", "en"))).toEqual({ value: "Hallo", pending: false });
+  });
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});
+
+it("returns persisted translations immediately after restart without contacting the engine", async () => {
+  const cacheDir = await mkdtemp(join(tmpdir(), "cockpit-deferred-"));
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValue(response(["Hello"]));
+  const options = { url: "https://translation.invalid/translate", fetch: fetcher, cacheDir };
+  try {
+    await new AutomaticTranslator(options).text("Hallo", "en");
+    const restarted = new AutomaticTranslator(options);
+    expect(await restarted.defer(() => restarted.text("Hallo", "en"))).toEqual({ value: "Hello", pending: false });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  } finally { await rm(cacheDir, { recursive: true, force: true }); }
+});
+
+it("deduplicates concurrent cold disk-cache misses while keeping both responses nonblocking", async () => {
+  const cacheDir = await mkdtemp(join(tmpdir(), "cockpit-cold-"));
+  let finish!: (response: Response) => void;
+  const fetcher = vi.fn<typeof fetch>().mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  const translator = new AutomaticTranslator({ url: "https://translation.invalid/translate", fetch: fetcher, cacheDir });
+  try {
+    expect(await Promise.all([translator.defer(() => translator.text("Hallo", "en")), translator.defer(() => translator.text("Hallo", "en"))])).toEqual([{ value: "Hallo", pending: true }, { value: "Hallo", pending: true }]);
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+    const completion = translator.text("Hallo", "en");
+    finish(response(["Hello"]));
+    await completion;
+    expect(await translator.defer(() => translator.text("Hallo", "en"))).toEqual({ value: "Hello", pending: false });
+  } finally { await rm(cacheDir, { recursive: true, force: true }); }
+});

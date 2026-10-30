@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { join } from "node:path";
@@ -14,6 +15,8 @@ type Options = {
 const editorialFields = new Set(["title", "description", "fullText", "imageCaption", "imageAlt", "question", "answer", "dropdownTitle", "tabTitle"]);
 
 export class AutomaticTranslator {
+  private readonly requestScope = new AsyncLocalStorage<{ pending: boolean }>();
+  private readonly retryAfter = new Map<string, number>();
   private readonly cache = new Map<string, string>();
   private requestQueue: Promise<void> = Promise.resolve();
   private readonly pending = new Map<string, Promise<string>>();
@@ -26,9 +29,42 @@ export class AutomaticTranslator {
     const key = createHash("sha256").update(JSON.stringify(["v2", this.options.url, "auto", target, text])).digest("hex");
     const cached = this.cache.get(key);
     if (cached !== undefined) return cached;
-    const pending = this.pending.get(key);
-    if (pending) return pending;
-    const task = this.load(text, target, key).finally(() => this.pending.delete(key));
+    const scope = this.requestScope.getStore();
+    if (scope) return this.cachedOrSchedule(text, target, key, scope);
+    return this.pending.get(key) ?? this.schedule(text, target, key);
+  }
+
+  public async defer<T>(action: () => T | Promise<T>): Promise<{ value: T; pending: boolean }> {
+    const scope = this.requestScope.getStore() ?? { pending: false };
+    return this.requestScope.run(scope, async () => ({ value: await action(), pending: scope.pending }));
+  }
+
+  private async cachedOrSchedule(text: string, target: string, key: string, scope: { pending: boolean }): Promise<string> {
+    if (this.pending.has(key)) {
+      scope.pending = true;
+      return text;
+    }
+    if (this.options.cacheDir) {
+      try {
+        const value: unknown = JSON.parse(await readFile(join(this.options.cacheDir, `${key}.json`), "utf8"));
+        if (typeof value === "string" && value.trim()) return this.remember(key, value);
+      } catch { /* Missing translations are prepared in the background. */ }
+    }
+    if ((this.retryAfter.get(key) ?? 0) > Date.now()) return text;
+    scope.pending = true;
+    if (!this.pending.has(key) && this.pending.size < 100) void this.schedule(text, target, key);
+    return text;
+  }
+
+  private schedule(text: string, target: string, key: string): Promise<string> {
+    const task = this.load(text, target, key).finally(() => {
+      this.pending.delete(key);
+      if (this.cache.has(key)) this.retryAfter.delete(key);
+      else {
+        if (this.retryAfter.size >= 2000) this.retryAfter.delete(this.retryAfter.keys().next().value!);
+        this.retryAfter.set(key, Date.now() + 30000);
+      }
+    });
     this.pending.set(key, task);
     return task;
   }
@@ -40,7 +76,6 @@ export class AutomaticTranslator {
   }
 
   private async load(text: string, target: string, key: string): Promise<string> {
-    const deadline = Date.now() + (this.options.timeoutMs ?? 3000);
     let release: (() => void) | undefined;
     const file = this.options.cacheDir ? join(this.options.cacheDir, `${key}.json`) : undefined;
     if (file) {
@@ -58,8 +93,7 @@ export class AutomaticTranslator {
       const previous = this.requestQueue;
       this.requestQueue = new Promise<void>((resolve) => { release = resolve; });
       await previous;
-      const remaining = deadline - Date.now();
-      if (remaining <= 0) return text;
+      const remaining = this.options.timeoutMs ?? 3000;
       const response = await (this.options.fetch ?? fetch)(this.options.url!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

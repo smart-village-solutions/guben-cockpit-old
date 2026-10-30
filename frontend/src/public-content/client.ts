@@ -56,8 +56,17 @@ export const fetchGatewayJson = async <TOutput>(
   }
 
   const payload = await response.json();
-  return schema.parse(payload);
+  const parsed = schema.parse(payload);
+  const pending = response.headers?.get("X-Translation-Pending");
+  if (pending != null && parsed && typeof parsed === "object") {
+    Object.assign(parsed, { translationPending: pending === "1" });
+  }
+  return parsed;
 };
 
 export const isGatewayRequestError = (value: unknown): value is GatewayRequestError =>
   value instanceof GatewayRequestError;
+
+export const hasPendingTranslations = (value: unknown): boolean =>
+  typeof value === "object" && value !== null &&
+  (value as { translationPending?: boolean }).translationPending === true;
