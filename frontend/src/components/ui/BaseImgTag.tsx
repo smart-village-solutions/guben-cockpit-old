@@ -9,8 +9,9 @@ export const BaseImgTag = React.forwardRef<
     ref={ref}
     alt={alt}
     onError={({ currentTarget }) => {
-      currentTarget.onerror = null; // prevents looping
-      currentTarget.src="/public/images/image-not-found.png";
+      if (currentTarget.getAttribute("src") !== "/images/image-not-found.png") {
+        currentTarget.src = "/images/image-not-found.png";
+      }
     }}
     className={cn(className)}
     {...props}

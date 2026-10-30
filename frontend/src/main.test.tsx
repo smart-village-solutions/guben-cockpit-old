@@ -76,13 +76,14 @@ describe("main bootstrap", () => {
     expect(hydrateRootMock).not.toHaveBeenCalled();
   });
 
-  it("hydrates an existing root instead of creating a new one", async () => {
-    document.body.innerHTML = '<div id="app"><div>server</div></div>';
+  it("mounts React over the static prerender shell without hydrating incompatible HTML", async () => {
+    document.body.innerHTML = '<div id="app"><main data-prerendered="true">server</main></div>';
 
     await import("./main");
 
-    expect(hydrateRootMock).toHaveBeenCalledTimes(1);
-    expect(createRootMock).not.toHaveBeenCalled();
+    expect(hydrateRootMock).not.toHaveBeenCalled();
+    expect(createRootMock).toHaveBeenCalledWith(document.getElementById("app"));
+    expect(createRootRender).toHaveBeenCalledTimes(1);
   });
 
   it("renders the app and injects Matomo only outside localhost when configured", async () => {
