@@ -81,3 +81,19 @@ describe("translation gaps", () => {
     expect(result).toEqual({ categories: [{ id: "c", name: "EN Kultur" }], priceInformations: [{ name: "EN Erwachsene" }], location: { name: "Guben" }, organizerName: "Stadt Guben" });
   });
 });
+
+it("serializes distinct network requests without losing results or blocking on failures", async () => {
+  let active = 0;
+  let peak = 0;
+  const fetcher = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
+    active++; peak = Math.max(peak, active);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    active--;
+    const { q } = JSON.parse(String(init?.body)) as { q: string[] };
+    if (q[0] === "Fehler") throw new Error("offline");
+    return response(q.map((text) => `EN ${text}`));
+  });
+  const translator = new AutomaticTranslator({ url: "https://translation.invalid/translate", fetch: fetcher });
+  expect(await Promise.all(["Eins", "Fehler", "Zwei"].map((text) => translator.text(text, "en")))).toEqual(["EN Eins", "Fehler", "EN Zwei"]);
+  expect(peak).toBe(1);
+});

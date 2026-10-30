@@ -15,6 +15,7 @@ const editorialFields = new Set(["title", "description", "fullText", "imageCapti
 
 export class AutomaticTranslator {
   private readonly cache = new Map<string, string>();
+  private requestQueue: Promise<void> = Promise.resolve();
   private readonly pending = new Map<string, Promise<string>>();
 
   public constructor(private readonly options: Options) {}
@@ -39,6 +40,8 @@ export class AutomaticTranslator {
   }
 
   private async load(text: string, target: string, key: string): Promise<string> {
+    const deadline = Date.now() + (this.options.timeoutMs ?? 3000);
+    let release: (() => void) | undefined;
     const file = this.options.cacheDir ? join(this.options.cacheDir, `${key}.json`) : undefined;
     if (file) {
       try {
@@ -51,10 +54,16 @@ export class AutomaticTranslator {
       const parts = text.split(/(<[^>]*>|&(?:#\d+|#x[\da-f]+|\w+);|https?:\/\/[^\s<>]+|[\w.+-]+@[\w.-]+\.[a-z]{2,})/gi);
       const indexes = parts.flatMap((part, index) => index % 2 === 0 && /\p{L}/u.test(part) ? [index] : []);
       if (indexes.length === 0) return text;
+      // The existing CPU translation engine must not receive an unbounded fan-out.
+      const previous = this.requestQueue;
+      this.requestQueue = new Promise<void>((resolve) => { release = resolve; });
+      await previous;
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) return text;
       const response = await (this.options.fetch ?? fetch)(this.options.url!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(this.options.timeoutMs ?? 3000),
+        signal: AbortSignal.timeout(remaining),
         body: JSON.stringify({
           q: indexes.map((index) => parts[index].trim()), source: "auto", target, format: "text",
           ...(this.options.apiKey ? { api_key: this.options.apiKey } : {}),
@@ -82,6 +91,7 @@ export class AutomaticTranslator {
       }
       return this.remember(key, value);
     } catch { return text; } // Failed translations are deliberately not cached.
+    finally { release?.(); }
   }
 
   public async fillMissing<T>(source: T, target: T, language: string): Promise<T> {

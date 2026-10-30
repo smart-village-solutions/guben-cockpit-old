@@ -32,6 +32,29 @@ function normalizeTranslations(payload: unknown): string[] | null {
     return null;
 }
 
+async function requestTranslations(texts: string[], targetLang: string): Promise<string[]> {
+    const results = [...texts];
+    for (let start = 0; start < texts.length; start += 20) {
+        const batch = texts.slice(start, start + 20);
+        const indexes = batch.flatMap((text, index) => text.length <= 20000 ? [index] : []);
+        if (indexes.length === 0) continue;
+        try {
+            const response = await fetch(new URL("/api/content/translate", contentGatewayBaseUrl), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ q: indexes.map((index) => batch[index]), target: targetLang.split("-")[0].toLowerCase() }),
+            });
+            if (!response.ok) continue;
+            const translated = normalizeTranslations(await response.json());
+            if (!translated || translated.length !== indexes.length) continue;
+            indexes.forEach((index, offset) => {
+                if (translated[offset].trim()) results[start + index] = translated[offset];
+            });
+        } catch { /* Retain original text and allow a later retry. */ }
+    }
+    return results;
+}
+
 export async function translateBatchedMultiple(texts: string[], targetLang: string) {
     const results: string[] = [];
     const untranslated: { index: number; text: string }[] = [];
@@ -49,25 +72,7 @@ export async function translateBatchedMultiple(texts: string[], targetLang: stri
 
     const textsToTranslate = untranslated.map(({ text }) => text);
 
-    let translatedTexts: string[] | null = null;
-    try {
-        const response = await fetch(new URL("/api/content/translate", contentGatewayBaseUrl), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                q: textsToTranslate,
-                target: targetLang.split("-")[0].toLowerCase()
-            }),
-        });
-
-        if (response.ok) {
-            translatedTexts = normalizeTranslations(await response.json());
-        } else {
-            console.warn("Translation request returned non-OK status", response.status);
-        }
-    } catch (error) {
-        console.warn("Translation request failed", error);
-    }
+    const translatedTexts = await requestTranslations(textsToTranslate, targetLang);
 
     untranslated.forEach(({ index, text }, i) => {
         const translated = translatedTexts?.[i] ?? text;
@@ -112,37 +117,24 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
         return results;
     }
 
-    let translatedTexts: string[] | null = null;
-    try {
-        const response = await fetch(new URL("/api/content/translate", contentGatewayBaseUrl), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-            q: flatTexts,
-            target: targetLang.split("-")[0].toLowerCase()
-            }),
-        });
+    const translatedTexts = await requestTranslations(flatTexts, targetLang);
 
-        if (response.ok) {
-            translatedTexts = normalizeTranslations(await response.json());
-        } else {
-            console.warn("Translation request returned non-OK status", response.status);
-        }
-    } catch (error) {
-        console.warn("Translation fetch failed", error);
-    }
-  
     let counter = 0;
     untranslated.forEach(({ index, text }) => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(`<div>${text}</div>`, "text/html");
         const root = doc.body.firstElementChild!;
         const nodes = collectTextNodes(root);
+        let changed = false;
+        let complete = true;
         nodes.forEach((node) => {
-            node.textContent = translatedTexts?.[counter++] ?? node.textContent ?? "";
+            const translated = translatedTexts[counter++];
+            if (translated !== node.textContent?.trim()) changed = true;
+            else complete = false;
+            node.textContent = translated ?? node.textContent ?? "";
         });
         const translatedHTML = root.innerHTML;
-        if (translatedTexts && translatedHTML !== text) htmlCache[`${text}_${targetLang}`] = translatedHTML;
+        if (complete && changed && translatedHTML !== text) htmlCache[`${text}_${targetLang}`] = translatedHTML;
         results[index] = translatedHTML;
     });
 

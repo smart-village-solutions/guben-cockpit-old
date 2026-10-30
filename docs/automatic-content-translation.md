@@ -15,7 +15,7 @@ Nur freigegebene redaktionelle Felder werden übersetzt. IDs, Links, Adressen, O
 
 ## Cache und Ausfälle
 
-Der Cache-Schlüssel enthält Dienst-URL, automatische Quellspracherkennung, Zielsprache und vollständigen Ausgangstext. Änderungen am Original erzeugen automatisch einen neuen Schlüssel. Erfolgreiche Übersetzungen werden im begrenzten Arbeitsspeicher-Cache und optional auf einem persistenten Volume gespeichert. Gleichzeitige identische Anfragen teilen einen laufenden Übersetzungsauftrag.
+Der Cache-Schlüssel enthält Dienst-URL, automatische Quellspracherkennung, Zielsprache und vollständigen Ausgangstext. Änderungen am Original erzeugen automatisch einen neuen Schlüssel. Erfolgreiche Übersetzungen werden im begrenzten Arbeitsspeicher-Cache und optional auf einem persistenten Volume gespeichert. Gleichzeitige identische Anfragen teilen einen laufenden Übersetzungsauftrag. Unterschiedliche Dienstaufrufe werden pro Gateway-Prozess seriell ausgeführt, damit die CPU-Übersetzungsmaschine nicht durch parallele Modellberechnungen überlastet wird. Das Zeitlimit umfasst auch das Warten in der Warteschlange. Große Textsammlungen aus dem Browser werden in aufeinanderfolgende Anfragen mit höchstens 20 Texten aufgeteilt; zu große Einzeltexte bleiben als Original sichtbar.
 
 Timeouts, fehlerhafte Antworten und nicht verfügbare Dienste führen zum Originaltext. Fehler werden nicht als erfolgreiche Übersetzung gespeichert; ein späterer Abruf versucht es erneut. Fehler beim Dateicache verhindern die Inhaltsausgabe nicht. Nicht mehr referenzierte Dateien können bei Bedarf durch Leeren des Cache-Volumes entfernt werden; der Cache wird automatisch wieder aufgebaut.
 

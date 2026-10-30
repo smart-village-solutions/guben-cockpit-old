@@ -29,3 +29,26 @@ describe("gateway-backed browser translations", () => {
     expect(renderToStaticMarkup(<TranslatedHtml text="<p>Hallo</p>" />)).toBe("<div><p>Hello</p></div>");
   });
 });
+
+it("splits large booking text collections into bounded requests and retains order", async () => {
+  const fetcher = vi.fn().mockImplementation(async (_url, init) => ({ ok: true, json: async () => ({ translatedText: JSON.parse(init.body).q.map((text: string) => `EN ${text}`) }) }));
+  vi.stubGlobal("fetch", fetcher);
+  const { translateBatchedMultiple, translateHtmlBatchedMultiple } = await import("./translateUtils");
+  const texts = Array.from({ length: 121 }, (_, index) => `Text ${index}`);
+  expect(await translateBatchedMultiple(texts, "en")).toEqual(texts.map((text) => `EN ${text}`));
+  const html = texts.map((text) => `<p>${text}</p>`).join("");
+  expect(await translateHtmlBatchedMultiple([html], "en")).toEqual([texts.map((text) => `<p>EN ${text}</p>`).join("")]);
+  expect(fetcher).toHaveBeenCalledTimes(14);
+  expect(fetcher.mock.calls.every((call) => JSON.parse(call[1].body).q.length <= 20)).toBe(true);
+});
+
+it("retries HTML with partially untranslated segments instead of caching the fallback", async () => {
+  const fetcher = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ translatedText: ["Hello", "Welt"] }) })
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ translatedText: ["Hello", "World"] }) });
+  vi.stubGlobal("fetch", fetcher);
+  const { translateHtmlBatchedMultiple } = await import("./translateUtils");
+  const html = "<p>Hallo</p><p>Welt</p>";
+  expect(await translateHtmlBatchedMultiple([html], "en")).toEqual(["<p>Hello</p><p>Welt</p>"]);
+  expect(await translateHtmlBatchedMultiple([html], "en")).toEqual(["<p>Hello</p><p>World</p>"]);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});
