@@ -112,6 +112,7 @@ export const eventImageSchema = z.object({
   thumbnailUrl: z.string(),
   previewUrl: z.string(),
   originalUrl: z.string(),
+  description: z.string().nullable().optional(),
 });
 
 export const eventContactSchema = z.object({

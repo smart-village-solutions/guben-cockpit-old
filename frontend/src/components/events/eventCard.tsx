@@ -41,7 +41,7 @@ const EventImageCarousel = ({ event, selectedImage, onSelectImage }: EventImageC
         <BaseImgTag
           className="w-full h-full object-contain"
           src={event.images[selectedImage].previewUrl}
-          alt="Event"
+          alt={event.images[selectedImage].description?.trim() || event.title}
         />
 
         {selectedImage < event.images.length - 1 && event.images.length > 1 && (
@@ -108,12 +108,15 @@ function EventCard({ event }: EventCardProps) {
       ].filter(Boolean).join(" · ")
     : null;
 
+  const locationLabel = formatEventLocation(event.location);
   const extraInfo: ReactNode = (
     <div className="space-y-2 flex flex-col">
-      <div className="flex items-start gap-2 text-sm">
-        <MapPinIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
-        <p className="line-clamp-2">{formatEventLocation(event.location)}</p>
-      </div>
+      {locationLabel ? (
+        <div className="flex items-start gap-2 text-sm">
+          <MapPinIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <p className="line-clamp-2">{locationLabel}</p>
+        </div>
+      ) : null}
       <div className="flex items-start gap-2 text-sm">
         <ClockIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <p className="line-clamp-2">{formatEventDateRange(startDate, endDate)}</p>

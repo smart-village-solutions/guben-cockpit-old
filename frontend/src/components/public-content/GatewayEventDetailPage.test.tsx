@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
+import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "@/utilities/dateExtensions";
 import type { EventDetailContent } from "@shared/public-content/contracts";
+
+import { SmartVillageEventMapper } from "../../../../content-gateway/src/content/smart-village-event-mapper";
 
 import { GatewayEventDetailPage } from "./GatewayEventDetailPage";
 
@@ -40,7 +43,7 @@ const queryState = vi.hoisted(() => ({
           previewUrl: "/preview-2.jpg",
           originalUrl: "/image-2.jpg",
         },
-      ],
+      ] as EventDetailContent["event"]["images"],
       organizerName: null as EventDetailContent["event"]["organizerName"],
       contact: null as EventDetailContent["event"]["contact"],
       priceInformations: [] as NonNullable<EventDetailContent["event"]["priceInformations"]>,
@@ -124,27 +127,15 @@ vi.mock("./PublicContentDisabledState", () => ({
   PublicContentDisabledState: () => <div>disabled-state</div>,
 }));
 
-describe("GatewayEventDetailPage", () => {
-  beforeEach(() => {
-    queryState.isPending = false;
-    queryState.error = null;
-    queryState.data.event.startDate = "2026-06-01T10:00:00";
-    queryState.data.event.endDate = "2026-06-01T12:00:00";
-    queryState.data.event.location = {
-      id: "location-1",
-      name: "Altstadt",
-      street: "Musterstrasse 1",
-      zip: "03172",
-      city: "Guben",
-    };
-    queryState.data.event.organizerName = null;
-    queryState.data.event.contact = null;
-    queryState.data.event.priceInformations = [];
-    queryState.data.event.dataProviderName = null;
-    queryState.data.event.registrationRequired = undefined;
-    queryState.data.event.maximumAttendees = undefined;
-  });
+const initialEvent = structuredClone(queryState.data.event);
 
+beforeEach(() => {
+  queryState.data.event = structuredClone(initialEvent);
+  queryState.isPending = false;
+  queryState.error = null;
+});
+
+describe("GatewayEventDetailPage", () => {
   it("renders event images in the shared content media slot instead of the header", () => {
     render(<GatewayEventDetailPage eventId="event-1" />);
 
@@ -252,5 +243,68 @@ describe("GatewayEventDetailPage", () => {
     rerender(<GatewayEventDetailPage eventId="event-1" />);
 
     expect(screen.getByText("Keine Anmeldung erforderlich")).toBeTruthy();
+  });
+});
+
+describe("Biletado event detail images", () => {
+  it.each([0, 1, 3])("renders %i images with metadata and working navigation", async (count) => {
+    const user = userEvent.setup();
+    queryState.data.event.images = Array.from({ length: count }, (_, index) => ({
+      thumbnailUrl: `/image-${index}.jpg`, previewUrl: `/image-${index}.jpg`, originalUrl: `/image-${index}.jpg`, description: `Motiv ${index}`,
+    }));
+    render(<GatewayEventDetailPage eventId="event-1" />);
+    if (!count) {
+      expect(screen.queryByRole("img")).toBeNull();
+      expect(screen.getByRole("heading", { name: "Sommerfest" })).toBeTruthy();
+    } else {
+      expect(screen.getByRole("img", { name: "Motiv 0" }).getAttribute("src")).toBe("/image-0.jpg");
+      expect(screen.getByText("Motiv 0")).toBeTruthy();
+    }
+    if (count > 1) {
+      await user.click(screen.getByRole("button", { name: "Nächstes Bild" }));
+      expect(screen.getByRole("img", { name: "Motiv 1" }).getAttribute("src")).toBe("/image-1.jpg");
+      expect(screen.getByText(`2 / ${count}`)).toBeTruthy();
+    } else {
+      expect(screen.queryByRole("button", { name: "Nächstes Bild" })).toBeNull();
+    }
+  });
+
+  it("hides unavailable location and category blocks", () => {
+    queryState.data.event.categories = [];
+    queryState.data.event.location = { id: "event-1", name: "", street: " ", zip: "", city: "" };
+    render(<GatewayEventDetailPage eventId="event-1" />);
+    expect(screen.queryByText("Location")).toBeNull();
+    expect(screen.queryByText("Fest")).toBeNull();
+  });
+});
+
+describe("Mainserver to public event detail contract", () => {
+  it("renders a controlled Biletado record through the real mapper and schema", () => {
+    const [event] = new SmartVillageEventMapper().eventsFromRecord({
+      id: "biletado-controlled-42", externalId: "biletado:test:42", title: "Kontrolliertes Biletado-Event",
+      description: "Öffentliche Beschreibung", visible: true,
+      date: { dateStart: "2026-11-01", dateEnd: "2026-11-01", timeStart: "10:00", timeEnd: "12:00" },
+      addresses: [{ street: "Markt 1", zip: "03172", city: "Guben" }],
+      categories: [{ id: "fest", name: "Fest" }],
+      mediaContents: [
+        { sourceUrl: { url: "https://example.test/entrance.jpg", description: "Eingang am Markt" } },
+        { sourceUrl: { url: "https://example.test/stage.jpg", description: "Bühne im Hof" } },
+      ],
+      urls: [{ url: "https://tickets.example.test/42", description: "Tickets buchen" }, { url: "javascript:alert(1)" }],
+      contacts: [{ email: "kontakt@example.test", phone: "+49 123 456", webUrls: [{ url: "https://example.test" }] }],
+      organizer: { name: "Kulturverein" }, dataProvider: { name: "Biletado" },
+      registrationRequired: true, maximumAttendees: 42,
+      priceInformations: [{ name: "Eintritt", amount: 5, description: "Abendkasse" }],
+    });
+    queryState.data.event = event as typeof queryState.data.event;
+    render(<GatewayEventDetailPage eventId={event.id} />);
+    for (const text of ["Markt 1, 03172 Guben", "Fest", "Anmeldung erforderlich", "Maximale Teilnehmerzahl: 42", "Kulturverein", "Quelle: Biletado"]) {
+      expect(screen.getByText(text)).toBeTruthy();
+    }
+    expect(screen.getByText(/Eintritt.*5,00.*Abendkasse/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Tickets buchen/ }).getAttribute("href")).toBe("https://tickets.example.test/42");
+    expect(screen.getByRole("link", { name: /kontakt@example.test/ }).getAttribute("href")).toBe("mailto:kontakt@example.test");
+    expect(screen.getByRole("img", { name: "Eingang am Markt" })).toBeTruthy();
+    expect(screen.getByText("1 / 2")).toBeTruthy();
   });
 });

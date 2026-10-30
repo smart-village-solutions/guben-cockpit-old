@@ -158,6 +158,23 @@ Ein Detail wird ueber die ID aus dem Listenresultat abgefragt:
 GET /api/content/events/{id}?lang=de
 ```
 
+### Event-Bilder und optionale Metadaten
+
+`event.images` bleibt ein Array (ohne Bilder: `[]`). Der Smart-Village-Mapper
+übernimmt `mediaContents` in Quellreihenfolge und verwirft Einträge ohne valide,
+absolute HTTP(S)-Bild-URL. `thumbnailUrl`, `previewUrl` und `originalUrl` verwenden
+aktuell dieselbe Quell-URL. Die optionale `description` übernimmt die getrimmte
+`sourceUrl.description`; ältere Payloads ohne dieses Feld bleiben gültig.
+Karte und Detailseite verwenden die Beschreibung als Alternativtext, sonst den
+Eventtitel. Die Detailgalerie zeigt eine vorhandene Beschreibung zusätzlich als
+Bildbeschriftung. Beschreibung und Beschriftung werden als Text ausgegeben.
+
+Leere Ortsangaben erzeugen keinen Standortblock; der Mapper ersetzt einen
+fehlenden Ortsnamen nicht durch den Eventtitel. Leere Kategorien und optionale
+Teilnahme-, Veranstalter-, Kontakt-, Preis- oder Quellenangaben erzeugen keine
+entsprechenden Detailblöcke. Ticket- und Kontakt-Weblinks werden im Mapper auf
+absolute HTTP(S)-URLs beschränkt.
+
 ### Orte (POIs)
 
 `GET /api/content/pois` akzeptiert ausschliesslich die folgenden Parameter;

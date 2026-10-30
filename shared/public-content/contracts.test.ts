@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   bookingFaqsContentSchema,
   eventDetailContentSchema,
+  eventImageSchema,
   eventsContentSchema,
   gatewayErrorSchema,
   homeContentSchema,
@@ -355,5 +356,17 @@ describe("public content contracts", () => {
         },
       }),
     ).toThrowError();
+  });
+});
+
+describe("event image metadata", () => {
+  it.each([0, 1, 3])("retains %i ordered images and optional descriptions", (count) => {
+    const images = Array.from({ length: count }, (_, index) => ({
+      thumbnailUrl: `https://example.test/${index}.jpg`,
+      previewUrl: `https://example.test/${index}.jpg`,
+      originalUrl: `https://example.test/${index}.jpg`,
+      ...(index % 2 === 0 ? { description: `Motiv ${index}` } : {}),
+    }));
+    expect(eventImageSchema.array().parse(images)).toEqual(images);
   });
 });
