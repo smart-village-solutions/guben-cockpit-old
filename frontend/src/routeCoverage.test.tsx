@@ -293,7 +293,7 @@ describe("route coverage", () => {
       </div>,
     );
 
-    expect(screen.getByText("Willkommen in der Buchungsübersicht")).toBeTruthy();
+    expect(screen.getByText("overview.title")).toBeTruthy();
     expect(screen.getByText("BookingIntegration")).toBeTruthy();
     expect(screen.getByText("rooms")).toBeTruthy();
     expect(screen.getByText("BookingComponent")).toBeTruthy();

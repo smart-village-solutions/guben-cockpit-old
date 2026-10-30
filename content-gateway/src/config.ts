@@ -47,6 +47,10 @@ const createSecureUrlSchema = (
   );
 
 const baseConfigSchema = z.object({
+  TRANSLATE_URL: z.preprocess((value) => value === "" ? undefined : value, z.string().url().optional()),
+  TRANSLATE_API_KEY: z.string().optional(),
+  TRANSLATE_CACHE_DIR: z.string().optional(),
+  TRANSLATE_TIMEOUT_MS: z.coerce.number().int().positive().optional(),
   PORT: z.coerce.number().int().positive().default(5100),
   LOG_LEVEL: z.string().default("info"),
   PUBLIC_BASE_URL: createSecureUrlSchema(

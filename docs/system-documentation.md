@@ -31,7 +31,7 @@ flowchart LR
 
   Browser --> Booking["Booking"]
   Browser --> Masterportal["Masterportal"]
-  Browser --> Translate["LibreTranslate"]
+  Gateway --> Translate["LibreTranslate"]
   Browser --> Matomo["Matomo"]
 ```
 

@@ -6,5 +6,7 @@
   "LogOut": "Abmelden",
   "Admin": "Admin",
   "ServicePortal": "Service Portal",
-  "Booking": "Buchungen"
+  "Booking": "Buchungen",
+  "SelectLanguage": "Sprache wählen",
+  "Home": "Startseite"
 }

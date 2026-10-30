@@ -1,3 +1,4 @@
+import { contentGatewayBaseUrl } from "@/public-content/source";
 import { Language } from "./i18n/Languages";
 import i18next from "i18next";
 import DOMPurify from "dompurify";
@@ -50,14 +51,12 @@ export async function translateBatchedMultiple(texts: string[], targetLang: stri
 
     let translatedTexts: string[] | null = null;
     try {
-        const response = await fetch(import.meta.env.VITE_TRANSLATE_URL, {
+        const response = await fetch(new URL("/api/content/translate", contentGatewayBaseUrl), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 q: textsToTranslate,
-                source: "auto",
-                target: targetLang,
-                api_key: import.meta.env.VITE_TRANSLATE_API_KEY
+                target: targetLang.split("-")[0].toLowerCase()
             }),
         });
 
@@ -73,7 +72,7 @@ export async function translateBatchedMultiple(texts: string[], targetLang: stri
     untranslated.forEach(({ index, text }, i) => {
         const translated = translatedTexts?.[i] ?? text;
         const cacheKey = `${text}_${targetLang}`;
-        cache[cacheKey] = translated;
+        if (translatedTexts?.[i] && translated !== text) cache[cacheKey] = translated;
         results[index] = translated;
     });
 
@@ -115,14 +114,12 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
 
     let translatedTexts: string[] | null = null;
     try {
-        const response = await fetch(import.meta.env.VITE_TRANSLATE_URL, {
+        const response = await fetch(new URL("/api/content/translate", contentGatewayBaseUrl), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
             q: flatTexts,
-            source: "auto",
-            target: targetLang,
-            api_key: import.meta.env.VITE_TRANSLATE_API_KEY
+            target: targetLang.split("-")[0].toLowerCase()
             }),
         });
 
@@ -145,7 +142,7 @@ export async function translateHtmlBatchedMultiple(htmls: string[], targetLang: 
             node.textContent = translatedTexts?.[counter++] ?? node.textContent ?? "";
         });
         const translatedHTML = root.innerHTML;
-        htmlCache[`${text}_${targetLang}`] = translatedHTML;
+        if (translatedTexts && translatedHTML !== text) htmlCache[`${text}_${targetLang}`] = translatedHTML;
         results[index] = translatedHTML;
     });
 
@@ -158,7 +155,7 @@ export function TranslatedText({ text }: Readonly<{ text: string }>) {
     if (currentLang === "de") return text;
 
     const cacheKey = `${text}_${currentLang}`;
-    const translation = cache[cacheKey];
+    const translation = cache[cacheKey] ?? text;
 
     return <>{translation}</>;
 }
@@ -169,7 +166,7 @@ export function TranslatedHtml({ text, className }: Readonly<{ text: string; cla
     if (currentLang === "de") return <div className={className} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(text) }} />;
 
     const cacheKey = `${text}_${currentLang}`;
-    const translation = htmlCache[cacheKey];
+    const translation = htmlCache[cacheKey] ?? text;
 
     return <div className={className} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(translation) }} />;
 }

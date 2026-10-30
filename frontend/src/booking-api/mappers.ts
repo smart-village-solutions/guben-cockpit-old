@@ -1,30 +1,33 @@
+import i18next from "i18next";
+import deBooking from "@/assets/locales/de/booking.json";
+import { formatCurrency } from "@/utilities/i18n/formatting";
 import type { Booking, BookingPrice, BookingAvailability, Ticket } from "@/stores/bookingStore";
 import type { BookingApiBookable, BookingApiOccupancy } from "./schemas";
 
 const FALLBACK_IMAGE_URL = "/images/guben-city-booking-card-placeholder.png";
 
-const formatAmount = (amount: number) => `${amount.toLocaleString("de-DE", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})} €`;
+const label = (key: keyof typeof deBooking.formatting) =>
+  i18next.t(`formatting.${key}`, { ns: "booking", defaultValue: deBooking.formatting[key] }) || deBooking.formatting[key];
+
+const formatAmount = (amount: number) => formatCurrency(amount).replaceAll("\u00a0", " ");
 
 const formatUnit = (unit: string | null | undefined) => {
   const value = unit?.trim();
   switch (value?.toLowerCase()) {
     case "hour":
     case "per-hour":
-      return "pro Stunde";
+      return label("perHour");
     case "day":
     case "per-day":
-      return "pro Tag";
+      return label("perDay");
     case "month":
     case "per-month":
-      return "pro Monat";
+      return label("perMonth");
     case "year":
     case "per-year":
-      return "pro Jahr";
+      return label("perYear");
     case "service-fee":
-      return "Servicegebühr";
+      return label("serviceFee");
     default:
       return value || undefined;
   }
@@ -39,7 +42,7 @@ const formatInterval = (
     const from = Number(start);
     const to = Number(end);
     if (start.trim() && end.trim() && Number.isFinite(from) && Number.isFinite(to) && from >= 0 && to > from) {
-      return `${from} - ${to} Std.`;
+      return `${from} - ${to} ${label("hours")}`;
     }
   }
   return formatUnit(price.unit);
@@ -52,28 +55,28 @@ const formatPrice = (
   price:
     typeof price.priceEur === "number"
       ? formatAmount(price.priceEur)
-      : "Auf Anfrage",
+      : label("onRequest"),
   interval: formatInterval(price, priceType),
 });
 
 const formatStartingPrice = (bookable: BookingApiBookable) => {
   const tariffs = bookable.priceCategories.filter((price) => price.unit?.trim().toLowerCase() !== "service-fee");
   const fees = bookable.priceCategories.filter((price) => price.unit?.trim().toLowerCase() === "service-fee");
-  const feeLabels = fees.map((fee) => `${formatPrice(fee, bookable.priceType).price} Servicegebühr`);
+  const feeLabels = fees.map((fee) => `${formatPrice(fee, bookable.priceType).price} ${label("serviceFee")}`);
   const feeNote = fees.length > 0
-    ? ` zzgl. ${feeLabels.join(" + ")}`
+    ? ` ${label("plus")} ${feeLabels.join(" + ")}`
     : "";
   const amounts = tariffs
     .map((category) => category.priceEur)
     .filter((amount): amount is number => typeof amount === "number");
-  if (amounts.length === 0) return `Auf Anfrage${feeNote}`;
+  if (amounts.length === 0) return `${label("onRequest")}${feeNote}`;
   const amount = formatAmount(Math.min(...amounts));
-  const prefix = amounts.length > 1 ? "ab " : "";
+  const prefix = amounts.length > 1 ? `${label("from")} ` : "";
   const units = tariffs
     .filter((category) => typeof category.priceEur === "number")
     .map((category) => formatUnit(category.unit));
   const sharedUnit = units[0] && units.every((value) => value === units[0]) ? units[0] : undefined;
-  const unit = bookable.priceType === "per-hour" ? "pro Stunde" : sharedUnit;
+  const unit = bookable.priceType === "per-hour" ? label("perHour") : sharedUnit;
   const unitLabel = unit ? ` ${unit}` : "";
   return `${prefix}${amount}${unitLabel}${feeNote}`;
 };
@@ -101,7 +104,7 @@ const createDefaultTicket = (bookable: BookingApiBookable): Ticket => ({
   location: bookable.location.display_address,
   type: bookable.type,
   flags: [...bookable.flags],
-  autoCommitNote: bookable.bookingNotes || (bookable.autoCommitBooking ? "Automatische Bestätigung" : ""),
+  autoCommitNote: bookable.bookingNotes || (bookable.autoCommitBooking ? label("automaticConfirmation") : ""),
   price: formatStartingPrice(bookable),
   prices: bookable.priceCategories.map((price) => formatPrice(price, bookable.priceType)),
   bookingUrl: bookable.checkoutUrl ?? "",
@@ -123,7 +126,7 @@ export const mapBookableToBooking = (
     type: bookable.type,
     imgUrl: bookable.imgUrl || FALLBACK_IMAGE_URL,
     bookingUrl: defaultTicket.bookingUrl,
-    price: defaultTicket.price ?? "Auf Anfrage",
+    price: defaultTicket.price ?? label("onRequest"),
     prices: defaultTicket.prices,
     category: deriveCategory(bookable, options?.privateTenant ?? false),
     flags: [...bookable.flags],

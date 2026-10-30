@@ -83,7 +83,9 @@
     "offer": "Nasza oferta"
   },
   "overview": {
-    "loading": "Ładowanie przeglądu rezerwacji."
+    "loading": "Ładowanie przeglądu rezerwacji.",
+    "title": "Witamy w przeglądzie rezerwacji",
+    "description": "Witamy na naszej platformie rezerwacyjnej! Tutaj można łatwo i wygodnie rezerwować sale, obiekty sportowe, zasoby i wydarzenia miasta Guben. Korzystaj z naszych nowoczesnych obiektów i zasobów podczas imprez prywatnych, spotkań stowarzyszeń oraz wydarzeń biznesowych. Cyfrowa rezerwacja pozwala oszczędzić czas i lepiej wykorzystać infrastrukturę miejską. Pod hasłem „Inteligentne zmiany z udziałem mieszkańców” wspólnie kształtujmy Guben i korzystajmy z jego możliwości."
   },
   "noResults": "Brak wyników",
   "availability": {
@@ -150,5 +152,17 @@
   "AllBookings": "Wszystkie rezerwacje",
   "ForPublicUse": "Do użytku publicznego",
   "PrivateBookings": "Prywatne rezerwacje",
-  "Edit": "Edytuj ID klienta"
+  "Edit": "Edytuj ID klienta",
+  "formatting": {
+    "perHour": "za godzinę",
+    "perDay": "za dzień",
+    "perMonth": "za miesiąc",
+    "perYear": "za rok",
+    "serviceFee": "opłata serwisowa",
+    "onRequest": "Na zapytanie",
+    "hours": "godz.",
+    "from": "od",
+    "plus": "plus",
+    "automaticConfirmation": "Automatyczne potwierdzenie"
+  }
 }

@@ -162,6 +162,7 @@ const AdminLink = () => (
 );
 
 const LanguageSection = ({ compact = false }: { compact?: boolean }) => {
+  const { t } = useTranslation("navigation");
   const updateLanguage = useLanguageUpdater();
   const currentLanguage = i18next.language.split('-')[0];
 
@@ -174,7 +175,7 @@ const LanguageSection = ({ compact = false }: { compact?: boolean }) => {
             "rounded-lg text-[#cd1421] hover:bg-[#cd1421] hover:text-white",
             compact ? "h-9 px-2 text-sm" : "mx-3 h-9 px-3 text-base",
           )}
-          aria-label="Sprache wählen"
+          aria-label={t("SelectLanguage")}
         >
           {getLocalizedLanguagename(currentLanguage)}
         </Button>

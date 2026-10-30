@@ -27,7 +27,7 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  const currentLang = i18next.language as Language;
+  const currentLang = (i18next.resolvedLanguage ?? i18next.language ?? "de").split("-")[0] as Language;
   const locale = localeMap[currentLang] || de;
 
   return (

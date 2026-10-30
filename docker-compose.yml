@@ -8,8 +8,6 @@ services:
         VITE_BOOKING_SDK: ${VITE_BOOKING_SDK:-https://booking.guben.de/cdn/current/booking-manager.min.js}
         VITE_BOOKING_URL: ${VITE_BOOKING_URL:-https://backend.booking.guben.de}
         VITE_BOOKING_LOGIN: ${VITE_BOOKING_LOGIN:-https://booking.guben.de/login/sso}
-        VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
-        VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
         VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
     container_name: web-dev
     restart: unless-stopped
@@ -34,8 +32,6 @@ services:
         VITE_BOOKING_SDK: ${VITE_BOOKING_SDK:-https://booking.guben.de/cdn/current/booking-manager.min.js}
         VITE_BOOKING_URL: ${VITE_BOOKING_URL:-https://backend.booking.guben.de}
         VITE_BOOKING_LOGIN: ${VITE_BOOKING_LOGIN:-https://booking.guben.de/login/sso}
-        VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
-        VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
         VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
     container_name: web-live-dev
     restart: unless-stopped
@@ -51,8 +47,6 @@ services:
       VITE_BOOKING_SDK: ${VITE_BOOKING_SDK:-https://booking.guben.de/cdn/current/booking-manager.min.js}
       VITE_BOOKING_URL: ${VITE_BOOKING_URL:-https://backend.booking.guben.de}
       VITE_BOOKING_LOGIN: ${VITE_BOOKING_LOGIN:-https://booking.guben.de/login/sso}
-      VITE_TRANSLATE_URL: ${VITE_TRANSLATE_URL:-https://translate.guben.de/translate}
-      VITE_TRANSLATE_API_KEY: ${VITE_TRANSLATE_API_KEY:-some-api-key}
       VITE_MATOMO_JS: ${VITE_MATOMO_JS:-https://matomo.guben.de/js/container_Rgw4mNRZ.js}
       INTERNAL_CONTENT_GATEWAY_URL: http://content-gateway:5100
     command: ["start-frontend-live"]
@@ -79,9 +73,15 @@ services:
       CONTENT_SOURCE_MODE: postgrest
       DEFAULT_LANGUAGE: de
       FALLBACK_LANGUAGE: de
+      TRANSLATE_URL: ${TRANSLATE_URL-https://translate.guben.de/translate}
+      TRANSLATE_API_KEY: ${TRANSLATE_API_KEY:-}
+      TRANSLATE_TIMEOUT_MS: ${TRANSLATE_TIMEOUT_MS:-3000}
+      TRANSLATE_CACHE_DIR: /var/cache/translations
       POSTGREST_URL: http://postgrest:3000
       POSTGREST_TIMEOUT_MS: ${POSTGREST_TIMEOUT_MS:-10000}
       POSTGREST_SCHEMA: public_content
+    volumes:
+      - translation-cache:/var/cache/translations
     ports:
       - "${CONTENT_GATEWAY_PORT:-5100}:5100"
     networks:
@@ -167,4 +167,5 @@ networks:
     driver: bridge
 
 volumes:
+  translation-cache:
   guben_cockpit:

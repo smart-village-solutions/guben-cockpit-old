@@ -84,7 +84,9 @@
     "description": "Description"
   },
   "overview": {
-    "loading": "Booking overview is loading."
+    "loading": "Booking overview is loading.",
+    "title": "Welcome to the booking overview",
+    "description": "Welcome to our booking platform! Here you can easily book rooms, sports facilities, resources and events provided by the City of Guben. Whether for private events, club meetings or business activities, make use of our modern facilities and resources. Digital booking saves you time and helps us make better use of municipal infrastructure. Under the motto “Smart change through participation”, let us shape and enjoy Guben together."
   },
   "noResults": "No results found",
   "availability": {
@@ -151,5 +153,17 @@
   "AllBookings": "All Bookings",
   "ForPublicUse": "For Public Usage",
   "PrivateBookings": "Private Bookings",
-  "Edit": "Edit Tenant-ID"
+  "Edit": "Edit Tenant-ID",
+  "formatting": {
+    "perHour": "per hour",
+    "perDay": "per day",
+    "perMonth": "per month",
+    "perYear": "per year",
+    "serviceFee": "service fee",
+    "onRequest": "On request",
+    "hours": "hrs",
+    "from": "from",
+    "plus": "plus",
+    "automaticConfirmation": "Automatic confirmation"
+  }
 }

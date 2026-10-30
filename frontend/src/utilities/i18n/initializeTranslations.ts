@@ -41,6 +41,6 @@ void i18next
 
 // Correct way to handle language changes
 i18next.on("languageChanged", (lng) => {
-  console.log("langauge changed", lng)
+  document.documentElement.lang = lng.split("-")[0];
   FetchInterceptor.setHeader("Accept-Language", lng);
 });

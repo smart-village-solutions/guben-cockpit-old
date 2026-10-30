@@ -25,12 +25,14 @@ type Options = {
 
 type QueryResponse = { genericItems?: SmartVillageGenericItem[] | null };
 type CockpitCardPayload = {
+  translationKey?: string;
   languageCode: string;
   sortWeight: number;
   openInNewTab: boolean;
 };
 
 export type CategorizedCockpitCard = {
+  translationKey?: string;
   categoryName: string;
   languageCode: string;
   sortWeight: number;
@@ -46,6 +48,7 @@ const parsePayload = (value: unknown): CockpitCardPayload | null => {
   const payload = value as Record<string, unknown>;
   if (typeof payload.languageCode !== "string" || normalizeLanguage(payload.languageCode).length !== 2) return null;
   return {
+    ...(typeof payload.translationKey === "string" && payload.translationKey.trim() ? { translationKey: payload.translationKey.trim() } : {}),
     languageCode: normalizeLanguage(payload.languageCode),
     sortWeight:
       typeof payload.sortWeight === "number" && Number.isFinite(payload.sortWeight)
@@ -104,10 +107,13 @@ export class SmartVillageCockpitCardRepository {
     const imageUrl = optionalString(item.mediaContents?.[0]?.sourceUrl?.url);
     const imageAlt = optionalString(item.mediaContents?.[0]?.sourceUrl?.description);
     const buttonUrl = optionalString(item.webUrls?.[0]?.url);
-    const buttonTitle = optionalString(item.webUrls?.[0]?.description) ?? "Mehr erfahren";
+    const buttonTitle = optionalString(item.webUrls?.[0]?.description)
+      ?? ({ en: "Learn more", pl: "Dowiedz się więcej" } as Record<string, string>)[payload.languageCode]
+      ?? "Mehr erfahren";
 
     return [{
       categoryName,
+      ...(payload.translationKey ? { translationKey: payload.translationKey } : {}),
       languageCode: payload.languageCode,
       sortWeight: payload.sortWeight,
       card: {

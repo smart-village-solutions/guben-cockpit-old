@@ -43,8 +43,9 @@ const localizedField = (
   fallbackLanguage: string,
   key: string,
 ) => {
-  const entry = translations[language] ?? translations[fallbackLanguage];
-  return entry?.[key];
+  const value = translations[language]?.[key];
+  return value == null || (typeof value === "string" && !value.trim())
+    ? translations[fallbackLanguage]?.[key] : value;
 };
 
 const requiredString = (value: unknown, field: string): string => {

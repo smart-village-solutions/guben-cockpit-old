@@ -85,7 +85,9 @@ interface Resources {
       "description": "Beschreibung"
     },
     "overview": {
-      "loading": "Buchungsübersicht wird geladen."
+      "loading": "Buchungsübersicht wird geladen.",
+      "title": "Willkommen in der Buchungsübersicht",
+      "description": "Herzlich willkommen auf unserer Buchungsplattform! Hier können Sie bequem und unkompliziert verschiedene Räume, Sportanlagen, Ressourcen und Events der Stadt Guben buchen. Ob für private Veranstaltungen, Vereinstreffen oder geschäftliche Aktivitäten – nutzen Sie unsere modernen Einrichtungen und Ressourcen. Durch digitale Buchungsprozesse möchten wir Ihnen Zeit sparen und die Auslastung unserer städtischen Infrastruktur optimieren. Lassen Sie uns unter dem Motto „Smarter Wandel mit Beteiligung\" Guben gemeinsam gestalten und nutzen."
     },
     "noResults": "Keine Ergebnisse gefunden",
     "availability": {
@@ -152,7 +154,19 @@ interface Resources {
     "AllBookings": "Alle Buchungen",
     "ForPublicUse": "Für öffentliche Nutzung",
     "PrivateBookings": "Private Buchungen",
-    "Edit": "Mandanten-ID bearbeiten"
+    "Edit": "Mandanten-ID bearbeiten",
+    "formatting": {
+      "perHour": "pro Stunde",
+      "perDay": "pro Tag",
+      "perMonth": "pro Monat",
+      "perYear": "pro Jahr",
+      "serviceFee": "Servicegebühr",
+      "onRequest": "Auf Anfrage",
+      "hours": "Std.",
+      "from": "ab",
+      "plus": "zzgl.",
+      "automaticConfirmation": "Automatische Bestätigung"
+    }
   },
   "common": {
     "Actions": "Aktionen",
@@ -261,7 +275,8 @@ interface Resources {
         "name": "Kontakt",
         "url": "https://www.guben.de/de/kontakt"
       }
-    }
+    },
+    "FreeOfCharge": "Kostenlos"
   },
   "dashboard": {
     "Title": "Dashboard",
@@ -408,7 +423,9 @@ interface Resources {
     "LogOut": "Abmelden",
     "Admin": "Admin",
     "ServicePortal": "Service Portal",
-    "Booking": "Buchungen"
+    "Booking": "Buchungen",
+    "SelectLanguage": "Sprache wählen",
+    "Home": "Startseite"
   },
   "pages": {
     "Title": "Seiten",

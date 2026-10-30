@@ -22,7 +22,7 @@ type Options = {
 };
 
 type QueryResponse = { genericItems?: SmartVillageGenericItem[] | null };
-type FaqPayload = { languageCode: string; sortWeight?: unknown };
+type FaqPayload = { translationKey?: string; languageCode: string; sortWeight?: unknown };
 
 const invalidPayloadError = () =>
   new GatewayError({
@@ -44,7 +44,7 @@ const parsePayload = (value: unknown): FaqPayload | null => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const payload = value as Record<string, unknown>;
   if (typeof payload.languageCode !== "string" || normalizeLanguage(payload.languageCode).length !== 2) return null;
-  return { languageCode: payload.languageCode, sortWeight: payload.sortWeight };
+  return { languageCode: payload.languageCode, sortWeight: payload.sortWeight, ...(typeof payload.translationKey === "string" && payload.translationKey.trim() ? { translationKey: payload.translationKey.trim() } : {}) };
 };
 
 const leadingNumber = (title: string) => {
@@ -94,6 +94,7 @@ export class SmartVillageBookingFaqRepository {
     }
 
     return [{
+      ...(payload.translationKey ? { translationKey: payload.translationKey } : {}),
       id: item.id as string,
       question: item.title as string,
       answer: item.contentBlocks![0]!.body as string,

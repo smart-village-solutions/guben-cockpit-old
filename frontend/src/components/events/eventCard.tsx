@@ -1,3 +1,5 @@
+import i18next from "i18next";
+import { formatCurrency } from "@/utilities/i18n/formatting";
 import { BaseImgTag } from "@/components/ui/BaseImgTag";
 import { GenericCard } from "@/components/ui/GenericCard";
 import type { Event } from "@shared/public-content/contracts";
@@ -77,8 +79,8 @@ function renderEventDescription(event: Event, bookingEvent: boolean) {
 }
 
 function formatEventPrice(amount: number | null | undefined) {
-  if (amount === 0) return "Kostenlos";
-  if (typeof amount === "number") return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(amount);
+  if (amount === 0) return i18next.t("FreeOfCharge", { defaultValue: "Kostenlos" }) || "Kostenlos";
+  if (typeof amount === "number") return formatCurrency(amount);
   return null;
 }
 
