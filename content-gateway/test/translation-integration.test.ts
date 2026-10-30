@@ -58,3 +58,18 @@ it("fills local PostgREST gaps before mapping and localizes footer content", asy
   expect(metadata.page.description).toBe("EN Beschreibung");
   expect((await repository.getFooter("en")).items[0]).toEqual({ id: "footer", name: "EN Kontakt", content: "EN Inhalt" });
 });
+
+it("merges partial card translations by unique link and matches localized tabs by stable ID", async () => {
+  const card = (id: string, title: string, url: string, sortWeight: number, description: string | null = null) => ({ categoryName: "KULTUR", languageCode: id.startsWith("de") ? "de" : "en", sortWeight, card: { id, title, description, imageUrl: null, imageAlt: null, button: { title: "Weiter", url, openInNewTab: false } } });
+  const source = [card("de-one", "Erste Karte", "https://guben.de/one", 1, "Beschreibung"), card("de-two", "Zweite Karte", "https://guben.de/two", 0)];
+  const target = [card("en-one", "Existing card", "https://guben.de/one", 1)];
+  const dashboard = (title: string) => ({ seo: mockEventsContent.seo, dropdowns: [{ id: "drop", title: "Menu", rank: 0, isLink: false, links: [], tabs: [{ id: "tab", title, sequence: 0, mapUrl: "", informationCards: [] }] }] });
+  const repository = new SmartVillagePostgrestContentRepository({
+    translator: translator(), postgrestRepository: { getDashboard: async (language: string) => dashboard(language === "de" ? "Kultur" : "Culture") } as never,
+    smartVillageCockpitCardRepository: { getCockpitCards: async (language: string) => language === "de" ? source : target } as never,
+    smartVillageBookingFaqRepository: {} as never, smartVillageEventRepository: {} as never, smartVillagePoiRepository: {} as never, smartVillageFeaturedProjectRepository: {} as never,
+  });
+  const cards = (await repository.getDashboard("en")).dropdowns[0].tabs[0].informationCards;
+  expect(cards.map((entry) => entry.title)).toEqual(["EN Zweite Karte", "Existing card"]);
+  expect(cards[1]).toMatchObject({ id: "en-one", description: "EN Beschreibung" });
+});

@@ -27,6 +27,7 @@ import type { SmartVillagePoiRepository } from "./smart-village-poi-repository.j
 import type { SmartVillageFeaturedProjectRepository } from "./smart-village-featured-project-repository.js";
 import {
   enrichDashboardWithCockpitCards,
+  normalizeCockpitCardCategory,
   flattenedDashboardCards,
 } from "./cockpit-card-dashboard-enrichment.js";
 
@@ -156,9 +157,10 @@ export class SmartVillagePostgrestContentRepository implements PublicContentRepo
         // Match against canonical German tab names, then use localized labels for rendering.
         const canonical = await this.options.postgrestRepository.getDashboard("de").catch(() => dashboard);
         const tabTitles = new Map(dashboard.dropdowns.flatMap((dropdown) => dropdown.tabs.map((tab) => [tab.id, tab.title])));
-        const localizedCategories = new Map(canonical.dropdowns.flatMap((dropdown) => dropdown.tabs.map((tab) => [tab.title, tabTitles.get(tab.id) ?? tab.title])));
-        cards = cards.map((entry) => ({ ...entry, categoryName: localizedCategories.get(entry.categoryName) ?? entry.categoryName }));
+        const localizedCategories = new Map(canonical.dropdowns.flatMap((dropdown) => dropdown.tabs.map((tab) => [normalizeCockpitCardCategory(tab.title), tabTitles.get(tab.id) ?? tab.title])));
+        cards = cards.map((entry) => ({ ...entry, categoryName: localizedCategories.get(normalizeCockpitCardCategory(entry.categoryName)) ?? entry.categoryName }));
       }
+      cards.sort((left, right) => left.sortWeight - right.sortWeight || left.card.id.localeCompare(right.card.id));
       const enriched = enrichDashboardWithCockpitCards(dashboard, cards, this.options.warn);
       if (!enriched.usedSmartVillageCards) {
         this.options.warn?.("Using local Cockpit Cards because Smart Village returned no assignable cards", {
