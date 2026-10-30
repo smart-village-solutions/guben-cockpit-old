@@ -89,7 +89,7 @@ export function Booking() {
         try {
           const descriptions = bookables
             .map(b => b.description)
-            .filter(desc => desc && desc.trim());
+            .filter(desc => desc?.trim());
 
           if (descriptions.length > 0) {
             await translateHtmlBatchedMultiple([...new Set(descriptions)], currentLang);

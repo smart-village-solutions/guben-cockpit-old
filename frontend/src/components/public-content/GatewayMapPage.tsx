@@ -42,6 +42,7 @@ export const GatewayMapPage = () => {
       </article>
       <section className="max-w-[1600px] w-full h-[calc(100dvh-14rem)]">
         <iframe
+          title={`Interaktive Karte: ${query.data.page.title}`}
           className="overflow-hidden border-none h-full w-full"
           src={query.data.map.embedUrl}
         />

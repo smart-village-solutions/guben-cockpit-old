@@ -6,6 +6,7 @@ import { BaseImgTag } from "@/components/ui/BaseImgTag";
 import { useGatewayFooterContent } from "@/public-content/hooks";
 import { isGatewayPublicContentEnabled } from "@/public-content/source";
 import { useTranslation } from "react-i18next";
+import sanitizeHtml from "sanitize-html";
 import type { FooterItem } from "@shared/public-content/contracts";
 
 export const Footer = () => {
@@ -74,8 +75,28 @@ interface FooterItemDialogProps {
   footerItem: FooterItem;
 }
 
-// TODO: customize the sanitize html so it allows for inline styling for colored text, images etc
-export default function FooterItemDialog({footerItem}: FooterItemDialogProps) {
+const footerColorStyles = [/^#[\da-f]+$/i, /^rgba?\([\d\s.,%]+\)$/i, /^[a-z]+$/i];
+
+export default function FooterItemDialog({footerItem}: Readonly<FooterItemDialogProps>) {
+  const content = sanitizeHtml(footerItem.content ?? "", {
+    allowedTags: [...sanitizeHtml.defaults.allowedTags, "img"],
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      "*": ["style"],
+      img: ["src", "alt", "title", "width", "height"],
+    },
+    allowedStyles: {
+      "*": {
+        color: footerColorStyles,
+        "background-color": footerColorStyles,
+        "text-align": [/^(left|right|center|justify)$/],
+        "font-weight": [/^(normal|bold|[1-9]00)$/],
+        "font-style": [/^(normal|italic)$/],
+        "font-size": [/^\d+(\.\d+)?(px|em|rem|%)$/],
+        "text-decoration": [/^(none|underline|line-through)$/],
+      },
+    },
+  });
   return (
     <Dialog>
       <DialogTrigger>{footerItem.name}</DialogTrigger>
@@ -90,8 +111,7 @@ export default function FooterItemDialog({footerItem}: FooterItemDialogProps) {
 
         {!isNullOrUndefinedOrWhiteSpace(footerItem.content) &&
           <DialogDescription>
-            {/*<div className="text-neutral-800" dangerouslySetInnerHTML={{ __html: sanitizeHtml(footerItem.content!) }} />*/}
-            <div className="text-neutral-800" dangerouslySetInnerHTML={{__html: footerItem.content!}}/>
+            <div className="text-neutral-800" dangerouslySetInnerHTML={{__html: content}}/>
           </DialogDescription>
         }
       </DialogContent>

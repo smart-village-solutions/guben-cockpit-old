@@ -35,7 +35,7 @@ export default function SortFilter({
   ariaLabel,
   triggerClassName,
   onChange
-}: Props) {
+}: Readonly<Props>) {
   const {t} = useTranslation("common");
   const resolvedOptions = options.map((entry) => ({
     ...entry,

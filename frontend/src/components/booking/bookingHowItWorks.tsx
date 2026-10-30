@@ -1,9 +1,8 @@
-import { ArrowBigRightDash } from "lucide-react"
+import { ArrowBigRightDash, GlassesIcon } from "lucide-react"
 import BookingDivider from "./bookingDivider"
-import { GlassesIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-export default function() {
+export default function BookingHowItWorks() {
   const { t } = useTranslation("booking");
 
   const steps = t("howItWorks.steps", { returnObjects: true}) as { number: number; title: string; description: string }[];

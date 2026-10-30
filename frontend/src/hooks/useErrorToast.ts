@@ -1,4 +1,3 @@
-import { ApiErrorResult } from "@/types/ApiErrorResult";
 import { toast } from "sonner";
 
 const extractErrorPayload = (error: unknown): Record<string, unknown> | null => {
@@ -13,7 +12,7 @@ const extractErrorPayload = (error: unknown): Record<string, unknown> | null => 
   return error as Record<string, unknown>;
 };
 
-export const useErrorToast = (error: ApiErrorResult | Error | unknown) => {
+export const useErrorToast = (error: unknown) => {
   const payload = extractErrorPayload(error);
   if (!payload) {
     toast("An error occurred");

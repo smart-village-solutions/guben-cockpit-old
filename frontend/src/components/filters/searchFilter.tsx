@@ -13,7 +13,7 @@ export function SearchFilter({
   value,
   onChange,
   className
-}: Props) {
+}: Readonly<Props>) {
   const {t} = useTranslation("common");
 
   return (

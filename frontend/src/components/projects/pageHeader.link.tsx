@@ -6,7 +6,7 @@ interface IProps {
   text: string;
 }
 
-export default function PageHeaderLink(props: IProps) {
+export default function PageHeaderLink(props: Readonly<IProps>) {
   return (
     <a
       href={props.to}

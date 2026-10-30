@@ -8,7 +8,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import sanitizeHtml from "sanitize-html";
 import { formatEventDateRange } from "@/utilities/eventDateRange";
 import { formatEventLocation } from "@/utilities/location";
-import { TranslatedHtml, TranslatedText } from "@/utilities/translateUtils";
+import { TranslatedHtml } from "@/utilities/translateUtils";
 import { getEventImage } from "@/lib/DefaultEventImage";
 
 import { containsHtmlMarkup, isBookingEvent } from "./eventPresentation";
@@ -82,7 +82,7 @@ function formatEventPrice(amount: number | null | undefined) {
   return null;
 }
 
-function EventCard({ event }: EventCardProps) {
+function EventCard({ event }: Readonly<EventCardProps>) {
   const bookingEvent = isBookingEvent(event);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -151,7 +151,7 @@ function EventCard({ event }: EventCardProps) {
       <Link
         to="/events/$eventId"
         params={{ eventId: event.id }}
-        state={(prev) => ({ ...(prev ?? {}), event })}
+        state={(prev) => ({ ...prev, event })}
         className="h-full w-full"
       >
         {card}

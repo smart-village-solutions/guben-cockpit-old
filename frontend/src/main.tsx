@@ -50,7 +50,7 @@ export function App() {
     if (!isLocalhost && import.meta.env.VITE_MATOMO_JS) {
       const _mtm = window._mtm = window._mtm || [];
       _mtm.push({
-        'mtm.startTime': (new Date().getTime()),
+        'mtm.startTime': Date.now(),
         'event': 'mtm.Start'
       });
 

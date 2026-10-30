@@ -36,7 +36,7 @@ function SortableItemWrapper({
   id,
   className,
   children,
-}: SortableItemWrapperProps) {
+}: Readonly<SortableItemWrapperProps>) {
   const {
     attributes,
     listeners,
@@ -77,7 +77,7 @@ export function SortableList<T>({
   listClassName,
   itemClassName,
   axis,
-}: SortableListProps<T>) {
+}: Readonly<SortableListProps<T>>) {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, {

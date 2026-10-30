@@ -19,7 +19,7 @@ interface IProps {
   images?: boolean;
 }
 
-export function FileInput({ files, setFiles, images }: IProps) {
+export function FileInput({ files, setFiles, images }: Readonly<IProps>) {
   const { t } = useTranslation("projects");
 
   const accept = images ? "image/*" : "application/pdf";

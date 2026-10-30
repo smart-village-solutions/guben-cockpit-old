@@ -139,7 +139,7 @@ const GatewayEventsPageContent = () => {
       const translateAll = async () => {
         const descriptions = customEvents
           .map((event) => event.description)
-          .filter((description) => description && description.trim());
+          .filter((description) => description?.trim());
         if (descriptions.length > 0) {
           await translateHtmlBatchedMultiple(descriptions, currentLang);
         }

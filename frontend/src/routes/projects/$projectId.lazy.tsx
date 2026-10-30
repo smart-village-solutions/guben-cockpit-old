@@ -6,7 +6,7 @@ export const Route = createLazyFileRoute('/projects/$projectId')({
   component: RouteComponent,
 })
 
-export function ProjectDetailRoute({ projectId }: { projectId: string }) {
+export function ProjectDetailRoute({ projectId }: Readonly<{ projectId: string }>) {
   return <GatewayProjectDetailPage projectId={projectId} />
 }
 

@@ -76,7 +76,7 @@ const normalizeOccurrenceIdTime = (value: string | null | undefined): string | n
 };
 
 const toCoordinates = (value: SmartVillageGeoLocation) => {
-  if (!value || value.latitude === null || value.longitude === null) {
+  if (value?.latitude == null || value.longitude === null) {
     return null;
   }
 

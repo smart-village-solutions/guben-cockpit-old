@@ -12,7 +12,7 @@ interface IProps {
   images: Image[];
 }
 
-export function ImageCarousel({ images }: IProps) {
+export function ImageCarousel({ images }: Readonly<IProps>) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentImage = images[currentIndex];
 
@@ -94,7 +94,7 @@ const CarouselControls = ({
     </button>
 
     <div className="mt-2 font-semibold text-lg">
-      {decodeURIComponent(filename?.match(/\/Images\/[^/]+\/([^/.]+)/)?.[1] ?? "")}
+      {decodeURIComponent(/\/Images\/[^/]+\/([^/.]+)/.exec(filename)?.[1] ?? "")}
     </div>
     <div className="mt-1 text-sm text-gray-600">
       {currentIndex + 1} / {total}

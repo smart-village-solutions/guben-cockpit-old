@@ -6,7 +6,6 @@ import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Label } from "../ui/label";
-import { XIcon } from "lucide-react";
 
 interface Props {
   value?: DateRange;
@@ -50,7 +49,7 @@ export const DateRangeFilter = ({
         break;
       case Preset.THIS_WEEK:
         newRange = {
-          from: new Date(Math.max(new Date().startOfWeek().getTime(), new Date().getTime())),
+          from: new Date(Math.max(new Date().startOfWeek().getTime(), Date.now())),
           to: new Date().endOfWeek()
         };
         break;
@@ -62,7 +61,7 @@ export const DateRangeFilter = ({
         break;
       case Preset.THIS_MONTH:
         newRange = {
-          from: new Date(Math.max(new Date().startOfMonth().getTime(), new Date().getTime())),
+          from: new Date(Math.max(new Date().startOfMonth().getTime(), Date.now())),
           to: new Date().endOfMonth()
         };
         break;

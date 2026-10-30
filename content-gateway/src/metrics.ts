@@ -52,19 +52,15 @@ export class MetricsRegistry {
       });
       lines.push(
         `gateway_request_duration_ms_bucket{route="${route}",status_code="${statusCode}",le="+Inf"} ${metric.count}`,
-      );
-      lines.push(
         `gateway_request_duration_ms_sum{route="${route}",status_code="${statusCode}"} ${metric.sum}`,
-      );
-      lines.push(
         `gateway_request_duration_ms_count{route="${route}",status_code="${statusCode}"} ${metric.count}`,
       );
     }
 
     lines.push(
       "# HELP gateway_upstream_failures_total Count of upstream failures by upstream and error code.",
+      "# TYPE gateway_upstream_failures_total counter",
     );
-    lines.push("# TYPE gateway_upstream_failures_total counter");
     for (const [key, count] of this.upstreamFailures.entries()) {
       const [upstream, code] = key.split("|");
       lines.push(

@@ -20,7 +20,7 @@ const parseTicket = (ticketEl: Element): Ticket => {
     let currentElement = descriptionElement.nextElementSibling;
     const paragraphs: string[] = [];
 
-    while (currentElement && currentElement.tagName === "P" && !currentElement.classList.length && currentElement.textContent?.trim() !== "") {
+    while (currentElement?.tagName === "P" && !currentElement.classList.length && currentElement.textContent?.trim() !== "") {
       paragraphs.push(currentElement.outerHTML);
       currentElement = currentElement.nextElementSibling;
     }
@@ -76,7 +76,7 @@ export default function EventIntegration({ tenantId, setLoading, onDone }: Event
             let currentElement = descriptionElement.nextElementSibling;
             const paragraphs: string[] = [];
 
-            while (currentElement && currentElement.tagName === "P" && !currentElement.classList.length && currentElement.textContent?.trim() !== "") {
+            while (currentElement?.tagName === "P" && !currentElement.classList.length && currentElement.textContent?.trim() !== "") {
               paragraphs.push(currentElement.outerHTML);
               currentElement = currentElement.nextElementSibling;
             }
@@ -107,7 +107,7 @@ export default function EventIntegration({ tenantId, setLoading, onDone }: Event
                 let currentElement = descriptionElement.nextElementSibling;
                 const paragraphs: string[] = [];
 
-                while (currentElement && currentElement.tagName === "P" && !currentElement.classList.length && currentElement.textContent?.trim() !== "") {
+                while (currentElement?.tagName === "P" && !currentElement.classList.length && currentElement.textContent?.trim() !== "") {
                   paragraphs.push(currentElement.outerHTML);
                   currentElement = currentElement.nextElementSibling;
                 }

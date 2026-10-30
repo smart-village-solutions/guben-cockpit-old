@@ -23,7 +23,7 @@ export function getEventImage(category?: string | null): string | null {
       .replace(/[äÄ]/g, 'ae')
       .replace(/[öÖ]/g, 'oe')
       .replace(/[üÜ]/g, 'ue')
-      .replace(/ß/g, 'ss')
+      .replaceAll('ß', 'ss')
       // Remove spaces, slashes and other special characters
       .replace(/[\s/\\]+/g, '')
       .replace(',', '')

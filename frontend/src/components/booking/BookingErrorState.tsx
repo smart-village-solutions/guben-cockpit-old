@@ -1,7 +1,6 @@
 import { AlertTriangleIcon, RefreshCcwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
-import type { BookingApiError } from "@/booking-api/errors";
 import { isBookingApiError } from "@/booking-api/errors";
 
 type BookingErrorStateProps = {

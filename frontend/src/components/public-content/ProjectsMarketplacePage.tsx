@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import ProjectCard from "@/components/projects/projectCard";
 import { PaginationContainer } from "@/components/DataDisplay/PaginationContainer";
 import { Skeleton } from "@/components/ui/skeleton";
