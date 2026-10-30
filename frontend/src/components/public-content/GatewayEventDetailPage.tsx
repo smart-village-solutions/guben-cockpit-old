@@ -70,17 +70,21 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
     return <PublicContentErrorState error={query.error} />;
   }
 
+  const locationLabel = formatEventLocation(data.location);
+
   // Build metadata card content
   const metadata: ReactNode = (
     <div className="space-y-4">
       {/* Categories */}
-      <div className="flex gap-2 flex-wrap">
-        {data.categories.map((category: EventDetailContent["event"]["categories"][number]) => (
-          <p key={category.id} className="px-4 border-neutral-300 border rounded-full text-sm">
-            {category.name}
-          </p>
-        ))}
-      </div>
+      {data.categories.length > 0 ? (
+        <div className="flex gap-2 flex-wrap">
+          {data.categories.map((category: EventDetailContent["event"]["categories"][number]) => (
+            <p key={category.id} className="px-4 border-neutral-300 border rounded-full text-sm">
+              {category.name}
+            </p>
+          ))}
+        </div>
+      ) : null}
 
       {/* Date and Time */}
       <div className="space-y-1">
@@ -93,12 +97,14 @@ export const GatewayEventDetailPage = ({ eventId }: { eventId: string }) => {
       </div>
 
       {/* Location */}
-      <div className="space-y-1">
-        <p className="flex flex-nowrap items-center gap-2 text-neutral-500">
-          <MapPinIcon className="size-4" /> {t("Location")}
-        </p>
-        <p className="flex gap-1">{formatEventLocation(data.location)}</p>
-      </div>
+      {locationLabel ? (
+        <div className="space-y-1">
+          <p className="flex flex-nowrap items-center gap-2 text-neutral-500">
+            <MapPinIcon className="size-4" /> {t("Location")}
+          </p>
+          <p className="flex gap-1">{locationLabel}</p>
+        </div>
+      ) : null}
     </div>
   );
 

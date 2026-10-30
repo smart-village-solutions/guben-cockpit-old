@@ -29,5 +29,6 @@ export const isBookingEvent = (event: Event): event is BookingEventView =>
 export const buildDetailImages = (event: EventDetailContent["event"]) =>
   event.images.map((image) => ({
     src: image.originalUrl,
-    alt: event.title,
+    alt: image.description?.trim() || event.title,
+    caption: image.description?.trim() || undefined,
   }));

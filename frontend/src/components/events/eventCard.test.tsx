@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import "@/utilities/dateExtensions";
 
+import { SmartVillageEventMapper } from "../../../../content-gateway/src/content/smart-village-event-mapper";
+
 import EventCard from "./eventCard";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -82,7 +84,7 @@ describe("eventCard", () => {
       />,
     );
 
-    const image = screen.getByRole("img", { name: "Event" });
+    const image = screen.getByRole("img", { name: "Sommerfest" });
     expect(image.className).toContain("object-contain");
     expect(image.parentElement?.className).toContain("bg-[#808080]");
   });
@@ -125,6 +127,7 @@ describe("eventCard", () => {
               thumbnailUrl: "/thumb-2.jpg",
               previewUrl: "/preview-2.jpg",
               originalUrl: "/image-2.jpg",
+              description: "Bühne im Innenhof",
             },
           ],
           published: true,
@@ -134,7 +137,7 @@ describe("eventCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Next image" }));
 
-    expect(screen.getByRole("img", { name: "Event" }).getAttribute("src")).toBe("/preview-2.jpg");
+    expect(screen.getByRole("img", { name: "Bühne im Innenhof" }).getAttribute("src")).toBe("/preview-2.jpg");
   });
 
   it("moves back in the image carousel when the previous button is clicked", () => {
@@ -175,6 +178,7 @@ describe("eventCard", () => {
               thumbnailUrl: "/thumb-2.jpg",
               previewUrl: "/preview-2.jpg",
               originalUrl: "/image-2.jpg",
+              description: "Bühne im Innenhof",
             },
           ],
           published: true,
@@ -185,6 +189,19 @@ describe("eventCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next image" }));
     fireEvent.click(screen.getByRole("button", { name: "Previous image" }));
 
-    expect(screen.getByRole("img", { name: "Event" }).getAttribute("src")).toBe("/preview-1.jpg");
+    expect(screen.getByRole("img", { name: "Sommerfest" }).getAttribute("src")).toBe("/preview-1.jpg");
   });
+});
+
+it("keeps a card without images or a location usable", () => {
+  const [event] = new SmartVillageEventMapper().eventsFromRecord({
+    id: "no-media", title: "Ohne Bild und Ort", visible: true,
+    date: { dateStart: "2026-11-01", dateEnd: "2026-11-01", timeStart: "10:00", timeEnd: "12:00" },
+    mediaContents: null, location: null, addresses: [],
+  });
+  render(<EventCard event={event} />);
+  expect(screen.getByRole("heading", { name: "Ohne Bild und Ort" })).toBeTruthy();
+  expect(screen.getByText("Mehr erfahren")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Next image" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Previous image" })).toBeNull();
 });

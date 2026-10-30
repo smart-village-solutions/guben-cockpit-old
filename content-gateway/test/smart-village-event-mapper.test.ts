@@ -314,3 +314,39 @@ describe("SmartVillageEventMapper", () => {
     ).toEqual(["1937530:2026-06-14:10%3A00"]);
   });
 });
+
+describe("Biletado image projection", () => {
+  it.each([null, [], [{ sourceUrl: { url: "https://example.test/one.jpg", description: " Eingangsbereich " } }]])(
+    "handles absent and single images: %j", (mediaContents) => {
+      const [event] = mapper.eventsFromRecord(makeRecord({ mediaContents }));
+      expect(event.images).toHaveLength(mediaContents?.length ?? 0);
+      if (event.images.length) expect(event.images[0].description).toBe("Eingangsbereich");
+    },
+  );
+
+  it("preserves image order and descriptions while rejecting invalid image and ticket URLs", () => {
+    const [event] = mapper.eventsFromRecord(makeRecord({
+      mediaContents: [
+        { sourceUrl: { url: "https://example.test/second.jpg", description: " Zweites Motiv " } },
+        { sourceUrl: { url: "javascript:alert(1)", description: "Unsafe" } },
+        { sourceUrl: { url: "data:image/png;base64,abc" } },
+        { sourceUrl: { url: "/relative.jpg" } },
+        { sourceUrl: { url: " " } },
+        { sourceUrl: null },
+        { sourceUrl: { url: "http://example.test/first.jpg", description: " " } },
+      ],
+      urls: [{ url: "javascript:alert(1)" }, { url: " https://tickets.example.test ", description: " Tickets " }],
+    }));
+    expect(event.images).toEqual([
+      { thumbnailUrl: "https://example.test/second.jpg", previewUrl: "https://example.test/second.jpg", originalUrl: "https://example.test/second.jpg", description: "Zweites Motiv" },
+      { thumbnailUrl: "http://example.test/first.jpg", previewUrl: "http://example.test/first.jpg", originalUrl: "http://example.test/first.jpg" },
+    ]);
+    expect(event.urls).toEqual([{ link: "https://tickets.example.test", description: "Tickets" }]);
+  });
+
+  it("does not invent a location from the event title", () => {
+    const [event] = mapper.eventsFromRecord(makeRecord({ addresses: [], location: null }));
+    expect(event.location.name).toBe("");
+    expect(event.location.street).toBeNull();
+  });
+});

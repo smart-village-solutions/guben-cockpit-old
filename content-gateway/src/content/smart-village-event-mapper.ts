@@ -162,7 +162,7 @@ export class SmartVillageEventMapper {
       endDate: this.toEndDate(occurrence),
       location: {
         id: nonEmptyString(record.location?.id) ?? eventId,
-        name: nonEmptyString(record.location?.name) ?? title,
+        name: nonEmptyString(record.location?.name) ?? "",
         city: nonEmptyString(address?.city),
         street: nonEmptyString(address?.street),
         telephoneNumber: null,
@@ -197,14 +197,19 @@ export class SmartVillageEventMapper {
           return { id, name };
         })
         .filter((category): category is { id: string; name: string } => category !== null),
-      images: (record.mediaContents ?? [])
-        .map((mediaContent) => nonEmptyString(mediaContent.sourceUrl?.url))
-        .filter((url): url is string => url !== null)
-        .map((url) => ({
+      images: (record.mediaContents ?? []).flatMap((mediaContent) => {
+        const url = toHttpUrl(mediaContent.sourceUrl?.url);
+        if (!url) {
+          return [];
+        }
+        const description = nonEmptyString(mediaContent.sourceUrl?.description);
+        return [{
           thumbnailUrl: url,
           previewUrl: url,
           originalUrl: url,
-        })),
+          ...(description ? { description } : {}),
+        }];
+      }),
       ...(typeof record.registrationRequired === "boolean"
         ? { registrationRequired: record.registrationRequired }
         : {}),
