@@ -4,6 +4,15 @@ on:
   pull_request:
 
 jobs:
+  logging-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify archive retention boundaries and failure recovery
+        run: python3 -m unittest discover -s ops/logging/tests -v
+      - name: Verify systemd logging units
+        run: systemd-analyze verify --man=no ops/logging/*.service ops/logging/*.timer
+
   build:
     runs-on: ubuntu-latest
 

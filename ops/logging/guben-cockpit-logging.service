@@ -1,0 +1,13 @@
+[Unit]
+Description=Keep the Guben Cockpit journal available
+Requires=systemd-journald@guben-cockpit.service
+After=systemd-journald@guben-cockpit.service
+Before=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/true
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
