@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Guben Cockpit log retention every hour
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+AccuracySec=1min
+Unit=guben-cockpit-log-retention.service
+
+[Install]
+WantedBy=timers.target

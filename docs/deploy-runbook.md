@@ -90,6 +90,9 @@ Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schrit
 
 ## Voraussetzungen
 
+- Auf dem Produktionshost ist das getrennte Log-Journal `guben-cockpit` gemaess
+  `ops/logging/` eingerichtet (siehe "Log-Aufbewahrung").
+
 - GitHub Tag fuer Release ist gepusht (z. B. `v0.8.6`)
 - GitHub Action fuer Image-Build ist erfolgreich
 - Portainer-URL, Stack-ID und Endpoint-ID liegen aus der privaten Betriebsdokumentation oder direkt aus Portainer vor
@@ -107,6 +110,47 @@ Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schrit
 Die `curl`-Beispiele gehen von gueltig vertrauenswuerdigen Zertifikaten aus und verwenden bewusst kein `-k`.
 
 Wenn Portainer ueber eine interne CA oder ein Self-Signed-Zertifikat abgesichert ist, sollte das Zertifikat lokal vertraut oder gezielt per `--cacert /pfad/zur/ca.pem` uebergeben werden.
+
+## Log-Aufbewahrung
+
+Die fuenf Cockpit-Container schreiben ueber einen lokalen Unix-Socket in den
+Journal-Namespace `guben-cockpit`. Seine Aufbewahrung betraegt 14 Tage; ein Timer
+rotiert und bereinigt das Journal stuendlich. Der Namespace hat zusaetzlich ein
+Groessenlimit von 4 GiB. Bei hohem Logaufkommen koennen dadurch juengere Eintraege
+verdraengt werden. Die Docker-Standardkonfiguration wird dafuer nicht geaendert.
+
+Der Docker-Log-Cache ist fuer diese Container deaktiviert, da er keine
+zeitbasierte Aufbewahrung unterstuetzt. Cockpit-Logs werden deshalb auf dem Host
+ueber das Journal gelesen; die Container-Loganzeige in Portainer ist fuer diese
+Container nicht verfuegbar:
+
+```bash
+sudo journalctl --namespace=guben-cockpit --since '14 days ago'
+sudo journalctl --namespace=guben-cockpit -t guben-cockpit/guben-api-prod -f
+sudo systemctl status guben-cockpit-log-retention.timer
+```
+
+Einrichtung auf einem neuen Produktionshost, vor dem ersten Compose-Start:
+
+```bash
+sudo install -m 0644 ops/logging/journald@guben-cockpit.conf /etc/systemd/
+sudo install -m 0644 ops/logging/*.service ops/logging/*.timer /etc/systemd/system/
+sudo install -m 0750 ops/logging/guben-cockpit-log-archive-retention.py /usr/local/sbin/
+sudo systemctl daemon-reload
+sudo systemctl enable --now guben-cockpit-logging.service
+sudo systemctl enable --now guben-cockpit-log-retention.timer
+```
+
+Das Boot-Service `guben-cockpit-logging.service` stellt den Journal-Socket vor
+dem Docker-Start bereit. Bereits vorhandene JSON-Logs der Erstumstellung liegen
+geschuetzt unter `/var/lib/guben-cockpit-log-retention/archive/`; derselbe Timer
+entfernt daraus Eintraege, die aelter als 14 Tage sind. Nicht datierbare Zeilen
+laufen 14 Tage nach ihrer Archivierung ab.
+
+Das API-Volume `cockpit_api-data-protection-keys` bewahrt die ASP.NET-Schluessel
+ueber Container-Neuerstellungen hinweg. Bei einer Erstumstellung vorhandene
+Schluessel mit unveraenderter UID/GID und geprueften Inhalts-Hashes in dieses
+Volume uebertragen, bevor der bisherige API-Container ersetzt wird.
 
 ## 1. Pre-Deploy Checks
 

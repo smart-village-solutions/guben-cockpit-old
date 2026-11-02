@@ -1,0 +1,12 @@
+[Unit]
+Description=Enforce the Guben Cockpit 14-day log retention
+Requires=guben-cockpit-logging.service
+After=guben-cockpit-logging.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/journalctl --namespace=guben-cockpit --rotate --vacuum-time=14day --vacuum-size=4G
+ExecStart=/usr/bin/python3 /usr/local/sbin/guben-cockpit-log-archive-retention.py
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
