@@ -10,6 +10,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:server": "node --test docker/serve-dist.integration.mjs",
     "test:coverage": "vitest run --coverage",
     "dev": "npm run translations && npm run check-translations && vite --port=3000",
     "build:spa": "npm run check-translations && vite build",

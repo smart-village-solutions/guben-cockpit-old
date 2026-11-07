@@ -11,7 +11,7 @@ services:
 
   guben-web-prod:
     logging: *cockpit-logging
-    image: ${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION_WEB}
+    image: ${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION_FRONTEND:-${VERSION_WEB}}
     container_name: guben-web-prod
     restart: unless-stopped
     environment:

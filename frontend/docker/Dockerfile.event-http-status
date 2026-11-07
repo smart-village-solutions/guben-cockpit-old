@@ -1,0 +1,7 @@
+# Preserve the deployed frontend and its runtime/dependencies; replace only the server.
+FROM ghcr.io/smart-village-solutions/guben-cockpit-web@sha256:0eb27dbb6e6a334a5b18c62d13426f8d622482f2f1b01b57fe6e69cecc1221b7
+ARG CHANGE_REVISION
+LABEL org.opencontainers.image.source="https://github.com/smart-village-solutions/guben-cockpit-old" \
+      org.opencontainers.image.revision="${CHANGE_REVISION}" \
+      org.opencontainers.image.version="v0.8.49-event-http-status.1"
+COPY frontend/docker/serve-dist.mjs /app/docker/serve-dist.mjs
