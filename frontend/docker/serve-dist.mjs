@@ -197,6 +197,13 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    const requestPath = new URL(request.url ?? "/", "http://frontend").pathname;
+    if (/^\/projects\/\d+\/?$/.test(requestPath)) {
+      response.writeHead(302, { location: "/projects", "cache-control": "no-store" });
+      response.end();
+      return;
+    }
+
     // Validate even existing prerendered files: their event may since have expired.
     const eventStatus = await eventPageStatus(request);
     if (eventStatus !== null) {
