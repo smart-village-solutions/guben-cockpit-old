@@ -25,7 +25,7 @@ services:
 
   guben-api-prod:
     logging: *cockpit-logging
-    image: ghcr.io/agriculturedev/guben-cockpit-api:${VERSION_API}
+    image: ${LEGACY_API_IMAGE:-ghcr.io/agriculturedev/guben-cockpit-api}:${VERSION_API}
     container_name: guben-api-prod
     restart: unless-stopped
     volumes:
