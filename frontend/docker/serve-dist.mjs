@@ -78,6 +78,52 @@ const shouldProxyToBooking = (requestPath) => {
   return normalizedPath === "/api/booking" || normalizedPath.startsWith("/api/booking/");
 };
 
+const eventPageStatus = async (request) => {
+  const url = new URL(request.url ?? "/", "http://frontend");
+  const match = url.pathname.match(/^\/events\/([^/]+)\/?$/);
+  if (!match) return null;
+
+  const target = new URL(`/api/content/events/${match[1]}`, gatewayProxyBaseUrl);
+  const language = url.searchParams.get("lang");
+  if (language) target.searchParams.set("lang", language);
+
+  try {
+    const result = await fetch(target, {
+      headers: {
+        accept: "application/json",
+        "accept-language": request.headers["accept-language"] ?? "",
+      },
+      signal: AbortSignal.timeout(10_000),
+    });
+    await result.body?.cancel();
+    if (result.status === 200) return 200;
+    return result.status === 404 ? 404 : 503;
+  } catch {
+    return 503;
+  }
+};
+
+const sendEventPageError = (response, method, status) => {
+  const missing = status === 404;
+  const title = missing ? "Veranstaltung nicht mehr verfügbar" : "Veranstaltung vorübergehend nicht erreichbar";
+  const message = missing
+    ? "Dieser Veranstaltungstermin ist nicht mehr verfügbar. Im Kalender finden Sie aktuelle Veranstaltungen."
+    : "Die Veranstaltung kann momentan nicht geladen werden. Bitte versuchen Sie es später erneut.";
+  const html = `<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>${title} | Guben Cockpit</title>
+<style>body{font-family:system-ui,sans-serif;color:#1f2937;background:#fff;margin:0}main{max-width:42rem;margin:3rem auto;padding:1.5rem;line-height:1.6}h1{line-height:1.2;font-size:2rem}a{color:#1d4ed8}a:focus-visible{outline:2px solid;outline-offset:4px}</style>
+</head><body><main><h1>${title}</h1><p>${message}</p><a href="/events">Zum Veranstaltungskalender</a></main></body></html>`;
+  response.writeHead(status, {
+    "content-type": "text/html; charset=utf-8",
+    "content-length": String(Buffer.byteLength(html)),
+    "cache-control": "no-store",
+    "x-robots-tag": "noindex",
+    ...(!missing ? { "retry-after": "60" } : {}),
+  });
+  response.end(method === "HEAD" ? undefined : html);
+};
+
 const proxyToGateway = async (request, response) => {
   const targetUrl = new URL(request.url ?? "/", gatewayProxyBaseUrl).toString();
   const upstreamResponse = await fetch(targetUrl, {
@@ -151,6 +197,16 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    // Validate even existing prerendered files: their event may since have expired.
+    const eventStatus = await eventPageStatus(request);
+    if (eventStatus !== null) {
+      if (eventStatus !== 200) {
+        sendEventPageError(response, method, eventStatus);
+        return;
+      }
+      response.setHeader("cache-control", "no-store");
+    }
+
     const requestFile = await resolveRequestFile(request.url ?? "/");
     if (!requestFile) {
       response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
@@ -178,5 +234,5 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Serving prerendered frontend from ${rootDir} on http://0.0.0.0:${port}`);
+  console.log(`Serving prerendered frontend from ${rootDir} on http://0.0.0.0:${server.address().port}`);
 });

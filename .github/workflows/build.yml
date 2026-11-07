@@ -25,6 +25,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Verify event detail HTTP status on the production frontend server
+        run: npm run test:server --prefix frontend
+
       - name: Install shared dependencies
         run: npm ci --prefix shared
 
