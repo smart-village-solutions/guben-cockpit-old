@@ -33,7 +33,6 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Frontend:BaseUri: ${FRONTEND_BASEURI}
-      Jobs:ProjectImporter:BearerToken: ${ProjectImporterBearerToken}
       ConnectionStrings:DefaultConnection: ${DATABASE_CONNECTION_STRING}
       Keycloak:realm: ${KEYCLOAK_REALM}
       Keycloak:auth-server-url: ${KEYCLOAK_AUTH_SERVER}

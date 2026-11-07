@@ -1,5 +1,5 @@
 # Build context: the production source revision after ops/legacy-api/prepare.py.
-# Keep the deployed runtime, dependencies, configuration, and assets byte-for-byte.
+# Keep the deployed runtime, dependencies, and assets; remove obsolete Jobs config.
 ARG LEGACY_API_BASE=ghcr.io/smart-village-solutions/guben-cockpit-api@sha256:9ad1b6293428d6ca5cc969c2576a5ffcc8b29aa010c0ea85c8ff2f8abfbc8e72
 FROM ${LEGACY_API_BASE} AS deployed
 
@@ -15,7 +15,8 @@ FROM deployed AS final
 ARG CHANGE_REVISION
 LABEL org.opencontainers.image.source="https://github.com/smart-village-solutions/guben-cockpit-old" \
       org.opencontainers.image.revision="${CHANGE_REVISION}" \
-      org.opencontainers.image.version="v0.7.3-no-event-importer.1" \
+      org.opencontainers.image.version="v0.7.3-no-importers.1" \
       de.guben.cockpit.legacy-source-revision="0329f2a8a792247e433fc405f9fc28deb7726587" \
-      de.guben.cockpit.event-importer="removed"
-COPY --from=build /app/publish/Api.dll /app/publish/Api.pdb /app/publish/Jobs.dll /app/publish/Jobs.pdb /app/
+      de.guben.cockpit.event-importer="removed" \
+      de.guben.cockpit.project-importer="removed"
+COPY --from=build /app/publish/Api.dll /app/publish/Api.pdb /app/publish/Jobs.dll /app/publish/Jobs.pdb /app/publish/appsettings.json /app/
