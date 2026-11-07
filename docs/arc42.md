@@ -61,7 +61,7 @@ Der fruehere `.NET`-CMS-/Admin-Pfad ist nicht mehr Teil der Zielarchitektur dies
 
 ### 2.3 Historische Randbedingung
 
-Die Branch-Dokumentation beschreibt eine bereinigte Zielarchitektur ohne aktiven `.NET`-CMS-/Admin-Stack. Im produktiven Portainer-Stack existiert laut `stack.prod.yml` weiterhin ein legacy `guben-api-prod`-Container. Dieser bleibt betriebliche Realitaet, ist aber nicht Teil des Public-Content-Zielpfads dieses Repositorys.
+Die fruehere `.NET`-CMS-/Admin-API wurde stillgelegt. Der produktive Stack besteht aus Frontend, Content-Gateway, PostgREST und PostgreSQL. Die Datenbank bleibt fuer den aktiven Public-Content-Pfad erhalten.
 
 ## 3. Kontextabgrenzung
 
@@ -329,7 +329,7 @@ Der Standard-Compose-Stack nutzt standardmaessig eine bereits laufende Host-Post
   - `guben-content-gateway-prod`
   - `guben-postgrest-prod`
   - `guben-db-prod`
-- Zusaetzlich enthaelt `stack.prod.yml` derzeit noch `guben-api-prod` als Legacy-Komponente ausserhalb des beschriebenen Zielpfads.
+- Der fruehere Container `guben-api-prod` ist aus dem Stack entfernt.
 
 ### 7.3 Verteilungsrelevante Konfigurationsgrenzen
 

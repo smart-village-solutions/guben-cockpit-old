@@ -86,7 +86,6 @@ Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schrit
 - Wichtige Images:
   - `ghcr.io/smart-village-solutions/guben-cockpit-web:<tag>`
   - `ghcr.io/smart-village-solutions/guben-cockpit-content-gateway:<tag>`
-  - `ghcr.io/agriculturedev/guben-cockpit-api:<tag>`
 
 ## Voraussetzungen
 
@@ -113,7 +112,7 @@ Wenn Portainer ueber eine interne CA oder ein Self-Signed-Zertifikat abgesichert
 
 ## Log-Aufbewahrung
 
-Die fuenf Cockpit-Container schreiben ueber einen lokalen Unix-Socket in den
+Die vier Cockpit-Container schreiben ueber einen lokalen Unix-Socket in den
 Journal-Namespace `guben-cockpit`. Seine Aufbewahrung betraegt 14 Tage; ein Timer
 rotiert und bereinigt das Journal stuendlich. Der Namespace hat zusaetzlich ein
 Groessenlimit von 4 GiB. Bei hohem Logaufkommen koennen dadurch juengere Eintraege
@@ -126,7 +125,7 @@ Container nicht verfuegbar:
 
 ```bash
 sudo journalctl --namespace=guben-cockpit --since '14 days ago'
-sudo journalctl --namespace=guben-cockpit -t guben-cockpit/guben-api-prod -f
+sudo journalctl --namespace=guben-cockpit -t guben-cockpit/guben-content-gateway-prod -f
 sudo systemctl status guben-cockpit-log-retention.timer
 ```
 
@@ -147,10 +146,10 @@ geschuetzt unter `/var/lib/guben-cockpit-log-retention/archive/`; derselbe Timer
 entfernt daraus Eintraege, die aelter als 14 Tage sind. Nicht datierbare Zeilen
 laufen 14 Tage nach ihrer Archivierung ab.
 
-Das API-Volume `cockpit_api-data-protection-keys` bewahrt die ASP.NET-Schluessel
-ueber Container-Neuerstellungen hinweg. Bei einer Erstumstellung vorhandene
-Schluessel mit unveraenderter UID/GID und geprueften Inhalts-Hashes in dieses
-Volume uebertragen, bevor der bisherige API-Container ersetzt wird.
+Die alte `.NET`-API ist stillgelegt; `guben-api-prod` darf bei normalen Deploys
+nicht erneut angelegt werden. Das bisherige Volume
+`cockpit_api-data-protection-keys` bleibt als Rollback-Bestand erhalten und wird
+nicht mehr eingebunden. Details: [Stilllegung der alten API](legacy-api-retirement.md).
 
 ## 1. Pre-Deploy Checks
 
@@ -192,7 +191,6 @@ docker manifest inspect ghcr.io/smart-village-solutions/guben-cockpit-content-ga
    - `VITE_BOOKING_URL=/api/booking` fuer die noch nicht migrierten Legacy-Event-Flows
 3. In `Environment variables` setzen:
   - `VERSION_WEB=<zieltag>`
-  - `VERSION_API=<bestehender API-Tag>` (nur aendern, wenn API-Release geplant)
   - `SV_GRAPHQL_URL=<smart-village-graphql-url>`
   - `SV_OAUTH_TOKEN_URL=<smart-village-oauth-token-url>`
   - `SV_CLIENT_ID=<smart-village-client-id>`
@@ -283,7 +281,7 @@ Zusatzcheck Container:
 ```bash
 curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
   "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT_ID/docker/containers/json?all=1" | \
-  jq -r '.[] | select(([.Names[]] | join(" ") | test("guben-(web|api|db|postgrest|content-gateway)-prod"))) | [.Names[0], .Image, .State] | @tsv'
+  jq -r '.[] | select(([.Names[]] | join(" ") | test("guben-(web|db|postgrest|content-gateway)-prod"))) | [.Names[0], .Image, .State] | @tsv'
 ```
 
 ## 5. Troubleshooting
@@ -305,7 +303,7 @@ Beispiel manuelles Pullen via Portainer Docker API:
 curl -fsS -X POST \
   -H "X-API-Key: $PORTAINER_TOKEN" \
   -H "X-Registry-Auth: <base64-json>" \
-  "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT_ID/docker/images/create?fromImage=ghcr.io/agriculturedev/guben-cockpit-api&tag=v0.7.3"
+  "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT_ID/docker/images/create?fromImage=ghcr.io/smart-village-solutions/guben-cockpit-web&tag=v0.8.6"
 ```
 
 ### Fehlerbild: Env-Eintraege mit `:` im Namen
@@ -339,6 +337,6 @@ Rollback via API (Kurzform):
 1. Tag gebaut und in GHCR verfuegbar
 2. Portainer-Registries fuer alle benoetigten Namespaces verifiziert
 3. Stack mit korrekten Env-Variablen aktualisiert
-4. Alle 5 Kerncontainer laufen (`web`, `api`, `db`, `postgrest`, `content-gateway`)
+4. Alle 4 Kerncontainer laufen (`web`, `db`, `postgrest`, `content-gateway`)
 5. Frontend, Home, Event-Liste, Event-Detail und Booking-Smoke-Checks liefern `200`
 6. Bei Problemen: gezielter Rollback auf letzten stabilen `VERSION_WEB`

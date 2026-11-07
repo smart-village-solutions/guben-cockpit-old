@@ -1,4 +1,4 @@
-# Build context: the production source revision after ops/legacy-api/prepare.py.
+# Historical build context after ops/archive/legacy-api/prepare.py.
 # Keep the deployed runtime, dependencies, and assets; remove obsolete Jobs config.
 ARG LEGACY_API_BASE=ghcr.io/smart-village-solutions/guben-cockpit-api@sha256:9ad1b6293428d6ca5cc969c2576a5ffcc8b29aa010c0ea85c8ff2f8abfbc8e72
 FROM ${LEGACY_API_BASE} AS deployed
