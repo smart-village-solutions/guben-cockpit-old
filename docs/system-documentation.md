@@ -16,7 +16,7 @@ Das Repository betreibt den oeffentlichen Web-Stack fuer `cockpit.guben.de` mit 
 - `content-gateway/` als Fastify-API fuer `/api/content/*`
 - `postgrest/` als read-only Datenzugriff auf PostgreSQL
 
-Der fruehere `.NET`-Admin-/CMS-Pfad ist in diesem Branch nicht mehr Teil der Zielarchitektur. Historische Produktionsartefakte bleiben nur dort bestehen, wo sie fuer den Betrieb noch relevant sind.
+Die fruehere `.NET`-Admin-/CMS-API (`guben-api-prod`) ist stillgelegt und aus dem produktiven Stack entfernt. PostgreSQL und PostgREST bleiben aktive Bestandteile des Public-Content-Pfads.
 
 ## Architektur auf einen Blick
 

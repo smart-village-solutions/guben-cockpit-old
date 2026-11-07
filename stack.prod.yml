@@ -7,7 +7,7 @@ x-cockpit-logging: &cockpit-logging
 
 services:
 
-  # ── Legacy (unverändert) ──────────────────────────────────────────────────────
+  # ── Frontend und Datenbank ───────────────────────────────────────────────────
 
   guben-web-prod:
     logging: *cockpit-logging
@@ -22,34 +22,6 @@ services:
       VITE_BOOKING_URL: /api/booking
     networks:
       - websites
-
-  guben-api-prod:
-    logging: *cockpit-logging
-    image: ${LEGACY_API_IMAGE:-ghcr.io/agriculturedev/guben-cockpit-api}:${VERSION_API}
-    container_name: guben-api-prod
-    restart: unless-stopped
-    volumes:
-      - api-data-protection-keys:/home/app/.aspnet/DataProtection-Keys
-    environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      Frontend:BaseUri: ${FRONTEND_BASEURI}
-      ConnectionStrings:DefaultConnection: ${DATABASE_CONNECTION_STRING}
-      Keycloak:realm: ${KEYCLOAK_REALM}
-      Keycloak:auth-server-url: ${KEYCLOAK_AUTH_SERVER}
-      Keycloak:ssl-required: ${KEYCLOAK_ENABLE_SSL}
-      Keycloak:resource: ${KEYCLOAK_RESOURCE}
-      Keycloak:verify-token-audience: ${KEYCLOAK_VERIFY_AUDIENCE}
-      Nextcloud:BaseUri: ${NEXTCLOUD_BASE_URI}
-      Nextcloud:BaseDirectory: ${NEXTCLOUD_BASE_DIR}
-      Nextcloud:Username: ${NEXTCLOUD_USERNAME}
-      Nextcloud:Password: ${NEXTCLOUD_PASSWORD}
-    networks:
-      - websites
-      - guben_prod
-    depends_on:
-      guben-db-prod:
-        condition: service_started
-        restart: true
 
   guben-db-prod:
     logging: *cockpit-logging
@@ -125,7 +97,6 @@ networks:
     external: true
 
 volumes:
-  api-data-protection-keys:
   translation-cache:
   guben-data-prod:
     external: true

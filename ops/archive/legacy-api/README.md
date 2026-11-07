@@ -1,4 +1,8 @@
-# Legacy API without retired event and project importers
+# Archived legacy API build
+
+The .NET API has been retired from the production stack. These files document
+the historical importer-removal build for recovery only. Do not include this
+service in normal deployments. See `docs/legacy-api-retirement.md`.
 
 The production API still uses the historical .NET backend. Its original source
 was removed from this repository, but the deployed image identifies source
@@ -26,9 +30,9 @@ TASK_SOURCE=$(mktemp -d)
 git archive 0329f2a8a792247e433fc405f9fc28deb7726587 \
   Api Database Domain Jobs Shared.Api Shared.Database Shared.Domain .dockerignore \
   | tar -x -C "$TASK_SOURCE"
-python3 ops/legacy-api/prepare.py "$TASK_SOURCE"
+python3 ops/archive/legacy-api/prepare.py "$TASK_SOURCE"
 docker buildx build --platform linux/amd64 \
-  -f ops/legacy-api/Dockerfile \
+  -f ops/archive/legacy-api/Dockerfile \
   --build-arg CHANGE_REVISION="$(git rev-parse HEAD)" \
   -t ghcr.io/smart-village-solutions/guben-cockpit-api:v0.7.3-no-importers.1 \
   --load "$TASK_SOURCE"
@@ -42,7 +46,7 @@ The image overlays `Api.dll`, `Api.pdb`, `Jobs.dll`, `Jobs.pdb`, and the sanitiz
 identical. Configuration outside `Jobs`, runtime libraries, and assets remain
 those of the original image. Verify the image before pushing it.
 
-## Production
+## Historical production procedure (before retirement)
 
 Set `LEGACY_API_IMAGE=ghcr.io/smart-village-solutions/guben-cockpit-api` and
 `VERSION_API=v0.7.3-no-importers.1` in the existing Portainer stack.
