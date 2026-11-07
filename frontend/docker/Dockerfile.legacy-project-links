@@ -1,0 +1,8 @@
+# Keep the deployed runtime and replace only the server and project route sources.
+FROM ghcr.io/smart-village-solutions/guben-cockpit-web@sha256:2edbdebb5500f178c1882a05c2784ffa2f56afd2940af9d0df0efb1f08660e01
+ARG CHANGE_REVISION
+LABEL org.opencontainers.image.source="https://github.com/smart-village-solutions/guben-cockpit-old" \
+      org.opencontainers.image.revision="${CHANGE_REVISION}" \
+      org.opencontainers.image.version="v0.8.49-legacy-project-links.1"
+COPY frontend/docker/serve-dist.mjs /app/docker/serve-dist.mjs
+COPY frontend/src/routes/projects/ /app/frontend/src/routes/projects/

@@ -22,6 +22,10 @@ before(async () => {
     ["events/index.html", "EVENT-LIST"],
     ["events/valid/index.html", "VALID-EVENT"],
     ["events/expired/index.html", "STALE-EXPIRED-EVENT"],
+    ["projects/index.html", "PROJECT-OVERVIEW"],
+    ["projects/237/index.html", "STALE-LEGACY-PROJECT"],
+    ["projects/featured:5553/index.html", "CURRENT-FEATURED-PROJECT"],
+    ["projects/poi:123/index.html", "CURRENT-POI"],
     ["assets/app.js", "STATIC-ASSET"],
   ]) {
     const destination = path.join(directory, "dist", file);
@@ -147,4 +151,39 @@ test("the existing JSON gateway proxy retains its response status", async () => 
   const response = await fetch(`${baseUrl}/api/content/events/unknown`);
   assert.equal(response.status, 404);
   assert.match(response.headers.get("content-type"), /application\/json/);
+});
+
+test("numeric legacy project pages redirect to the overview for GET and HEAD", async () => {
+  const previousCalls = calls.length;
+  for (const path of ["/projects/237", "/projects/238/", "/projects/553?lang=pl", "/projects/999999"]) {
+    for (const method of ["GET", "HEAD"]) {
+      const response = await fetch(baseUrl + path, { method, redirect: "manual" });
+      assert.equal(response.status, 302);
+      assert.equal(response.headers.get("location"), "/projects");
+      assert.equal(response.headers.get("cache-control"), "no-store");
+      assert.doesNotMatch(await response.text(), /STALE-LEGACY-PROJECT|ROOT-FALLBACK/);
+    }
+  }
+  assert.equal(calls.length, previousCalls, "Legacy redirects must not call the detail API");
+});
+
+test("a legacy link reaches the functioning project overview", async () => {
+  const response = await fetch(`${baseUrl}/projects/237`);
+  assert.equal(response.status, 200);
+  assert.equal(response.url, `${baseUrl}/projects`);
+  assert.equal(await response.text(), "PROJECT-OVERVIEW");
+});
+
+test("current project IDs and the reserved school/marketplace routes retain their behavior", async () => {
+  for (const [url, body] of [
+    ["/projects", "PROJECT-OVERVIEW"],
+    ["/projects/featured%3A5553", "CURRENT-FEATURED-PROJECT"],
+    ["/projects/poi%3A123", "CURRENT-POI"],
+    ["/projects/schools", "ROOT-FALLBACK"],
+    ["/projects/marketplace", "ROOT-FALLBACK"],
+  ]) {
+    const response = await fetch(baseUrl + url, { redirect: "manual" });
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), body);
+  }
 });
