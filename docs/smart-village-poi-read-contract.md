@@ -1,4 +1,4 @@
-# Smart Village POI read contract
+# SVA Mainserver POI read contract
 
 Read-only verification date: 2026-08-04
 

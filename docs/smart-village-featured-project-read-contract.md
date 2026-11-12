@@ -1,14 +1,14 @@
-# Smart Village Featured Project read contract
+# SVA Mainserver Featured Project read contract
 
 ## Source
 
-The public Cockpit reads Featured Projects server-side through the existing Smart Village OAuth client. The authoritative list query is:
+The public Cockpit reads Featured Projects server-side through the existing SVA Mainserver OAuth client. The authoritative list query is:
 
 ```graphql
 genericItems(genericType: "FeaturedProject", order: id_ASC)
 ```
 
-The detail query uses the same type plus `externalId`. Browser clients only call the content gateway and never receive Smart Village credentials.
+The detail query uses the same type plus `externalId`. Browser clients only call the content gateway and never receive SVA Mainserver credentials.
 
 ## Verified live shape
 
@@ -16,7 +16,7 @@ The live schema provides `id`, `externalId`, `title`, `genericType`, `visible`, 
 
 The public mapping is:
 
-| Public Project field | Smart Village source |
+| Public Project field | SVA Mainserver source |
 | --- | --- |
 | `id` | `externalId` |
 | `type` | constant `1` |

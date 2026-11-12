@@ -1,9 +1,10 @@
 # arc42: Guben Cockpit
 
-Stand: 17. Maerz 2026
+Stand: 12. November 2026; Abgleich mit `dev` bei `1a15a84`. Beschrieben ist der Repository-Stand, keine erneute Produktionsabnahme.
 
-Diese Dokumentation beschreibt die aktuelle Zielarchitektur des Repositorys `guben-cockpit-old` nach dem arc42-Template. Sie konsolidiert die im Repository belegte Architektur fuer Maintainer und Betreiber. Operative Detailablaeufe bleiben in den bestehenden Spezialdokumenten:
+Diese Dokumentation beschreibt die aktuelle Architektur des Repositorys `guben-cockpit-old` nach dem arc42-Template. Sie konsolidiert die im Repository belegte Architektur fuer Maintainer und Betreiber. Operative Detailablaeufe bleiben in den bestehenden Spezialdokumenten:
 
+- [Inhaltsquellen und Abrufwege](./content-sources.md)
 - [Systemdokumentation](./system-documentation.md)
 - [Public Content Gateway Rollout](./public-content-gateway-rollout.md)
 - [Deploy Runbook](./deploy-runbook.md)
@@ -57,7 +58,7 @@ Der fruehere `.NET`-CMS-/Admin-Pfad ist nicht mehr Teil der Zielarchitektur dies
 - Das Repository beschreibt nur den Public-Content-Pfad.
 - Die Zielgruppe der Dokumentation sind Maintainer und Betreiber, nicht Fachanwender.
 - Operative Schrittfolgen werden nicht dupliziert, sondern ueber die bestehenden Runbooks referenziert.
-- Der Branch arbeitet mit einer reduzierten Zielarchitektur, auch wenn einzelne produktive Artefakte noch Hybridspuren tragen.
+- Der aktuelle Stack enthaelt keine .NET-API mehr. Archivierte Betriebsartefakte bleiben ausschliesslich fuer historische Nachvollziehbarkeit und Rollback erhalten.
 
 ### 2.3 Historische Randbedingung
 
@@ -70,7 +71,9 @@ Die fruehere `.NET`-CMS-/Admin-API wurde stillgelegt. Der produktive Stack beste
 ```mermaid
 flowchart LR
   Citizen["Buerger / Browser"] --> Frontend["Guben Cockpit Frontend"]
-  Frontend --> Gateway["Content Gateway"]
+  Frontend -->|"HTTPS /api/content/*"| Web["Webserver / API-Proxy"]
+  Web -->|"internes HTTP"| Gateway["Internes Content-Gateway"]
+  Gateway --> SmartVillage["SVA Mainserver GraphQL / OAuth"]
   Gateway --> PostgREST["PostgREST Read API"]
   PostgREST --> DB["PostgreSQL / public_content"]
 
@@ -87,14 +90,16 @@ flowchart LR
 | Masterportal | Liefert Karten- und Geodaten fuer Kartenseiten und Einbettungen. |
 | LibreTranslate | Wird serverseitig vom Content-Gateway zur Ergänzung fehlender Inhaltsübersetzungen genutzt. |
 | Matomo | Wird fuer Tracking im Browser eingebunden. |
+| SVA Mainserver | Liefert Events, POIs, Featured Projects, FAQs und Cockpit-Karten per serverseitig authentifiziertem GraphQL. |
 | PostgreSQL | Ist die fachliche Quelle fuer das read-only `public_content`-Schema. |
 
 ### 3.2 Technischer Kontext
 
 | Schnittstelle | Richtung | Zweck |
 | --- | --- | --- |
-| `GET /api/content/*` | Browser/Frontend -> Gateway | Oeffentliche, stabile Content-Vertraege fuer Seiten und Listings |
+| `GET /api/content/*` | Browser/Frontend -> Web-Proxy -> internes Gateway | Oeffentliche, stabile Content-Vertraege fuer Seiten und Listings |
 | `GET /health`, `/health/live`, `/health/ready`, `/metrics` | Betrieb -> Gateway | Liveness, Readiness und Prometheus-kompatible Beobachtung |
+| GraphQL / OAuth | Gateway -> SVA Mainserver | Abruf oeffentlicher Fachinhalte mit serverseitigen Zugangsdaten |
 | HTTP gegen PostgREST | Gateway -> PostgREST | Interner read-only Datenzugriff auf `public_content` |
 | GHCR Images | GitHub Actions -> Deployment | Bereitstellung von Web- und Gateway-Containern |
 | Portainer Stack API/UI | Betreiber -> Produktion | Rollout, Update und Rollback des Produktions-Stacks |
@@ -102,7 +107,7 @@ flowchart LR
 ### 3.3 Externe und interne Systemgrenzen
 
 - Der Browser sieht das Frontend und externe Web-Dienste.
-- Der Browser sieht nicht direkt PostgREST oder die Datenbank.
+- Der Browser ruft im Produktionspfad die Content-API ueber den Web-Proxy auf. Content-Gateway, PostgREST und Datenbank liegen intern.
 - Das Gateway kapselt Datenzugriffe, Fehleruebersetzung, Sprachaufloesung und Contract-Stabilitaet.
 - PostgREST exponiert nur eine interne, read-only Schicht ueber `public_content`.
 
@@ -126,7 +131,10 @@ Diese Strategie minimiert Browserwissen ueber interne Datenquellen und haelt die
 ```mermaid
 flowchart LR
   Browser --> Frontend["frontend"]
-  Frontend --> Gateway["content-gateway"]
+  Frontend -->|"HTTPS /api/content/*"| Web["Webserver / API-Proxy"]
+  Web -->|"internes HTTP"| Gateway["Internes Content-Gateway"]
+  Gateway --> SmartVillage["SVA Mainserver GraphQL / OAuth"]
+  Gateway --> Translate["LibreTranslate"]
   Gateway --> PostgREST["postgrest"]
   PostgREST --> DB["PostgreSQL"]
   Frontend --> Shared["shared/public-content/contracts.ts"]
@@ -161,6 +169,9 @@ flowchart TD
   HTTP["Fastify App / Routes"] --> Repo["PublicContentRepository"]
   HTTP --> Metrics["Metrics + Error Handling"]
   Repo --> Mapper["PostgREST Mapper / Composer"]
+  Repo --> SV["SVA Mainserver Repositories / validated read cache"]
+  SV --> GraphQL["GraphQL Client / OAuth"]
+  Repo --> Translator["AutomaticTranslator / persistent translation cache"]
   Repo --> Mock["Mock Repository"]
   Mapper --> PGClient["PostgREST Client"]
   PGClient --> PostgREST["PostgREST HTTP API"]
@@ -172,8 +183,12 @@ flowchart TD
 | --- | --- |
 | `src/app.ts` | HTTP-Routen, Query-Validierung, Sprachaufloesung, Health-/Metrics-Endpunkte, Fehlerantworten |
 | `src/config.ts` | Validierung der Laufzeitkonfiguration fuer `mock` oder `postgrest` |
-| `src/content/content-repository.ts` | Abstraktion des Public-Content-Repositorys |
-| `src/content/postgrest-content-repository.ts` | Zusammensetzen der fachlichen Antworten aus PostgREST-Daten |
+| `src/content/content-repository-contract.ts` | Schnittstelle des Public-Content-Repositorys |
+| `src/content/content-repository.ts` | Mock-Repository und Exporte |
+| `src/content/postgrest-content-repository.ts` | PostgREST-Seiten mit Sprach-Fallback und Uebersetzung |
+| `src/content/smart-village-postgrest-content-repository.ts` | Kombination von PostgREST-Seiten und SVA-Mainserver-Inhalten |
+| `src/content/smart-village-*-repository.ts` | Fachspezifische SVA-Mainserver-Abfragen und Mapping |
+| `src/translation/` | Automatische Ergaenzung fehlender Uebersetzungen; siehe Uebersetzungsdokumentation |
 | `src/content/postgrest-content-mapper.ts` | Mapping von Upstream-Daten auf stabile Contract-Modelle |
 | `src/upstream/postgrest-client.ts` | HTTP-Zugriff auf PostgREST mit Timeout |
 | `src/metrics.ts` | Histogramm-artige Request-Latenzen und Upstream-Fehlerzaehler |
@@ -206,6 +221,11 @@ Frontend und Gateway importieren damit dieselbe Laufzeitvalidierung und dieselbe
 | `GET /metrics` | Prometheus-kompatible Gateway-Metriken |
 | `GET /api/content/home` | Startseite inkl. SEO und Dashboard-Vorschau |
 | `GET /api/content/dashboard` | Dashboard-Dropdowns und Tabs |
+| `GET /api/content/public` | Gebuendelter Seiteninhalt ohne Events und Booking |
+| `GET /api/content/featured-projects`, `/:id` | Hervorgehobene Projekte / Detail |
+| `GET /api/content/pois`, `/:id` | Orte / Detail |
+| `GET /api/content/booking/faqs` | Sprachabhaengige Buchungs-FAQs |
+| `POST /api/content/translate` | Uebersetzung oeffentlicher Buchungstexte ohne Speicherung in der Inhaltsquelle |
 | `GET /api/content/projects` | Projektlisten mit Paging |
 | `GET /api/content/events` | Eventlisten mit Paging und Filtern |
 | `GET /api/content/events/:id` | Event-Detail |
@@ -228,19 +248,22 @@ Wichtige Query-Parameter:
 sequenceDiagram
   participant B as Browser
   participant F as Frontend
-  participant G as Content Gateway
+  participant W as Webserver / API-Proxy
+  participant G as Internes Content-Gateway
   participant P as PostgREST
   participant D as PostgreSQL
 
   B->>F: Aufruf z. B. /projects
-  F->>G: GET /api/content/projects?lang=de&pageNumber=1&pageSize=12
+  F->>W: GET /api/content/projects?lang=de&pageNumber=1&pageSize=12
+  W->>G: Request intern weiterleiten
   G->>G: Query validieren + Sprache aufloesen
   G->>P: HTTP-Request auf public_content
   P->>D: Read-only SQL ueber Views/Schema
   D-->>P: Ergebnisdaten
   P-->>G: JSON-Antwort
   G->>G: Mapping auf shared Contracts
-  G-->>F: Stabiles JSON
+  G-->>W: Stabiles JSON
+  W-->>F: JSON-Antwort
   F->>F: Rendern + SEO-Metadaten binden
   F-->>B: HTML/Interaktion
 ```
@@ -253,6 +276,8 @@ sequenceDiagram
 4. Der Client erhaelt eine nicht-2xx-Antwort mit `gatewayErrorSchema`.
 5. Gleichzeitig erhoeht das Gateway den Zaehler `gateway_upstream_failures_total`.
 6. Readiness und Monitoring koennen den Zustand getrennt von der reinen Liveness sichtbar machen.
+
+SVA-Mainserver-Reads verwenden einen validierten Prozess-Cache (vier Minuten frisch, bei Refresh-Fehlern bis zu 24 Stunden ab letzter Validierung). Event-/POI-Caches koennen die normale Aktualisierung auf etwa fuenf Minuten verlaengern. Readiness umgeht den Content-Cache und prueft beide Upstreams.
 
 ### 6.3 Sprachaufloesung pro Request
 
@@ -269,7 +294,7 @@ Das Gateway kuerzt die Sprache auf einen zweistelligen Lowercase-Code.
 1. `postgrest-bootstrap` startet und fuehrt die SQL-Artefakte idempotent aus.
 2. `postgrest` startet erst nach erfolgreichem Bootstrap.
 3. `content-gateway` startet mit `CONTENT_SOURCE_MODE=postgrest`.
-4. `web` oder `web-live` starten anschliessend gegen das Gateway.
+4. `web` oder `web-live` starten anschliessend gegen das Gateway. `web` baut und prerendert beim Containerstart; der Node-Server liefert das Ergebnis aus und uebernimmt Proxies, Event-Statuspruefung und Projekt-Weiterleitungen.
 5. Optional kann statt der Host-Datenbank eine lokale Compose-PostgreSQL per Profil `local-db` zugeschaltet werden.
 
 ## 7. Verteilungssicht
@@ -324,7 +349,7 @@ Der Standard-Compose-Stack nutzt standardmaessig eine bereits laufende Host-Post
   - `ghcr.io/smart-village-solutions/guben-cockpit-web`
   - `ghcr.io/smart-village-solutions/guben-cockpit-content-gateway`
 - Der produktive Rollout erfolgt ueber Portainer und `stack.prod.yml`.
-- Im produktiven Stack laufen mindestens:
+- Die Produktions-Compose-Datei definiert vier Kernservices:
   - `guben-web-prod`
   - `guben-content-gateway-prod`
   - `guben-postgrest-prod`
@@ -335,8 +360,8 @@ Der Standard-Compose-Stack nutzt standardmaessig eine bereits laufende Host-Post
 
 | Baustein | Relevante Variablen |
 | --- | --- |
-| Frontend | `VITE_CONTENT_GATEWAY_URL`, `VITE_PUBLIC_CONTENT_SOURCE`, `VITE_BOOKING_URL`, `VITE_TRANSLATE_URL`, `VITE_MATOMO_JS` |
-| Gateway | `PORT`, `LOG_LEVEL`, `PUBLIC_BASE_URL`, `CONTENT_SOURCE_MODE`, `DEFAULT_LANGUAGE`, `FALLBACK_LANGUAGE`, `POSTGREST_URL`, `POSTGREST_TIMEOUT_MS`, `POSTGREST_SCHEMA` |
+| Frontend | `VITE_CONTENT_GATEWAY_URL`, `VITE_PUBLIC_CONTENT_SOURCE`, `VITE_BOOKING_API_URL`, `VITE_BOOKING_URL`, `VITE_MATOMO_JS` |
+| Gateway | `PORT`, `LOG_LEVEL`, `PUBLIC_BASE_URL`, `CONTENT_SOURCE_MODE`, `DEFAULT_LANGUAGE`, `FALLBACK_LANGUAGE`, `POSTGREST_URL`, `POSTGREST_TIMEOUT_MS`, `POSTGREST_SCHEMA`, `SV_GRAPHQL_URL`, `SV_OAUTH_TOKEN_URL`, `SV_CLIENT_ID`, `SV_CLIENT_SECRET`, `TRANSLATE_URL`, `TRANSLATE_API_KEY`, `TRANSLATE_TIMEOUT_MS`, `TRANSLATE_CACHE_DIR` |
 | PostgREST | `PGRST_DB_URI`, `PGRST_DB_SCHEMAS`, `PGRST_DB_ANON_ROLE`, `PGRST_OPENAPI_MODE`, `PGRST_DB_ROOT_SPEC` |
 
 ## 8. Querschnittliche Konzepte
@@ -363,7 +388,7 @@ Das Gateway loest Sprache zentral auf und entkoppelt damit Frontend-Routen von f
 Das Gateway liefert ein einheitliches Fehlerformat:
 
 - `code`: `UPSTREAM_TIMEOUT`, `UPSTREAM_UNAVAILABLE`, `INVALID_UPSTREAM_PAYLOAD`, `NOT_FOUND`, `INTERNAL_ERROR`
-- `upstream`: `postgrest`, `gateway`
+- `upstream`: `postgrest`, `smartvillage`, `gateway`
 - `retryable`: boolesche Wiederholbarkeitsinformation
 - `requestId`: Korrelation fuer Logging und Betrieb
 
@@ -380,12 +405,18 @@ Das Gateway liefert ein einheitliches Fehlerformat:
 - `prerender-public-routes.ts` und `verify-prerender.ts` sichern den SEO-relevanten Build-Pfad ab.
 - Route-Metadaten werden ueber `useRouteMetadata` an Gateway-Content gebunden.
 
+Bei direkten GET-/HEAD-Aufrufen prueft der Node-Server `frontend/docker/serve-dist.mjs` Event-Details vor der Dateiauslieferung: 404 bei fehlenden Events, 503 bei nicht verfuegbarer Pruefung. Alte numerische Projektlinks erhalten 302 nach `/projects`. Siehe [Event-Status](event-detail-http-status.md) und [Projektlinks](legacy-project-links.md).
+
 ### 8.7 Sicherheitsgrenzen
 
 - PostgREST bleibt interne Infrastruktur und ist keine Browser-API.
 - Die Datenbank wird nur lesend ueber das Schema `public_content` exponiert.
 - Browser-seitige Integrationen zu Booking, Masterportal und Matomo bleiben extern. LibreTranslate wird über das Content-Gateway angebunden; siehe [automatische Inhaltsübersetzung](automatic-content-translation.md).
 - Historische Admin-Pfade gehoeren nicht zur aktiven Zielarchitektur dieses Branches.
+
+### 8.8 Automatische Inhaltsuebersetzung
+
+Das Gateway ergaenzt fehlende Sprachfassungen ueber LibreTranslate. Content-Antworten liefern vorhandene Uebersetzungen oder Originaltext sofort; fehlende Texte werden begrenzt im Hintergrund vorbereitet. `X-Translation-Pending` steuert das automatische Nachladen im Frontend. Zugangsschluessel bleiben serverseitig, Quelldaten werden nicht zurueckgeschrieben. Verhalten, Cache und Grenzen: [automatische Inhaltsuebersetzung](automatic-content-translation.md).
 
 ## 9. Architekturentscheidungen
 
@@ -400,8 +431,8 @@ Das Gateway liefert ein einheitliches Fehlerformat:
 
 Quellen fuer diese Entscheidungen:
 
-- `openspec/changes/legacy-frontend-content-gateway/design.md`
-- `openspec/changes/content-gateway-architecture-hardening/design.md`
+- [Gateway-Design](../openspec/changes/archive/2026-08-04-legacy-frontend-content-gateway/design.md)
+- [Architektur-Haertung](../openspec/changes/archive/2026-08-04-content-gateway-architecture-hardening/design.md)
 
 ## 10. Qualitaetsanforderungen
 
@@ -433,7 +464,7 @@ Quellen fuer diese Entscheidungen:
 | PostgREST ist nicht erreichbar | Gateway liefert einen standardisierten Fehler und erhoeht den Upstream-Fehlerzaehler. |
 | Ein Deploy startet neuen Traffic | `health/ready` und `metrics` koennen fuer Smoke-Tests und Monitoring genutzt werden. |
 | Ein Contract aendert sich | Frontend- und Gateway-Validierung sowie CI-Verifikation machen Drift sichtbar. |
-| Public Content soll kurzfristig abgeschaltet werden | Frontend kann ueber `VITE_PUBLIC_CONTENT_SOURCE=disabled` ohne Codeaenderung umgeschaltet werden. |
+| Public Content soll kurzfristig abgeschaltet werden | Frontend kann ueber `VITE_PUBLIC_CONTENT_SOURCE=disabled` bei erneutem Build umgeschaltet werden. |
 
 ### 10.3 Mess- und Pruefpunkte
 
@@ -445,7 +476,7 @@ Quellen fuer diese Entscheidungen:
 
 | Risiko / Schuld | Auswirkung | Umgang |
 | --- | --- | --- |
-| Produktionsstack ist noch hybrid | Zielarchitektur und Laufzeitrealitaet koennen auseinanderlaufen. | Deployment-Sicht klar trennen und Legacy-Komponente explizit markieren. |
+| Separate Frontend-Version kann einen normalen Release ueberlagern | `VERSION_FRONTEND` hat Vorrang vor `VERSION_WEB`. | Vor Rollout beide Werte und laufende Digests pruefen; siehe Deploy-Runbook. |
 | Aeltere Doku-Beispiele haben teils andere Ports oder Beispiele | Verwirrung bei Betrieb und Onboarding. | Diese arc42-Doku folgt dem aktuellen Repo-Zustand und verweist fuer Sonderfaelle auf Runbooks. |
 | PostgREST-Views und Mapper koennen driften | Fachliche Antworten koennen trotz stabiler API intern brechen. | Shared Contracts, Mapper-Tests und Rollout-Checks beibehalten. |
 | Gateway ist zusaetzlicher Hop | Mehr Latenz und neue Fehlerquelle. | Kurze Timeouts, Metriken, Health-/Readiness-Endpunkte und Rollback-Pfade nutzen. |
