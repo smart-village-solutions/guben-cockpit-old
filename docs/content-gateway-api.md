@@ -1,11 +1,13 @@
 # Content Gateway API
 
-Diese Referenz beschreibt die oeffentliche, ausschliesslich lesende Content-API
+Stand: 12. November 2026; abgeglichen mit `content-gateway/src/app.ts` und den Shared Contracts.
+
+Diese Referenz beschreibt die oeffentliche Content-API
 des Guben Cockpits. Sie ist fuer das Web-Frontend und fuer externe Anwendungen
 gedacht, die dieselben veroeffentlichten Inhalte abrufen moechten.
 
 Die API ist kein Schreib- oder Verwaltungszugang. Insbesondere sind die
-PostgREST-, Smart-Village-GraphQL- und OAuth-Schnittstellen interne Upstreams
+PostgREST-, SVA-Mainserver-GraphQL- und OAuth-Schnittstellen interne Upstreams
 und duerfen nicht direkt verwendet werden.
 
 ## Basis und Zugriff
@@ -16,8 +18,11 @@ Produktive Basis-URL:
 https://cockpit.guben.de
 ```
 
-Alle Content-Endpunkte beginnen mit `/api/content`. Sie akzeptieren nur
-`GET`; Browser duerfen `OPTIONS` fuer CORS-Preflights verwenden. Aktuell ist
+Im Produktionspfad nimmt der Webserver unter dieser Adresse die Anfragen entgegen und leitet `/api/content/*` an das interne Content-Gateway weiter. Der Gateway-Container hat im Produktions-Compose keinen veroeffentlichten Host-Port.
+
+Alle Content-Endpunkte beginnen mit `/api/content`. Inhaltsabrufe verwenden
+`GET`; die Uebersetzungsfunktion verwendet `POST /api/content/translate`.
+Browser duerfen `OPTIONS` fuer CORS-Preflights verwenden. Aktuell ist
 keine Authentifizierung vorgesehen und der Gateway-CORS-Handler laesst
 browserseitige Aufrufe von beliebigen Origins zu.
 
@@ -89,7 +94,7 @@ und Tab-Navigation sind `/home` und `/dashboard` zu verwenden.
 | `GET /api/content/home` | `lang` optional | Startseiteninhalt einschliesslich SEO-Metadaten. |
 | `GET /api/content/dashboard` | `lang` optional | Dropdowns, Tabs und Informationskarten. |
 | `GET /api/content/map` | `lang` optional | Kartenbezogene Inhalte. |
-| `GET /api/content/footer` | keine | Footer ist nicht sprachabhaengig. |
+| `GET /api/content/footer` | `lang` optional | Sprachabhaengige Footer-Inhalte. |
 | `GET /api/content/booking-tenants` | keine | Liefert nur die fuer die Buchungsintegration benoetigten oeffentlichen Tenant-IDs. |
 | `GET /api/content/booking/faqs` | `lang` optional | FAQ-Eintraege fuer die angeforderte Sprache. |
 
@@ -160,7 +165,7 @@ GET /api/content/events/{id}?lang=de
 
 ### Event-Bilder und optionale Metadaten
 
-`event.images` bleibt ein Array (ohne Bilder: `[]`). Der Smart-Village-Mapper
+`event.images` bleibt ein Array (ohne Bilder: `[]`). Der SVA-Mainserver-Mapper
 übernimmt `mediaContents` in Quellreihenfolge und verwirft Einträge ohne valide,
 absolute HTTP(S)-Bild-URL. `thumbnailUrl`, `previewUrl` und `originalUrl` verwenden
 aktuell dieselbe Quell-URL. Die optionale `description` übernimmt die getrimmte
@@ -205,6 +210,18 @@ Ein POI-Detail wird ueber die ID aus dem Listenresultat abgefragt:
 GET /api/content/pois/{id}?lang=de
 ```
 
+## Uebersetzungsfunktion
+
+`POST /api/content/translate` ergaenzt fehlende Uebersetzungen oeffentlicher Buchungstexte. Der Endpunkt veraendert keine Inhalte im Mainserver.
+
+```json
+{"q": ["Oeffnungszeiten"], "target": "en"}
+```
+
+`target` ist `de`, `en` oder `pl`. Das Gateway akzeptiert bis zu 100 Texte mit jeweils hoechstens 20.000 Zeichen; das Frontend sendet Batches von hoechstens 20 Texten. Weitere Body-Felder werden abgewiesen. Die Antwort ist `{ "translatedText": ["..."] }` in Eingabereihenfolge. Solange eine Uebersetzung fehlt, wird der Originaltext geliefert und die Uebersetzung im Hintergrund vorbereitet. Ungueltige Bodies erhalten `400` mit `{ "error": "Invalid translation request" }`, abweichend vom Fehlervertrag der Content-Abrufe. Details: [automatische Inhaltsuebersetzung](automatic-content-translation.md).
+
+Content-Antworten tragen `X-Translation-Pending: 1|0`. Bei `1` werden sie mit `Cache-Control: no-store` ausgeliefert; das Frontend wiederholt betroffene Abrufe alle 1,5 Sekunden bis `0`. Der Header ist fuer CORS-Clients freigegeben.
+
 ## Fehlerantworten
 
 Bei Validierungsfehlern, nicht gefundenem Inhalt und Upstream-Fehlern liefert
@@ -225,6 +242,7 @@ das Gateway einen JSON-Body nach `gatewayErrorSchema`:
 | HTTP-Status | Bedeutung |
 | --- | --- |
 | `200` | Erfolgreiche Anfrage. |
+| `400` | Ungueltiger Body der Uebersetzungsfunktion. |
 | `404` | Ein angefordertes Detail existiert nicht oder ist nicht oeffentlich. |
 | `500` | Nicht erwarteter Gateway-Fehler; derzeit auch bei einer vom Gateway abgewiesenen Query-Validierung. |
 | `502` | Ein Upstream lieferte eine fachlich oder technisch nicht verwertbare Antwort. |
@@ -244,7 +262,7 @@ Content-Integrationen:
 | --- | --- |
 | `GET /health` | Liveness und aktiver Content-Source-Modus. |
 | `GET /health/live` | Reine Liveness-Pruefung. |
-| `GET /health/ready` | Readiness des Gateways einschliesslich PostgREST und Smart Village; bei nicht bereitem Dienst `503`. |
+| `GET /health/ready` | Readiness des Gateways einschliesslich PostgREST und SVA Mainserver; bei nicht bereitem Dienst `503`. |
 | `GET /metrics` | Prometheus-Textformat mit Request-Latenzen und Upstream-Fehlerzaehlern. |
 
 ## Kompatibilitaet und Cache
@@ -253,7 +271,7 @@ Die Response-Vertraege werden im Repository durch gemeinsame Laufzeit-Schemas
 validiert. Aenderungen an `shared/public-content/contracts.ts` und dieser
 Referenz sollen gemeinsam reviewed werden.
 
-Smart-Village-Content wird pro Gateway-Prozess zwischengespeichert: erfolgreiche
+SVA-Mainserver-Content wird pro Gateway-Prozess zwischengespeichert: erfolgreiche
 Antworten sind vier Minuten frisch; die zusaetzlichen Event- und POI-Caches
 koennen Aenderungen normalerweise nach etwa fuenf Minuten sichtbar machen. Bei
 einem fehlgeschlagenen Refresh kann die letzte fachlich gueltige Antwort bis zu

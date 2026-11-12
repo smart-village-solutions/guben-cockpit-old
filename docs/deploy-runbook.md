@@ -1,127 +1,122 @@
-# Deploy Runbook (Prod)
+# Deploy-Runbook (Produktion)
 
-Dieses Runbook beschreibt den Standard-Deploy fuer `cockpit.guben.de` ueber Portainer inkl. Troubleshooting und Rollback.
+Stand: 12. November 2026; abgeglichen mit `stack.prod.yml`, den Frontend-Startskripten und dem Release-Workflow. Dieses Runbook beschreibt den Rollout ueber Portainer. Laufende Versionen und private Betriebswerte sind vor jedem Rollout aktuell zu ermitteln.
 
-## Notfall in 2 Minuten
+## Stack und Versionsauswahl
 
-Schnellablauf fuer akute Stoerungen oder dringende Releases.
+Der Stack `cockpit` besteht aus vier Services:
 
-1. Zielversion setzen:
+| Service | Image / Version |
+| --- | --- |
+| `guben-web-prod` | `${CONTAINER_REGISTRY}guben-cockpit-web:${VERSION_FRONTEND:-${VERSION_WEB}}` |
+| `guben-content-gateway-prod` | `${CONTAINER_REGISTRY}guben-cockpit-content-gateway:${VERSION_WEB}` |
+| `guben-postgrest-prod` | `postgrest/postgrest:v12.2.8` |
+| `guben-db-prod` | `postgres:17` |
+
+`CONTAINER_REGISTRY` ist normalerweise `ghcr.io/smart-village-solutions/`. Bei einem normalen Release waehlt `VERSION_WEB` beide Cockpit-Images. Ist `VERSION_FRONTEND` gesetzt, bleibt das Frontend auf dieser separaten Version. Den Override deshalb bewusst entfernen oder auf die Zielversion setzen. Spezialimages fuer Event-Status und Projektlinks sind in den jeweiligen Aenderungsdokumenten beschrieben.
+
+Der Tag-Workflow publiziert Images, erstellt aber keinen GitHub Release und deployt nicht. Siehe [Release-Verfahren](releases.md).
+
+## Vor dem Rollout
+
+1. Ziel-Commit, Release-Tag und erfolgreichen Image-Workflow pruefen. Beide Image-Manifeste und Digests festhalten. Die Zielversion nicht aus alten Env-Beispielen uebernehmen.
+2. Aktuelle Portainer-Stackquelle, Umgebung und laufende Container-IDs/Image-Digests geschuetzt ausserhalb von Git sichern. Beide Versionswerte fuer den Rollback notieren. Sicherstellen, dass ein aktuelles Datenbank-Backup vorhanden und dessen Wiederherstellung geklaert ist.
+3. Die aktuelle Stackquelle mit `stack.prod.yml` vergleichen; produktive Abweichungen gezielt bewerten. Ein regulaeres Release fuehrt keine Datenbankmigration und keinen SQL-Bootstrap aus.
+4. Hostvoraussetzungen pruefen: externes Netzwerk `websites`, Volume `cockpit_guben-data-prod`, eingerichteter Journal-Namespace `guben-cockpit` und passende GHCR-Zugriffsrechte.
+5. Gateway-Umgebung pruefen: `SV_GRAPHQL_URL`, `SV_OAUTH_TOKEN_URL`, `SV_CLIENT_ID`, `SV_CLIENT_SECRET` sind im Modus `postgrest` gemeinsam erforderlich. `PGRST_DB_URI` verbindet PostgREST mit der bestehenden DB. `FRONTEND_BASEURI` ist die oeffentliche Basis-URL.
+6. Uebersetzungen bei Bedarf ueber `TRANSLATE_URL`, `TRANSLATE_API_KEY` und `TRANSLATE_TIMEOUT_MS` konfigurieren. Das Volume `translation-cache` speichert Ergebnisse; leere `TRANSLATE_URL` deaktiviert die automatische Ergaenzung.
+
+Private Betriebswerte nur aus geschuetzter lokaler Konfiguration oder Portainer verwenden. Stack-/Env-Sicherungen koennen Zugangsdaten enthalten und gehoeren nicht in Git, Reports oder Konsolenausgaben. Die TLS-Beispiele setzen vertrauenswuerdige Zertifikate voraus; interne CAs gezielt mit `--cacert` verwenden.
+
+Lesende Image-Pruefung nach Setzen von `TARGET_WEB_VERSION` auf den freigegebenen Tag:
 
 ```bash
-export TARGET_WEB_VERSION=v0.8.6
-export TARGET_SV_GRAPHQL_URL='https://smart-village.example.com/graphql'
-export TARGET_SV_OAUTH_TOKEN_URL='https://smart-village.example.com/oauth/token'
-export TARGET_SV_CLIENT_ID='<smart-village-client-id>'
-export TARGET_SV_CLIENT_SECRET='<smart-village-client-secret>'
-export PORTAINER_URL='https://<portainer-host>:9443'
-export PORTAINER_TOKEN='<api-token>'
-export PORTAINER_STACK_ID='<stack-id>'
-export PORTAINER_ENDPOINT_ID='<endpoint-id>'
+gh run list --workflow release-prod.yml --limit 10
+docker manifest inspect "ghcr.io/smart-village-solutions/guben-cockpit-web:$TARGET_WEB_VERSION" >/dev/null
+docker manifest inspect "ghcr.io/smart-village-solutions/guben-cockpit-content-gateway:$TARGET_WEB_VERSION" >/dev/null
 ```
 
-2. Stack-Status laden:
+## Rollout in Portainer
+
+1. `Stacks` -> `cockpit` -> `Editor` oeffnen und gesicherte aktuelle Konfiguration mit der vorgesehenen Aenderung abgleichen.
+2. `VERSION_WEB` auf den freigegebenen Tag setzen; `VERSION_FRONTEND` wie oben beschrieben abgleichen. Vorhandene Zugangsdaten erhalten.
+3. Web-Umgebung gemaess `stack.prod.yml` erhalten:
+   - `PRERENDER_CONTENT_GATEWAY_URL=http://content-gateway:5100`
+   - `INTERNAL_CONTENT_GATEWAY_URL=http://content-gateway:5100`
+   - `VITE_CONTENT_GATEWAY_URL=${FRONTEND_BASEURI}`
+   - `INTERNAL_BOOKING_URL` als Upstream fuer den vorhandenen `/api/booking`-Proxy
+   - `VITE_BOOKING_URL=/api/booking` fuer die vorhandene Event-Booking-Integration
+4. Stack aktualisieren und benoetigte Images ziehen. Bei `denied` Registry-Zugriff pro Image pruefen und gezielt vorpullen; danach bei Bedarf ohne erneutes Pullen aktualisieren.
+5. Den Frontend-Start bis zum Ende von Build und Prerender verfolgen. `start-frontend.sh` wartet auf Gateway-`/health`; dies ersetzt keine Readiness-Pruefung beider Upstreams.
+6. Container, Digests und Smoke-Tests pruefen.
+
+Die oeffentliche Bookables-API ist eine eigene Integration ueber `VITE_BOOKING_API_URL`, konfiguriert beim Vite-Build, etwa in `frontend/.env`. Diese Variable wird im aktuellen Produktions-Compose nicht gesetzt. Den verwendeten Frontend-Build daher gesondert pruefen; eine beliebige Portainer-Laufzeitvariable wird nicht automatisch vom Stack an den Webdienst weitergereicht.
+
+## Optionales Update ueber die Portainer-API
+
+Die Werte `PORTAINER_URL`, `PORTAINER_TOKEN`, `PORTAINER_STACK_ID`, `PORTAINER_ENDPOINT_ID` und `TARGET_WEB_VERSION` muessen zuvor geschuetzt geladen sein. Das Beispiel erhaelt alle bestehenden Env-Eintraege, gleicht einen vorhandenen Frontend-Override auf die Zielversion ab und speichert sensible Antworten nur in einem privaten temporaeren Verzeichnis. Es setzt voraus, dass der Stackvergleich abgeschlossen und `stack.prod.yml` die freigegebene Zielquelle ist.
 
 ```bash
+umask 077
+deploy_dir=$(mktemp -d "${TMPDIR:-/tmp}/guben-deploy.XXXXXX")
+export TARGET_WEB_VERSION
 curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
-  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID" > /tmp/p-stack-now.json
-```
+  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID" \
+  > "$deploy_dir/stack-before.json"
 
-3. Env fuer Deploy bauen:
-
-```bash
 jq '
-  def upsert_env($name; $value):
+  def upsert($name; $value):
     if any(.[]; .name == $name) then
       map(if .name == $name then .value = $value else . end)
-    else
-      . + [{name: $name, value: $value}]
-    end;
-  .Env
-  | upsert_env("VERSION_WEB"; env.TARGET_WEB_VERSION)
-  | upsert_env("SV_GRAPHQL_URL"; env.TARGET_SV_GRAPHQL_URL)
-  | upsert_env("SV_OAUTH_TOKEN_URL"; env.TARGET_SV_OAUTH_TOKEN_URL)
-  | upsert_env("SV_CLIENT_ID"; env.TARGET_SV_CLIENT_ID)
-  | upsert_env("SV_CLIENT_SECRET"; env.TARGET_SV_CLIENT_SECRET)
-' \
-  /tmp/p-stack-now.json > /tmp/p-env.json
+    else . + [{name: $name, value: $value}] end;
+  .Env | upsert("VERSION_WEB"; env.TARGET_WEB_VERSION)
+  | if any(.[]; .name == "VERSION_FRONTEND") then
+      upsert("VERSION_FRONTEND"; env.TARGET_WEB_VERSION)
+    else . end
+' "$deploy_dir/stack-before.json" > "$deploy_dir/env.json"
+
+jq -n --rawfile content stack.prod.yml --slurpfile env "$deploy_dir/env.json" \
+  '{stackFileContent:$content, env:$env[0], prune:false, pullImage:true}' \
+  > "$deploy_dir/update.json"
+
+curl -fsS -X PUT -H "X-API-Key: $PORTAINER_TOKEN" \
+  -H 'Content-Type: application/json' --data-binary @"$deploy_dir/update.json" \
+  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID" \
+  > "$deploy_dir/update-result.json"
 ```
 
-4. Update absenden:
+Nach dem Request den Stack und die tatsaechlich laufenden Images unabhaengig erneut lesen. Bei Timeout zuerst den Zustand pruefen. Die temporaeren Dateien nach geschuetzter Uebernahme der benoetigten Sicherungen entfernen.
+
+## Technische Pruefung nach dem Rollout
+
+Von einem internen Zugriffspunkt Gateway-`/health/ready` und `/metrics` pruefen. Readiness prueft PostgREST und SVA Mainserver unabhaengig vom Content-Cache. Die Produktions-Compose-Datei veroeffentlicht dafuer keinen Host-Port.
+
+Oeffentliche Smoke-Tests:
 
 ```bash
-jq -n \
-  --arg content "$(cat stack.prod.yml)" \
-  --argjson env "$(cat /tmp/p-env.json)" \
-  '{stackFileContent:$content, env:$env, prune:true, pullImage:true}' \
-  > /tmp/p-update.json
-
-curl -fsS -X PUT \
-  -H "X-API-Key: $PORTAINER_TOKEN" \
-  -H 'Content-Type: application/json' \
-  --data-binary @/tmp/p-update.json \
-  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID"
+curl -fsS -o /dev/null -w 'frontend: %{http_code}\n' https://cockpit.guben.de/
+curl -fsS -o /dev/null -w 'home: %{http_code}\n' https://cockpit.guben.de/api/content/home
+curl -fsS -o /dev/null -w 'pois: %{http_code}\n' https://cockpit.guben.de/api/content/pois
+curl -fsS -o /dev/null -w 'featured-projects: %{http_code}\n' https://cockpit.guben.de/api/content/featured-projects
+curl -fsS -o /dev/null -w 'booking: %{http_code}\n' https://guben-api.smart-city-booking.de/json/default/bookables
 ```
 
-5. Wenn `denied`: Images vorpullen und erneut deployen (dann `pullImage:false`).
+Eine aktuelle Event-ID aus `/api/content/events?pageNumber=1&pageSize=1` lesen. Fuer den Detailrequest die vollstaendige ID als URL-Pfadsegment encodieren, etwa mit `jq -r '.events.results[0].id | @uri'`. Synthetische Occurrence-IDs koennen bereits Prozentzeichen enthalten; nicht manuell decodieren. Ein leerer Kalender liefert keine Detail-ID und ist separat zu bewerten.
 
-6. Smoke-Test:
+Zusaetzlich pruefen:
 
-```bash
-curl -fsS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
-curl -fsS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
-curl -fsS -o /tmp/content-events.json -w "content/events: %{http_code}\n" "https://cockpit.guben.de/api/content/events?pageNumber=1&pageSize=1"
-EVENT_ID="$(jq -r '.events.results[0].id' /tmp/content-events.json)"
-test "$EVENT_ID" != "null"
-curl -fsS -o /dev/null -w "content/event-detail: %{http_code}\n" "https://cockpit.guben.de/api/content/events/$EVENT_ID"
-curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/json/default/bookables
-```
+- Aktuelles Event: API und HTML-Seite liefern 200, GET und HEAD stimmen ueberein.
+- Bekannte abgelaufene Event-URL: HTML 404, `noindex`, keine gecachte alte Detailseite. Bei fehlgeschlagener Gateway-Pruefung HTML 503 mit `Retry-After: 60`.
+- `/projects/237` und andere alte numerische Projektlinks: 302 nach `/projects`; aktuelle `featured:`-/`poi:`-Links weiter funktionsfaehig.
+- Home, Projekte, Karte, Events und Buchungsseiten im Browser aufrufen. Booking-CORS aus der Ziel-Origin pruefen; ein erfolgreicher Terminalabruf belegt Browserzugriff nicht.
+- Deutsch, Englisch und Polnisch pruefen. Bei `X-Translation-Pending: 1` Originaltext und automatisches Nachladen beobachten; Uebersetzungen sind keine redaktionelle Freigabe.
+- Vier Kerncontainer, gewuenschte Images/Digests und fehlerfreien Start bestaetigen. `.NET`-API und alte Importer bleiben stillgelegt.
 
-Rollback sofort: `TARGET_WEB_VERSION` auf letzten stabilen Tag setzen und Schritte 3-6 wiederholen.
+Technische Ergebnisse und fachliche Abnahme getrennt dokumentieren.
 
-## Scope
+## Logs und Aufbewahrung
 
-- Stack: `cockpit`
-- Produktions-Compose: `stack.prod.yml`
-- Wichtige Images:
-  - `ghcr.io/smart-village-solutions/guben-cockpit-web:<tag>`
-  - `ghcr.io/smart-village-solutions/guben-cockpit-content-gateway:<tag>`
-
-## Voraussetzungen
-
-- Auf dem Produktionshost ist das getrennte Log-Journal `guben-cockpit` gemaess
-  `ops/logging/` eingerichtet (siehe "Log-Aufbewahrung").
-
-- GitHub Tag fuer Release ist gepusht (z. B. `v0.8.6`)
-- GitHub Action fuer Image-Build ist erfolgreich
-- Portainer-URL, Stack-ID und Endpoint-ID liegen aus der privaten Betriebsdokumentation oder direkt aus Portainer vor
-- Die Smart-Village-Zugangsdaten fuer den Event-Cutover liegen vor:
-  - `SV_GRAPHQL_URL`
-  - `SV_OAUTH_TOKEN_URL`
-  - `SV_CLIENT_ID`
-  - `SV_CLIENT_SECRET`
-- In Portainer existieren lauffaehige GHCR-Registries mit passenden Accounts:
-  - fuer `smart-village-solutions/*`
-  - fuer `agriculturedev/*`
-
-## TLS-Hinweis
-
-Die `curl`-Beispiele gehen von gueltig vertrauenswuerdigen Zertifikaten aus und verwenden bewusst kein `-k`.
-
-Wenn Portainer ueber eine interne CA oder ein Self-Signed-Zertifikat abgesichert ist, sollte das Zertifikat lokal vertraut oder gezielt per `--cacert /pfad/zur/ca.pem` uebergeben werden.
-
-## Log-Aufbewahrung
-
-Die vier Cockpit-Container schreiben ueber einen lokalen Unix-Socket in den
-Journal-Namespace `guben-cockpit`. Seine Aufbewahrung betraegt 14 Tage; ein Timer
-rotiert und bereinigt das Journal stuendlich. Der Namespace hat zusaetzlich ein
-Groessenlimit von 4 GiB. Bei hohem Logaufkommen koennen dadurch juengere Eintraege
-verdraengt werden. Die Docker-Standardkonfiguration wird dafuer nicht geaendert.
-
-Der Docker-Log-Cache ist fuer diese Container deaktiviert, da er keine
-zeitbasierte Aufbewahrung unterstuetzt. Cockpit-Logs werden deshalb auf dem Host
-ueber das Journal gelesen; die Container-Loganzeige in Portainer ist fuer diese
-Container nicht verfuegbar:
+Die vier Cockpit-Container schreiben ueber den Unix-Socket `/run/systemd/journal.guben-cockpit/dev-log` in den Journal-Namespace `guben-cockpit`. Maximale Aufbewahrung: 14 Tage, Groessenlimit: 4 GiB, stuendliche Bereinigung. Das Groessenlimit kann auch juengere Eintraege verdraengen. Der Docker-Log-Cache ist deaktiviert; die Portainer-Containerloganzeige steht deshalb nicht zur Verfuegung.
 
 ```bash
 sudo journalctl --namespace=guben-cockpit --since '14 days ago'
@@ -129,7 +124,7 @@ sudo journalctl --namespace=guben-cockpit -t guben-cockpit/guben-content-gateway
 sudo systemctl status guben-cockpit-log-retention.timer
 ```
 
-Einrichtung auf einem neuen Produktionshost, vor dem ersten Compose-Start:
+Auf einem neuen Host vor dem ersten Compose-Start einrichten:
 
 ```bash
 sudo install -m 0644 ops/logging/journald@guben-cockpit.conf /etc/systemd/
@@ -140,203 +135,10 @@ sudo systemctl enable --now guben-cockpit-logging.service
 sudo systemctl enable --now guben-cockpit-log-retention.timer
 ```
 
-Das Boot-Service `guben-cockpit-logging.service` stellt den Journal-Socket vor
-dem Docker-Start bereit. Bereits vorhandene JSON-Logs der Erstumstellung liegen
-geschuetzt unter `/var/lib/guben-cockpit-log-retention/archive/`; derselbe Timer
-entfernt daraus Eintraege, die aelter als 14 Tage sind. Nicht datierbare Zeilen
-laufen 14 Tage nach ihrer Archivierung ab.
+Die globale Docker-Konfiguration bleibt unveraendert. Archivierte JSON-Logs der Erstumstellung unter `/var/lib/guben-cockpit-log-retention/archive/` werden ebenfalls nach 14 Tagen bereinigt; nicht datierbare Zeilen laufen 14 Tage nach Archivierung ab.
 
-Die alte `.NET`-API ist stillgelegt; `guben-api-prod` darf bei normalen Deploys
-nicht erneut angelegt werden. Das bisherige Volume
-`cockpit_api-data-protection-keys` bleibt als Rollback-Bestand erhalten und wird
-nicht mehr eingebunden. Details: [Stilllegung der alten API](legacy-api-retirement.md).
+## Rollback
 
-## 1. Pre-Deploy Checks
+Die gesicherte vorherige Stackquelle und Umgebung einschliesslich `VERSION_WEB` und `VERSION_FRONTEND` wiederherstellen, bekannte Images/Digests verwenden und dieselben Smoke-Tests wiederholen. Ein reines App-Rollback veraendert keine Datenbankdaten.
 
-1. Lokal verifizieren:
-
-```bash
-cd frontend
-npm run typecheck
-```
-
-2. Release-Tag pruefen:
-
-```bash
-git tag --list | tail -n 20
-```
-
-3. Build-Status pruefen:
-
-```bash
-gh run list --workflow "Build and push Docker image on tag" --limit 10
-```
-
-4. Optionale Manifest-Pruefung:
-
-```bash
-docker manifest inspect ghcr.io/smart-village-solutions/guben-cockpit-web:v0.8.6 >/dev/null
-docker manifest inspect ghcr.io/smart-village-solutions/guben-cockpit-content-gateway:v0.8.6 >/dev/null
-```
-
-## 2. Deploy (Portainer UI)
-
-1. Portainer -> `Stacks` -> `cockpit` -> `Editor`
-2. Sicherstellen, dass `stack.prod.yml` folgende Web-Umgebung enthaelt:
-   - `PRERENDER_CONTENT_GATEWAY_URL=http://content-gateway:5100`
-   - `INTERNAL_CONTENT_GATEWAY_URL=http://content-gateway:5100`
-   - `INTERNAL_BOOKING_URL=https://backend.booking.guben.de` fuer die noch nicht migrierten Legacy-Event-Flows
-   - `VITE_CONTENT_GATEWAY_URL=${FRONTEND_BASEURI}`
-   - `VITE_BOOKING_API_URL=https://guben-api.smart-city-booking.de`
-   - `VITE_BOOKING_URL=/api/booking` fuer die noch nicht migrierten Legacy-Event-Flows
-3. In `Environment variables` setzen:
-  - `VERSION_WEB=<zieltag>`
-  - `SV_GRAPHQL_URL=<smart-village-graphql-url>`
-  - `SV_OAUTH_TOKEN_URL=<smart-village-oauth-token-url>`
-  - `SV_CLIENT_ID=<smart-village-client-id>`
-  - `SV_CLIENT_SECRET=<smart-village-client-secret>`
-4. `Update the stack` ausfuehren
-
-## 3. Deploy (Portainer API, optional)
-
-```bash
-PORTAINER_URL='https://<portainer-host>:9443'
-PORTAINER_TOKEN='<api-token>'
-PORTAINER_STACK_ID='<stack-id>'
-PORTAINER_ENDPOINT_ID='<endpoint-id>'
-TARGET_WEB_VERSION='v0.8.6'
-TARGET_SV_GRAPHQL_URL='https://smart-village.example.com/graphql'
-TARGET_SV_OAUTH_TOKEN_URL='https://smart-village.example.com/oauth/token'
-TARGET_SV_CLIENT_ID='<smart-village-client-id>'
-TARGET_SV_CLIENT_SECRET='<smart-village-client-secret>'
-
-curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
-  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID" > /tmp/p-stack-now.json
-
-# Env fuer den Cutover-Stack sicher aktualisieren oder anlegen
-jq '
-  def upsert_env($name; $value):
-    if any(.[]; .name == $name) then
-      map(if .name == $name then .value = $value else . end)
-    else
-      . + [{name: $name, value: $value}]
-    end;
-  .Env
-  | upsert_env("VERSION_WEB"; env.TARGET_WEB_VERSION)
-  | upsert_env("SV_GRAPHQL_URL"; env.TARGET_SV_GRAPHQL_URL)
-  | upsert_env("SV_OAUTH_TOKEN_URL"; env.TARGET_SV_OAUTH_TOKEN_URL)
-  | upsert_env("SV_CLIENT_ID"; env.TARGET_SV_CLIENT_ID)
-  | upsert_env("SV_CLIENT_SECRET"; env.TARGET_SV_CLIENT_SECRET)
-' \
-  /tmp/p-stack-now.json > /tmp/p-env.json
-
-jq -n \
-  --arg content "$(cat stack.prod.yml)" \
-  --argjson env "$(cat /tmp/p-env.json)" \
-  '{stackFileContent:$content, env:$env, prune:true, pullImage:true}' \
-  > /tmp/p-update.json
-
-curl -fsS -X PUT \
-  -H "X-API-Key: $PORTAINER_TOKEN" \
-  -H 'Content-Type: application/json' \
-  --data-binary @/tmp/p-update.json \
-  "$PORTAINER_URL/api/stacks/$PORTAINER_STACK_ID?endpointId=$PORTAINER_ENDPOINT_ID"
-```
-
-## 4. Post-Deploy Smoke Tests
-
-```bash
-curl -fsS -o /dev/null -w "frontend: %{http_code}\n" https://cockpit.guben.de/
-curl -fsS -o /dev/null -w "content/home: %{http_code}\n" https://cockpit.guben.de/api/content/home
-curl -fsS -o /tmp/content-events.json -w "content/events: %{http_code}\n" "https://cockpit.guben.de/api/content/events?pageNumber=1&pageSize=1"
-EVENT_ID="$(jq -r '.events.results[0].id' /tmp/content-events.json)"
-test "$EVENT_ID" != "null"
-curl -fsS -o /dev/null -w "content/event-detail: %{http_code}\n" "https://cockpit.guben.de/api/content/events/$EVENT_ID"
-curl -fsS -o /dev/null -w "booking-api/default/bookables: %{http_code}\n" https://guben-api.smart-city-booking.de/json/default/bookables
-```
-
-Erwartung: jeweils `200`.
-
-Hinweis zum Event-Detail-Smoke-Test:
-- Die Event-IDs kommen seit dem Smart-Village-Cutover als synthetische Occurrence-IDs zurueck, z. B. `1937530:2026-06-14:10%3A00`.
-- Wenn eine ID manuell in eine URL kopiert wird, muss sie URL-encodiert bleiben. Der Ablauf oben liest bereits die encodierte ID aus der Listen-Response.
-
-Browser-/CORS-Check fuer den Booking-Rollout:
-
-```js
-await fetch("https://guben-api.smart-city-booking.de/json/default/bookables", {
-  headers: { Accept: "application/json" },
-}).then((response) => response.ok)
-```
-
-Diesen Check vor Rollout einmal aus einer lokalen Frontend-Origin und einmal aus einer deployten Zielumgebung im Browser ausfuehren.
-
-Hinweis zum Booking-Link:
-- Angebote werden aus `/json/:tenant/bookables` geladen; die Belegungsabfrage bleibt unter `/api/:tenant/bookables/:id/occupancy`.
-- Das Frontend uebernimmt `checkoutUrl` aus dem oeffentlichen JSON-Angebot. Ohne gueltigen HTTP(S)-Link wird kein Buchungsbutton angeboten.
-- Miettarife und `service-fee` werden getrennt angezeigt; die Servicegebuehr wird nicht als Einstiegspreis verwendet und im Preiszusatz ausgewiesen.
-
-Zusatzcheck Container:
-
-```bash
-curl -fsS -H "X-API-Key: $PORTAINER_TOKEN" \
-  "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT_ID/docker/containers/json?all=1" | \
-  jq -r '.[] | select(([.Names[]] | join(" ") | test("guben-(web|db|postgrest|content-gateway)-prod"))) | [.Names[0], .Image, .State] | @tsv'
-```
-
-## 5. Troubleshooting
-
-### Fehler: `denied` beim Deploy
-
-Ursache: Mindestens ein referenziertes Image kann nicht gezogen werden (oft Registry/Namespace-Mismatch).
-
-Vorgehen:
-
-1. Gezielte Pull-Tests pro Image ausfuehren.
-2. Bei mehreren GHCR-Registries ggf. Image manuell mit passender Registry-ID pullen.
-3. Danach Stack-Update mit `pullImage:false` erneut ausfuehren.
-
-Beispiel manuelles Pullen via Portainer Docker API:
-
-```bash
-# X-Registry-Auth ist Base64 von {"registryId": <id>}
-curl -fsS -X POST \
-  -H "X-API-Key: $PORTAINER_TOKEN" \
-  -H "X-Registry-Auth: <base64-json>" \
-  "$PORTAINER_URL/api/endpoints/$PORTAINER_ENDPOINT_ID/docker/images/create?fromImage=ghcr.io/smart-village-solutions/guben-cockpit-web&tag=v0.8.6"
-```
-
-### Fehlerbild: Env-Eintraege mit `:` im Namen
-
-Beispiel falsch:
-
-- `PRERENDER_CONTENT_GATEWAY_URL: http://content-gateway:5100` als `name`
-
-Dann wurden YAML-Zeilen als Env-Key serialisiert. Diese Eintraege entfernen und korrekt als Key/Value hinterlegen:
-
-- `name=PRERENDER_CONTENT_GATEWAY_URL`, `value=http://content-gateway:5100`
-- `name=INTERNAL_CONTENT_GATEWAY_URL`, `value=http://content-gateway:5100`
-- `name=VITE_CONTENT_GATEWAY_URL`, `value=${FRONTEND_BASEURI}`
-
-## 6. Rollback
-
-Wenn Smoke-Tests fehlschlagen:
-
-1. `VERSION_WEB` auf letzten stabilen Tag setzen (z. B. `v0.8.5`)
-2. Stack erneut deployen
-3. Container-Status und Smoke-Tests wiederholen
-
-Rollback via API (Kurzform):
-
-```bash
-# analog Deploy, nur VERSION_WEB zuruecksetzen
-```
-
-## 7. Checkliste fuer Releases
-
-1. Tag gebaut und in GHCR verfuegbar
-2. Portainer-Registries fuer alle benoetigten Namespaces verifiziert
-3. Stack mit korrekten Env-Variablen aktualisiert
-4. Alle 4 Kerncontainer laufen (`web`, `db`, `postgrest`, `content-gateway`)
-5. Frontend, Home, Event-Liste, Event-Detail und Booking-Smoke-Checks liefern `200`
-6. Bei Problemen: gezielter Rollback auf letzten stabilen `VERSION_WEB`
+Keine Volumes loeschen und kein allgemeines Pruning ausfuehren. `guben-api-prod` wird durch einen normalen Rollback nicht wieder eingefuehrt. Das erhaltene Volume `cockpit_api-data-protection-keys` ist ausschliesslich historischer Rollback-Bestand; Details in der [Stilllegungsdokumentation](legacy-api-retirement.md).

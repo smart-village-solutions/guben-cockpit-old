@@ -10,6 +10,12 @@ This folder contains the read-only PostgREST setup for public content consumed b
 
 All profiles expose only the `public_content` schema and use the dedicated anonymous role `guben_public_content_reader`.
 
+## Database prerequisites
+
+The source application schema `Guben` and its existing tables/data must already exist. The scripts below create roles, the `public_content` read schema and views; they do not install the former application database or import content. Starting the optional local PostgreSQL service alone is insufficient. Use a suitably privileged database role for initial provisioning and verify the permissions afterward.
+
+Local Compose runs `bootstrap.sh` automatically before PostgREST. `stack.prod.yml` does not run SQL bootstrap; normal production image updates reuse the provisioned schema. Back up the database before initial provisioning.
+
 ## Database bootstrap
 
 Apply the SQL files in `sql/` against PostgreSQL in this order:

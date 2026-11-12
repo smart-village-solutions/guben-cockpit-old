@@ -1,7 +1,7 @@
 # Stilllegung der alten .NET-API
 
 Die alte API `guben-api-prod` wird vom aktuellen Cockpit nicht mehr verwendet.
-Das Frontend nutzt das Content-Gateway; dieses liest Smart Village und
+Das Frontend nutzt das Content-Gateway; dieses liest SVA Mainserver und
 PostgREST. Buchungen verwenden einen eigenen Dienst. Der Betreiber hat
 bestätigt, dass auch keine externen Aufrufer der alten API mehr existieren.
 
